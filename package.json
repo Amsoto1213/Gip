@@ -1,0 +1,8 @@
+{
+  "name": "gip-herramientas",
+  "private": true,
+  "description": "Fija la versión de la Supabase CLI para todo el equipo. Usar con: npx supabase <comando>",
+  "devDependencies": {
+    "supabase": "3.1.0"
+  }
+}

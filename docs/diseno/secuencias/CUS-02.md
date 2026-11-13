@@ -1,0 +1,135 @@
+# CUS-02 Registrar venta
+
+Diagrama de secuencia exportado de EA (3.3.2 CUS-02 Registrar venta).
+
+## Participantes
+
+- `Empleado` (Actor)
+- `VistaVenta` (Sequence)
+- `coordinador` : `RegistrarVentaCoordinator`
+- `servicioVentas` : `ServicioVentas`
+- `servicioInventario` : `ServicioInventario`
+- `procesador` : `ProcesadorPago`
+- `unidadTrabajo` : `IUnidadTrabajo`
+- `ventas` : `IVentaRepositorio`
+- `linea` : `LineaVenta`
+- `pagoContado` : `PagoContado`
+- `pagoNequi` : `PagoNequi`
+- `venta` : `Venta`
+- `salida` : `SalidaVenta`
+- `item` : `ItemInventario`
+- `producto` : `Producto`
+
+## Mensajes
+
+Indentación = fragmento combinado que contiene el mensaje (`[op nombre | guarda]`).
+
+- **[loop Líneas de la venta | por cada producto que pide el cliente]**
+  - **ref** CUS-06 Buscar producto — Resultado: producto : Producto (por nombre o con el lector de códigos).
+  - 1. `Empleado` → `VistaVenta`: agregar(producto, cantidad)
+  - 2. `VistaVenta` → `coordinador`: agregarProducto(tienda, List<LineaVenta>, producto, cantidad)
+  - 3. `coordinador` → `servicioVentas`: agregarLinea(tienda, List<LineaVenta>, producto, cantidad)
+  - **[alt Línea de la venta | el producto ya está en List<LineaVenta>]**
+    - 4. `servicioVentas` → `linea`: getCantidad()
+    - 5. `linea` → `servicioVentas`: cantidadActual
+    - 6. `servicioVentas` → `servicioVentas`: cambiarCantidad(linea, cantidadActual + cantidad)
+    - 7. `servicioVentas` → `linea`: getItem()
+    - 8. `linea` → `servicioVentas`: item
+    - 9. `servicioVentas` → `servicioInventario`: hayExistencia(item, cantidadActual + cantidad)
+    - 10. `servicioInventario` → `servicioVentas`: hayStock
+    - **[opt Actualizar cantidad | hayStock = true]**
+      - 11. `servicioVentas` → `linea`: setCantidad(cantidadActual + cantidad)
+  - **[alt Línea de la venta | producto nuevo]**
+    - 12. `servicioVentas` → `servicioInventario`: obtenerItem(tienda, producto)
+    - 13. `servicioInventario` → `servicioVentas`: item
+    - 14. `servicioVentas` → `servicioInventario`: hayExistencia(item, cantidad)
+    - 15. `servicioInventario` → `servicioVentas`: hayStock
+    - **[opt Crear línea | hayStock = true]**
+      - 16. `servicioVentas` → `linea`: LineaVenta(item, cantidad)
+      - _Nota: La línea queda en List, que conserva la pantalla; no se guarda (DA-57)._
+  - **[alt Resultado de agregar | hayStock = true]**
+    - _Nota: calcularTotal suma linea.calcularSubtotal() de cada línea de List, con el precio de venta actual del producto (DA-61)._
+    - 17. `servicioVentas` → `coordinador`: linea
+    - 18. `coordinador` → `VistaVenta`: linea
+    - 19. `VistaVenta` → `coordinador`: obtenerTotal(List<LineaVenta>)
+    - 20. `coordinador` → `servicioVentas`: calcularTotal(List<LineaVenta>)
+    - 21. `servicioVentas` → `linea`: calcularSubtotal()
+    - 22. `linea` → `servicioVentas`: subtotal
+    - 23. `servicioVentas` → `coordinador`: total
+    - 24. `coordinador` → `VistaVenta`: total
+    - 25. `VistaVenta` → `Empleado`: mostrar("Total: " + total)
+  - **[alt Resultado de agregar | hayStock = false (RN-01)]**
+    - 26. `servicioVentas` → `coordinador`: error("No hay existencia suficiente")
+    - **[opt Venta perdida | el cliente se va sin el producto]**
+      - 27. `coordinador` → `VistaVenta`: error("No hay existencia suficiente")
+      - 28. `VistaVenta` → `Empleado`: mostrar("No hay suficiente existencia del producto")
+      - **ref** CUS-13 Registrar venta perdida (extiende) — Registra la venta que no se hizo por falta de existencia (RF-12).
+- **[opt Contado | el cliente paga de contado]**
+  - 29. `Empleado` → `VistaVenta`: ingresarPagoContado(montoRecibido)
+  - 30. `VistaVenta` → `coordinador`: pagarDeContado(montoACubrir, montoRecibido)
+  - _Nota: cambio = montoRecibido - montoACubrir_
+  - 31. `coordinador` → `servicioVentas`: crearPagoContado(montoACubrir, montoRecibido)
+  - **[break Monto insuficiente | montoRecibido < montoACubrir]**
+    - 32. `servicioVentas` → `coordinador`: error("El monto recibido no alcanza")
+    - 33. `coordinador` → `VistaVenta`: error("El monto recibido no alcanza")
+    - 34. `VistaVenta` → `Empleado`: mostrar("El monto recibido no alcanza")
+  - 35. `servicioVentas` → `pagoContado`: PagoContado(id, montoRecibido, cambio)
+  - 36. `servicioVentas` → `coordinador`: pagoContado
+  - 37. `coordinador` → `VistaVenta`: pagoContado
+  - 38. `VistaVenta` → `pagoContado`: getCambio()
+  - 39. `pagoContado` → `VistaVenta`: cambio
+  - _Nota: Valida monto > 0; si no, rechaza._
+  - 40. `VistaVenta` → `Empleado`: mostrar("Cambio: " + cambio)
+- **[opt Nequi | el cliente paga con Nequi]**
+  - 41. `Empleado` → `VistaVenta`: ingresarPagoNequi(monto, referencia)
+  - 42. `VistaVenta` → `coordinador`: pagarConNequi(monto, referencia)
+  - 43. `coordinador` → `servicioVentas`: crearPagoNequi(monto, referencia)
+  - 44. `servicioVentas` → `pagoNequi`: PagoNequi(id, monto, referencia)
+  - 45. `servicioVentas` → `coordinador`: pagoNequi
+  - 46. `coordinador` → `VistaVenta`: pagoNequi
+- **[opt Fiado | el cliente queda debiendo una parte o todo]**
+  - _Nota: La pantalla conserva pagoContado, pagoNequi y fiado en formasPago hasta confirmar; antes de confirmar no se guarda nada (DA-57)._
+  - **ref** CUS-07 Registrar fiado (extiende) — Resultado: fiado : Fiado en memoria (RegistrarFiadoCoordinator.prepararFiado).
+- 47. `Empleado` → `VistaVenta`: confirmar()
+- 48. `VistaVenta` → `coordinador`: confirmarVenta(tienda, List<LineaVenta>, formasPago)
+- 49. `coordinador` → `servicioVentas`: confirmar(tienda, List<LineaVenta>, formasPago)
+- 50. `servicioVentas` → `servicioVentas`: calcularTotal(List<LineaVenta>)
+- 51. `servicioVentas` → `servicioVentas`: validarFormasPago(formasPago, total)
+- **[break Formas de pago no válidas | no suman el total, repiten tipo o son más de tres]**
+  - 52. `servicioVentas` → `coordinador`: error("Formas de pago no válidas")
+  - 53. `coordinador` → `VistaVenta`: error("Formas de pago no válidas")
+  - 54. `VistaVenta` → `Empleado`: mostrar("Las formas de pago no cubren el total de la venta")
+- 55. `servicioVentas` → `unidadTrabajo`: ejecutar(accion)
+- 56. `unidadTrabajo` → `servicioVentas`: accion()
+- 57. `servicioVentas` → `venta`: Venta(id, formasPago, total, fecha)
+- 58. `servicioVentas` → `ventas`: guardar(tienda, venta)
+- **[loop Salidas | por cada LineaVenta de List<LineaVenta>]**
+  - _Nota: Precio y costo del producto en el momento de la venta, para que los reportes no cambien si se editan los precios (DA-61); costoUnitario puede ser nulo._
+  - 59. `servicioVentas` → `linea`: getItem()
+  - 60. `linea` → `servicioVentas`: item
+  - 61. `servicioVentas` → `linea`: getCantidad()
+  - 62. `linea` → `servicioVentas`: cantidad
+  - 63. `servicioVentas` → `item`: getProducto()
+  - 64. `item` → `servicioVentas`: producto
+  - 65. `servicioVentas` → `producto`: getPrecioVenta()
+  - 66. `producto` → `servicioVentas`: precioUnitario
+  - 67. `servicioVentas` → `producto`: getPrecioCompra()
+  - 68. `producto` → `servicioVentas`: costoUnitario
+  - _Nota: Detalle en CUS-01: se une a la transacción abierta, calcula stock nuevo = stock anterior - cantidad y bloquea si queda negativo (RN-01)._
+  - 69. `servicioVentas` → `salida`: SalidaVenta(id, item, -cantidad, fecha, venta, precioUnitario, costoUnitario)
+  - _Nota: Polymorphism: ProcesadorPagoContado llama a servicioCaja.registrarIngreso (RF-10); ProcesadorNequi no mueve la caja (DA-63); ProcesadorFiado llama a servicioFiados.registrarFiado (CUS-07)._
+  - 70. `servicioVentas` → `servicioInventario`: aplicarMovimiento(tienda, salida)
+- **[loop Pagos | por cada forma en formasPago]**
+  - _Nota: Unit of Work (RNF-04): la venta, sus salidas, el ingreso en caja y el fiado se guardan en una sola transacción, con su registro en la cola de pendientes (RNF-08)._
+  - 71. `servicioVentas` → `servicioVentas`: procesadorPara(forma)
+  - 72. `servicioVentas` → `procesador`: procesar(tienda, venta, forma)
+- 73. `unidadTrabajo` → `servicioVentas`: retorno
+- **[alt Resultado de la transacción | transacción confirmada]**
+  - 74. `servicioVentas` → `coordinador`: venta
+  - 75. `coordinador` → `VistaVenta`: venta
+  - 76. `VistaVenta` → `Empleado`: mostrar("Venta registrada")
+- **[alt Resultado de la transacción | error al guardar o stock negativo (rollback: no se guarda nada)]**
+  - 77. `unidadTrabajo` → `servicioVentas`: error
+  - 78. `servicioVentas` → `coordinador`: error
+  - 79. `coordinador` → `VistaVenta`: error
+  - 80. `VistaVenta` → `Empleado`: mostrar("No se pudo registrar la venta. Intente de nuevo")

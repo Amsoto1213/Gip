@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub get)",
+      "Bash(flutter pub add:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Bash(dart format:*)",
+      "Bash(dart fix:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(bash tool/check_layers.sh)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(supabase status)",
+      "Bash(supabase migration new:*)",
+      "Bash(supabase db reset)",
+      "Bash(supabase db diff:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(supabase start)",
+      "Bash(supabase stop:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env.json)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase link:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash tool/hooks/format_dart.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

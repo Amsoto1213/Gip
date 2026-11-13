@@ -1,0 +1,81 @@
+name: APK de prueba
+
+# Genera el APK en cada push a main y cuando se pide a mano (Actions → APK de prueba → Run workflow,
+# en cualquier rama). Lo publica siempre en la misma pre-release "apk-dev" para descargarlo desde el teléfono:
+#   https://github.com/<dueño>/gip/releases/tag/apk-dev
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # para publicar la pre-release
+
+concurrency:
+  group: apk-dev
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.x"
+          cache: true
+
+      - name: Dependencias y código generado
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+
+      # Firma fija: sin esto cada build sale firmado con una llave distinta y el teléfono
+      # obliga a desinstalar la app (y se pierde la base local) para instalar la nueva.
+      - name: Llave de firma fija
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::Falta el secreto ANDROID_DEBUG_KEYSTORE_B64: cada APK tendrá otra firma."
+          else
+            mkdir -p ~/.android
+            echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          fi
+
+      # El teléfono no ve el Supabase local de nadie: el APK apunta al proyecto de pruebas en Supabase Cloud.
+      - name: Configuración de Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          printf '{"SUPABASE_URL":"%s","SUPABASE_ANON_KEY":"%s"}\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env.json
+
+      - name: Compilar APK
+        run: |
+          flutter build apk --release --dart-define-from-file=.env.json
+          cp build/app/outputs/flutter-apk/app-release.apk "gip-${GITHUB_SHA::7}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gip-apk
+          path: gip-*.apk
+          retention-days: 14
+
+      - name: Publicar en la pre-release apk-dev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-dev --cleanup-tag --yes || true
+          gh release create apk-dev gip-*.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "APK de prueba (${GITHUB_REF_NAME} @ ${GITHUB_SHA::7})" \
+            --notes "Generado por el workflow APK de prueba. Instalar sobre la versión anterior (misma firma)."

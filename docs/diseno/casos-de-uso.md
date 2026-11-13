@@ -1,0 +1,27 @@
+# Casos de uso del sistema
+
+- **CUS-01 Registrar entrada de mercancía**
+- **CUS-02 Registrar venta**
+- **CUS-03 Registrar pérdida o devolución al proveedor**
+- **CUS-04 Registrar conteo físico**
+- **CUS-05 Consultar alertas de reabastecimiento**
+- **CUS-06 Buscar producto**
+- **CUS-07 Registrar fiado**
+- **CUS-08 Registrar abono**
+- **CUS-09 Consultar margen de ganancia**
+- **CUS-10 Generar reporte diario**
+- **CUS-11 Registrar movimiento de caja**
+- **CUS-12 Consultar rotación de productos**
+- **CUS-13 Registrar venta perdida**
+- **CUS-14 Registrar cierre de caja**
+- **CUS-15 Gestionar usuarios de la tienda**
+- **CUS-16 Exportar datos del negocio**
+- **CUS-17 Leer código de producto**
+- **CUS-18 Gestionar producto**
+- **CUS-19 Consultar saldo e historial de cliente**
+- **CUS-20 Anular venta**
+- **CUS-21 Eliminar datos de un cliente**
+- **CUS-22 Revisar conflictos de sincronización**
+- **CUS-23 Conciliar datos sincronizados**
+- **CUS-24 Generar alertas de reabastecimiento**
+- **CUS-25 Consultar existencias**

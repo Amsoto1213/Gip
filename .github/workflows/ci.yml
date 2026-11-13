@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Fijen aquí la misma versión que usan los tres (flutter --version)
+          flutter-version: "3.47.x"
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Código generado (drift)
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Formato
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Análisis estático
+        run: flutter analyze
+
+      - name: Dependencias entre capas
+        run: bash tool/check_layers.sh
+
+      - name: Pruebas
+        run: flutter test --coverage
+
+      - name: Compilación web
+        run: flutter build web --release
+
+  supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 3.1.0
+      - name: Migraciones aplican desde cero
+        run: |
+          supabase db start
+          supabase db reset

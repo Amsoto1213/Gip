@@ -1,0 +1,29 @@
+{
+  "dart.flutterSdkPath": ".herramientas/flutter",
+  "terminal.integrated.env.windows": {
+    "GIP_HERRAMIENTAS": "${workspaceFolder}\\.herramientas",
+    "JAVA_HOME": "${workspaceFolder}\\.herramientas\\jdk-17",
+    "ANDROID_HOME": "${workspaceFolder}\\.herramientas\\android-sdk",
+    "ANDROID_SDK_ROOT": "${workspaceFolder}\\.herramientas\\android-sdk",
+    "PUB_CACHE": "${workspaceFolder}\\.herramientas\\pub-cache",
+    "GRADLE_USER_HOME": "${workspaceFolder}\\.herramientas\\gradle",
+    "FLUTTER_ROOT": "${workspaceFolder}\\.herramientas\\flutter",
+    "PATH": "${workspaceFolder}\\.herramientas\\flutter\\bin;${workspaceFolder}\\.herramientas\\jdk-17\\bin;${workspaceFolder}\\.herramientas\\android-sdk\\platform-tools;${workspaceFolder}\\.herramientas\\android-sdk\\cmdline-tools\\latest\\bin;${workspaceFolder}\\.herramientas\\node;${workspaceFolder}\\node_modules\\.bin;${env:PATH}"
+  },
+  "search.exclude": {
+    ".herramientas": true
+  },
+  "files.watcherExclude": {
+    "**/.herramientas/**": true
+  },
+  "terminal.integrated.env.linux": {
+    "GIP_HERRAMIENTAS": "${workspaceFolder}/.herramientas",
+    "JAVA_HOME": "${workspaceFolder}/.herramientas/jdk-17",
+    "ANDROID_HOME": "${workspaceFolder}/.herramientas/android-sdk",
+    "ANDROID_SDK_ROOT": "${workspaceFolder}/.herramientas/android-sdk",
+    "PUB_CACHE": "${workspaceFolder}/.herramientas/pub-cache",
+    "GRADLE_USER_HOME": "${workspaceFolder}/.herramientas/gradle",
+    "FLUTTER_ROOT": "${workspaceFolder}/.herramientas/flutter",
+    "PATH": "${workspaceFolder}/.herramientas/flutter/bin:${workspaceFolder}/.herramientas/jdk-17/bin:${workspaceFolder}/.herramientas/android-sdk/platform-tools:${workspaceFolder}/.herramientas/android-sdk/cmdline-tools/latest/bin:${workspaceFolder}/.herramientas/node/bin:${workspaceFolder}/node_modules/.bin:${env:PATH}"
+  }
+}

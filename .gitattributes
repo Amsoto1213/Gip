@@ -1,0 +1,4 @@
+# El equipo trabaja en Windows y Linux: fija los finales de línea de los scripts.
+*.sh   text eol=lf
+*.ps1  text eol=crlf
+*.dart text eol=lf
