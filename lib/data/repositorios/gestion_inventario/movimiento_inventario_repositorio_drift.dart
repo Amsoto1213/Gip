@@ -3,6 +3,7 @@ import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
@@ -10,8 +11,8 @@ import 'package:gip/data/local/base_local_drift.dart';
 
 /// [IMovimientoInventarioRepositorio] sobre la base local (drift), en la tabla
 /// única `movimientos_inventario` con columna `tipo` (DI-03). Los movimientos
-/// solo se agregan (RNF-15). Por ahora solo maneja ENTRADA (CUS-01); los
-/// demás tipos llegan con su caso de uso (DI-20).
+/// solo se agregan (RNF-15). Por ahora maneja ENTRADA (CUS-01) y SALIDA_VENTA
+/// (CUS-02); los demás tipos llegan con su caso de uso (DI-20, DI-21).
 class MovimientoInventarioRepositorioDrift
     implements IMovimientoInventarioRepositorio {
   MovimientoInventarioRepositorioDrift(this._base);
@@ -20,6 +21,7 @@ class MovimientoInventarioRepositorioDrift
 
   static const _tabla = 'movimientos_inventario';
   static const _tipoEntrada = 'ENTRADA';
+  static const _tipoSalidaVenta = 'SALIDA_VENTA';
 
   /// Nombres que comparte con el enum `estado_movimiento` de Supabase.
   static const _estados = {
@@ -44,6 +46,18 @@ class MovimientoInventarioRepositorioDrift
         estado: _estados[movimiento.getEstado()]!,
         costoUnitario: Value(movimiento.getCostoUnitario()),
         numeroFactura: Value(movimiento.getNumeroFactura()),
+      ),
+      SalidaVenta() => MovimientosInventarioCompanion.insert(
+        id: movimiento.getId(),
+        tiendaId: tienda.getId(),
+        itemId: movimiento.getItem().getId(),
+        tipo: _tipoSalidaVenta,
+        cantidad: movimiento.getCantidad(),
+        fecha: movimiento.getFecha(),
+        estado: _estados[movimiento.getEstado()]!,
+        costoUnitario: Value(movimiento.getCostoUnitario()),
+        ventaId: Value(movimiento.getVenta().getId()),
+        precioUnitario: Value(movimiento.getPrecioUnitario()),
       ),
       _ => throw UnsupportedError(
         'Tipo de movimiento no disponible todavía: ${movimiento.runtimeType}',
