@@ -6,6 +6,7 @@ import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
+import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
@@ -15,6 +16,9 @@ import 'package:mocktail/mocktail.dart';
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
 class SesionLocalFalsa extends Mock implements ISesionLocal {}
+
+class GestionarProductoFalso extends Mock
+    implements GestionarProductoCoordinator {}
 
 const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
 
@@ -41,6 +45,7 @@ void main() {
     iniciarSesion: IniciarSesionCoordinator(
       ServicioAcceso(autenticacion, sesionLocal),
     ),
+    gestionarProducto: GestionarProductoFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).
