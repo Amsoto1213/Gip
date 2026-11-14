@@ -1797,6 +1797,15 @@ class $MovimientosInventarioTable extends MovimientosInventario
       ).withConverter<Decimal?>(
         $MovimientosInventarioTable.$converterprecioUnitarion,
       );
+  static const VerificationMeta _motivoMeta = const VerificationMeta('motivo');
+  @override
+  late final GeneratedColumn<String> motivo = GeneratedColumn<String>(
+    'motivo',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1810,6 +1819,7 @@ class $MovimientosInventarioTable extends MovimientosInventario
     numeroFactura,
     ventaId,
     precioUnitario,
+    motivo,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1873,6 +1883,12 @@ class $MovimientosInventarioTable extends MovimientosInventario
       context.handle(
         _ventaIdMeta,
         ventaId.isAcceptableOrUnknown(data['venta_id']!, _ventaIdMeta),
+      );
+    }
+    if (data.containsKey('motivo')) {
+      context.handle(
+        _motivoMeta,
+        motivo.isAcceptableOrUnknown(data['motivo']!, _motivoMeta),
       );
     }
     return context;
@@ -1941,6 +1957,10 @@ class $MovimientosInventarioTable extends MovimientosInventario
               data['${effectivePrefix}precio_unitario'],
             ),
           ),
+      motivo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}motivo'],
+      ),
     );
   }
 
@@ -1976,6 +1996,7 @@ class FilaMovimientoInventario extends DataClass
   final String? numeroFactura;
   final String? ventaId;
   final Decimal? precioUnitario;
+  final String? motivo;
   const FilaMovimientoInventario({
     required this.id,
     required this.tiendaId,
@@ -1988,6 +2009,7 @@ class FilaMovimientoInventario extends DataClass
     this.numeroFactura,
     this.ventaId,
     this.precioUnitario,
+    this.motivo,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2027,6 +2049,9 @@ class FilaMovimientoInventario extends DataClass
         ),
       );
     }
+    if (!nullToAbsent || motivo != null) {
+      map['motivo'] = Variable<String>(motivo);
+    }
     return map;
   }
 
@@ -2051,6 +2076,9 @@ class FilaMovimientoInventario extends DataClass
       precioUnitario: precioUnitario == null && nullToAbsent
           ? const Value.absent()
           : Value(precioUnitario),
+      motivo: motivo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(motivo),
     );
   }
 
@@ -2071,6 +2099,7 @@ class FilaMovimientoInventario extends DataClass
       numeroFactura: serializer.fromJson<String?>(json['numeroFactura']),
       ventaId: serializer.fromJson<String?>(json['ventaId']),
       precioUnitario: serializer.fromJson<Decimal?>(json['precioUnitario']),
+      motivo: serializer.fromJson<String?>(json['motivo']),
     );
   }
   @override
@@ -2088,6 +2117,7 @@ class FilaMovimientoInventario extends DataClass
       'numeroFactura': serializer.toJson<String?>(numeroFactura),
       'ventaId': serializer.toJson<String?>(ventaId),
       'precioUnitario': serializer.toJson<Decimal?>(precioUnitario),
+      'motivo': serializer.toJson<String?>(motivo),
     };
   }
 
@@ -2103,6 +2133,7 @@ class FilaMovimientoInventario extends DataClass
     Value<String?> numeroFactura = const Value.absent(),
     Value<String?> ventaId = const Value.absent(),
     Value<Decimal?> precioUnitario = const Value.absent(),
+    Value<String?> motivo = const Value.absent(),
   }) => FilaMovimientoInventario(
     id: id ?? this.id,
     tiendaId: tiendaId ?? this.tiendaId,
@@ -2121,6 +2152,7 @@ class FilaMovimientoInventario extends DataClass
     precioUnitario: precioUnitario.present
         ? precioUnitario.value
         : this.precioUnitario,
+    motivo: motivo.present ? motivo.value : this.motivo,
   );
   FilaMovimientoInventario copyWithCompanion(
     MovimientosInventarioCompanion data,
@@ -2143,6 +2175,7 @@ class FilaMovimientoInventario extends DataClass
       precioUnitario: data.precioUnitario.present
           ? data.precioUnitario.value
           : this.precioUnitario,
+      motivo: data.motivo.present ? data.motivo.value : this.motivo,
     );
   }
 
@@ -2159,7 +2192,8 @@ class FilaMovimientoInventario extends DataClass
           ..write('costoUnitario: $costoUnitario, ')
           ..write('numeroFactura: $numeroFactura, ')
           ..write('ventaId: $ventaId, ')
-          ..write('precioUnitario: $precioUnitario')
+          ..write('precioUnitario: $precioUnitario, ')
+          ..write('motivo: $motivo')
           ..write(')'))
         .toString();
   }
@@ -2177,6 +2211,7 @@ class FilaMovimientoInventario extends DataClass
     numeroFactura,
     ventaId,
     precioUnitario,
+    motivo,
   );
   @override
   bool operator ==(Object other) =>
@@ -2192,7 +2227,8 @@ class FilaMovimientoInventario extends DataClass
           other.costoUnitario == this.costoUnitario &&
           other.numeroFactura == this.numeroFactura &&
           other.ventaId == this.ventaId &&
-          other.precioUnitario == this.precioUnitario);
+          other.precioUnitario == this.precioUnitario &&
+          other.motivo == this.motivo);
 }
 
 class MovimientosInventarioCompanion
@@ -2208,6 +2244,7 @@ class MovimientosInventarioCompanion
   final Value<String?> numeroFactura;
   final Value<String?> ventaId;
   final Value<Decimal?> precioUnitario;
+  final Value<String?> motivo;
   final Value<int> rowid;
   const MovimientosInventarioCompanion({
     this.id = const Value.absent(),
@@ -2221,6 +2258,7 @@ class MovimientosInventarioCompanion
     this.numeroFactura = const Value.absent(),
     this.ventaId = const Value.absent(),
     this.precioUnitario = const Value.absent(),
+    this.motivo = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MovimientosInventarioCompanion.insert({
@@ -2235,6 +2273,7 @@ class MovimientosInventarioCompanion
     this.numeroFactura = const Value.absent(),
     this.ventaId = const Value.absent(),
     this.precioUnitario = const Value.absent(),
+    this.motivo = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tiendaId = Value(tiendaId),
@@ -2255,6 +2294,7 @@ class MovimientosInventarioCompanion
     Expression<String>? numeroFactura,
     Expression<String>? ventaId,
     Expression<String>? precioUnitario,
+    Expression<String>? motivo,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2269,6 +2309,7 @@ class MovimientosInventarioCompanion
       if (numeroFactura != null) 'numero_factura': numeroFactura,
       if (ventaId != null) 'venta_id': ventaId,
       if (precioUnitario != null) 'precio_unitario': precioUnitario,
+      if (motivo != null) 'motivo': motivo,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2285,6 +2326,7 @@ class MovimientosInventarioCompanion
     Value<String?>? numeroFactura,
     Value<String?>? ventaId,
     Value<Decimal?>? precioUnitario,
+    Value<String?>? motivo,
     Value<int>? rowid,
   }) {
     return MovimientosInventarioCompanion(
@@ -2299,6 +2341,7 @@ class MovimientosInventarioCompanion
       numeroFactura: numeroFactura ?? this.numeroFactura,
       ventaId: ventaId ?? this.ventaId,
       precioUnitario: precioUnitario ?? this.precioUnitario,
+      motivo: motivo ?? this.motivo,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2351,6 +2394,9 @@ class MovimientosInventarioCompanion
         ),
       );
     }
+    if (motivo.present) {
+      map['motivo'] = Variable<String>(motivo.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2371,6 +2417,7 @@ class MovimientosInventarioCompanion
           ..write('numeroFactura: $numeroFactura, ')
           ..write('ventaId: $ventaId, ')
           ..write('precioUnitario: $precioUnitario, ')
+          ..write('motivo: $motivo, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5244,6 +5291,7 @@ typedef $$MovimientosInventarioTableCreateCompanionBuilder =
       Value<String?> numeroFactura,
       Value<String?> ventaId,
       Value<Decimal?> precioUnitario,
+      Value<String?> motivo,
       Value<int> rowid,
     });
 typedef $$MovimientosInventarioTableUpdateCompanionBuilder =
@@ -5259,6 +5307,7 @@ typedef $$MovimientosInventarioTableUpdateCompanionBuilder =
       Value<String?> numeroFactura,
       Value<String?> ventaId,
       Value<Decimal?> precioUnitario,
+      Value<String?> motivo,
       Value<int> rowid,
     });
 
@@ -5369,6 +5418,11 @@ class $$MovimientosInventarioTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
+  ColumnFilters<String> get motivo => $composableBuilder(
+    column: $table.motivo,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$ItemsInventarioTableFilterComposer get itemId {
     final $$ItemsInventarioTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -5470,6 +5524,11 @@ class $$MovimientosInventarioTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get motivo => $composableBuilder(
+    column: $table.motivo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ItemsInventarioTableOrderingComposer get itemId {
     final $$ItemsInventarioTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5560,6 +5619,9 @@ class $$MovimientosInventarioTableAnnotationComposer
         column: $table.precioUnitario,
         builder: (column) => column,
       );
+
+  GeneratedColumn<String> get motivo =>
+      $composableBuilder(column: $table.motivo, builder: (column) => column);
 
   $$ItemsInventarioTableAnnotationComposer get itemId {
     final $$ItemsInventarioTableAnnotationComposer composer = $composerBuilder(
@@ -5658,6 +5720,7 @@ class $$MovimientosInventarioTableTableManager
                 Value<String?> numeroFactura = const Value.absent(),
                 Value<String?> ventaId = const Value.absent(),
                 Value<Decimal?> precioUnitario = const Value.absent(),
+                Value<String?> motivo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MovimientosInventarioCompanion(
                 id: id,
@@ -5671,6 +5734,7 @@ class $$MovimientosInventarioTableTableManager
                 numeroFactura: numeroFactura,
                 ventaId: ventaId,
                 precioUnitario: precioUnitario,
+                motivo: motivo,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5686,6 +5750,7 @@ class $$MovimientosInventarioTableTableManager
                 Value<String?> numeroFactura = const Value.absent(),
                 Value<String?> ventaId = const Value.absent(),
                 Value<Decimal?> precioUnitario = const Value.absent(),
+                Value<String?> motivo = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MovimientosInventarioCompanion.insert(
                 id: id,
@@ -5699,6 +5764,7 @@ class $$MovimientosInventarioTableTableManager
                 numeroFactura: numeroFactura,
                 ventaId: ventaId,
                 precioUnitario: precioUnitario,
+                motivo: motivo,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
