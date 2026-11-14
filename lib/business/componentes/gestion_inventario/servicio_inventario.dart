@@ -1,6 +1,8 @@
 import 'package:decimal/decimal.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/merma.dart';
+import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -14,7 +16,8 @@ import 'package:uuid/uuid.dart';
 /// mantiene el stock con stock nuevo = stock anterior + cantidad con signo
 /// (ERS 3.2.1).
 ///
-/// Tiene [crearItem] (CUS-18) y la entrada de mercancía (CUS-01).
+/// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01) y la pérdida
+/// o devolución (CUS-03).
 /// `umbralRevisionConteo` está en el constructor de EA y lo usará CUS-04
 /// (DI-15).
 class ServicioInventario {
@@ -92,6 +95,37 @@ class ServicioInventario {
     );
     await aplicarMovimiento(tienda, entrada);
     return entrada;
+  }
+
+  /// Valida cantidad > 0 y motivo, obtiene el ítem, crea la [Merma] con id
+  /// nuevo y cantidad negativa (DA-19) y la aplica con [aplicarMovimiento]
+  /// (RF-03). [motivo] es nulo si el tendero no eligió ninguno: se rechaza con
+  /// "Datos no válidos" (CUS-03, paso 5; DI-22). Si la cantidad supera la
+  /// existencia se rechaza antes de abrir la transacción, con su propio
+  /// mensaje (DI-22). El nuevo stock se lee en
+  /// `merma.getItem().getStockActual()`.
+  Future<Merma> registrarMerma(
+    Tienda tienda,
+    Producto producto,
+    Decimal cantidad,
+    MotivoMerma? motivo,
+  ) async {
+    if (cantidad <= Decimal.zero || motivo == null) {
+      throw const ExcepcionDatosMermaNoValidos();
+    }
+    final item = await obtenerItem(tienda, producto);
+    if (!hayExistencia(item, cantidad)) {
+      throw const ExcepcionCantidadSuperaExistencia();
+    }
+    final merma = Merma(
+      const Uuid().v4(),
+      item,
+      -cantidad,
+      DateTime.now().toUtc(),
+      motivo,
+    );
+    await aplicarMovimiento(tienda, merma);
+    return merma;
   }
 
   /// Dentro de unidadTrabajo.ejecutar: guarda el movimiento y el nuevo stock

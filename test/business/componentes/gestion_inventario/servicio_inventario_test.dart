@@ -4,6 +4,8 @@ import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/merma.dart';
+import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -329,6 +331,127 @@ void main() {
         servicio.costoDifiereDelHistorico(tienda, sinItem(), d('1')),
         throwsA(isA<ExcepcionProductoSinInventario>()),
       );
+    });
+  });
+
+  group('registrarMerma (CUS-03)', () {
+    test('el stock baja en la cantidad y la merma queda negativa', () async {
+      final merma = await servicio.registrarMerma(
+        tienda,
+        aceite,
+        d('3'),
+        MotivoMerma.danado,
+      );
+
+      expect(merma.getCantidad(), d('-3'));
+      expect(merma.getItem().getStockActual(), d('5'));
+      expect(await stockGuardado(), d('5'));
+      expect(merma.getId(), matches(uuidV4));
+      expect(merma.getFecha().isUtc, isTrue);
+    });
+
+    test('el motivo queda guardado con el movimiento', () async {
+      await servicio.registrarMerma(
+        tienda,
+        aceite,
+        d('1'),
+        MotivoMerma.devueltoProveedor,
+      );
+
+      final guardada = movimientos.de(tienda).single as Merma;
+      expect(guardada.getMotivo(), MotivoMerma.devueltoProveedor);
+      expect(guardada.getCantidad(), d('-1'));
+    });
+
+    test('movimiento e ítem se guardan en una sola transacción', () async {
+      await servicio.registrarMerma(tienda, aceite, d('1'), MotivoMerma.otro);
+      expect(movimientos.guardadosEnTransaccion, [true]);
+      expect(items.guardadosEnTransaccion, [true]);
+    });
+
+    test('acepta cantidades con decimales (kilos, libras)', () async {
+      final merma = await servicio.registrarMerma(
+        tienda,
+        aceite,
+        d('2.5'),
+        MotivoMerma.vencido,
+      );
+      expect(merma.getItem().getStockActual(), d('5.5'));
+    });
+
+    test('permite sacar justo lo que hay (stock en cero)', () async {
+      await servicio.registrarMerma(tienda, aceite, d('8'), MotivoMerma.otro);
+      expect(await stockGuardado(), d('0'));
+    });
+
+    for (final cantidad in ['0', '-1']) {
+      test('rechaza cantidad $cantidad y no guarda nada', () async {
+        await expectLater(
+          servicio.registrarMerma(
+            tienda,
+            aceite,
+            d(cantidad),
+            MotivoMerma.vencido,
+          ),
+          throwsA(
+            isA<ExcepcionDatosMermaNoValidos>().having(
+              (e) => e.mensaje,
+              'mensaje',
+              'La cantidad debe ser mayor que cero y el motivo es obligatorio',
+            ),
+          ),
+        );
+        expect(movimientos.de(tienda), isEmpty);
+        expect(await stockGuardado(), d('8'));
+      });
+    }
+
+    test('rechaza el motivo vacío y no guarda nada', () async {
+      await expectLater(
+        servicio.registrarMerma(tienda, aceite, d('1'), null),
+        throwsA(isA<ExcepcionDatosMermaNoValidos>()),
+      );
+      expect(movimientos.de(tienda), isEmpty);
+      expect(await stockGuardado(), d('8'));
+    });
+
+    test(
+      'cantidad mayor a la existencia: rechazada sin guardar nada',
+      () async {
+        await expectLater(
+          servicio.registrarMerma(tienda, aceite, d('8.5'), MotivoMerma.danado),
+          throwsA(
+            isA<ExcepcionCantidadSuperaExistencia>().having(
+              (e) => e.mensaje,
+              'mensaje',
+              'La cantidad supera la existencia',
+            ),
+          ),
+        );
+        expect(movimientos.de(tienda), isEmpty);
+        expect(movimientos.guardadosEnTransaccion, isEmpty);
+        expect(items.guardadosEnTransaccion, isEmpty);
+        expect(await stockGuardado(), d('8'));
+      },
+    );
+
+    test('rechaza un producto sin ítem de inventario', () async {
+      await expectLater(
+        servicio.registrarMerma(tienda, sinItem(), d('1'), MotivoMerma.otro),
+        throwsA(isA<ExcepcionProductoSinInventario>()),
+      );
+      expect(movimientos.de(tienda), isEmpty);
+    });
+
+    test('si falla el guardado no se guarda nada (rollback)', () async {
+      items.fallar = true;
+      await expectLater(
+        servicio.registrarMerma(tienda, aceite, d('2'), MotivoMerma.vencido),
+        throwsA(isA<StateError>()),
+      );
+      items.fallar = false;
+      expect(movimientos.de(tienda), isEmpty);
+      expect(await stockGuardado(), d('8'));
     });
   });
 
