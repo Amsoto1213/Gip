@@ -47,4 +47,18 @@ class IniciarSesionViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Sale de la sesión y el router vuelve al inicio de sesión. Si Auth falla
+  /// (p. ej. sin internet), igual se sale: el usuario guardado ya se borró.
+  Future<void> cerrarSesion() async {
+    try {
+      await _coordinator.cerrarSesion();
+    } catch (_) {
+      // La sesión local ya no está; no hay nada que mostrar al tendero.
+    } finally {
+      _usuarioActivo = null;
+      _error = null;
+      notifyListeners();
+    }
+  }
 }

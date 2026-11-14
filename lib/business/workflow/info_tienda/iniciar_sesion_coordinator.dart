@@ -13,4 +13,7 @@ class IniciarSesionCoordinator {
 
   /// Usuario de la sesión guardada, o null si hay que iniciar sesión.
   Future<UsuarioActivo?> sesionGuardada() => _servicioAcceso.sesionGuardada();
+
+  /// Cierra la sesión: borra el usuario guardado y la sesión de Auth.
+  Future<void> cerrarSesion() => _servicioAcceso.cerrarSesion();
 }

@@ -16,6 +16,8 @@ class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
 class SesionLocalFalsa extends Mock implements ISesionLocal {}
 
+const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
+
 void main() {
   final UsuarioActivo carmen = (
     usuario: Administrador('2222', 'Carmen', '1000000001'),
@@ -32,6 +34,7 @@ void main() {
     sesionLocal = SesionLocalFalsa();
     when(() => sesionLocal.guardar(any())).thenAnswer((_) async {});
     when(() => sesionLocal.borrar()).thenAnswer((_) async {});
+    when(() => autenticacion.cerrarSesion()).thenAnswer((_) async {});
   });
 
   Widget app() => GipApp(
@@ -40,32 +43,70 @@ void main() {
     ),
   );
 
+  /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).
+  Future<void> abrir(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app());
+  }
+
+  Finder barra() => find.byType(NavigationBar);
+
+  /// Las 5 pestañas de la navegación principal están a la vista.
+  void expectCincoPestanas() {
+    expect(barra(), findsOneWidget);
+    for (final seccion in secciones) {
+      expect(
+        find.descendant(of: barra(), matching: find.text(seccion)),
+        findsOneWidget,
+      );
+    }
+  }
+
+  Finder titulo(String texto) => find.descendant(
+    of: find.byType(PantallaSeccion),
+    matching: find.text(texto),
+  );
+
+  /// Abre la app con la sesión guardada y va a la pestaña Negocio.
+  Future<void> entrarANegocio(WidgetTester tester) async {
+    when(() => autenticacion.haySesionGuardada()).thenReturn(true);
+    when(() => sesionLocal.leer()).thenAnswer((_) async => carmen);
+    await abrir(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: barra(), matching: find.text('Negocio')),
+    );
+    await tester.pumpAndSettle();
+    expect(titulo('Negocio'), findsOneWidget);
+  }
+
   testWidgets('sin sesión guardada muestra el inicio de sesión', (
     tester,
   ) async {
     when(() => autenticacion.haySesionGuardada()).thenReturn(false);
 
-    await tester.pumpWidget(app());
+    await abrir(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('Entrar'), findsOneWidget);
+    expect(barra(), findsNothing);
   });
 
-  testWidgets('con sesión guardada entra directo', (tester) async {
+  testWidgets('con sesión guardada entra directo a las 5 pestañas', (
+    tester,
+  ) async {
     when(() => autenticacion.haySesionGuardada()).thenReturn(true);
     when(() => sesionLocal.leer()).thenAnswer((_) async => carmen);
 
-    await tester.pumpWidget(app());
+    await abrir(tester);
     await tester.pumpAndSettle();
 
+    expectCincoPestanas();
+    expect(titulo('Vender'), findsOneWidget);
     expect(find.text('Hola, Carmen'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(PantallaSeccion),
-        matching: find.text('Vender'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Entrar'), findsNothing);
   });
 
   testWidgets('con la clave mala muestra el mensaje y se queda', (
@@ -75,7 +116,7 @@ void main() {
     when(() => autenticacion.iniciarSesion(any(), any()))
         .thenThrow(const ExcepcionCredencialesInvalidas());
 
-    await tester.pumpWidget(app());
+    await abrir(tester);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'carmen@gip.test');
     await tester.enterText(find.byType(TextField).at(1), 'mala');
@@ -86,18 +127,50 @@ void main() {
     expect(find.text('Entrar'), findsOneWidget);
   });
 
-  testWidgets('con datos correctos entra', (tester) async {
+  testWidgets('con datos correctos entra a Vender', (tester) async {
     when(() => autenticacion.haySesionGuardada()).thenReturn(false);
     when(() => autenticacion.iniciarSesion('carmen@gip.test', 'gip12345'))
         .thenAnswer((_) async => carmen);
 
-    await tester.pumpWidget(app());
+    await abrir(tester);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'carmen@gip.test');
     await tester.enterText(find.byType(TextField).at(1), 'gip12345');
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
 
+    expectCincoPestanas();
+    expect(titulo('Vender'), findsOneWidget);
     expect(find.text('Hola, Carmen'), findsOneWidget);
   });
+
+  testWidgets('Cerrar sesión en Negocio vuelve al inicio de sesión', (
+    tester,
+  ) async {
+    await entrarANegocio(tester);
+
+    await tester.tap(find.text('Cerrar sesión'));
+    await tester.pumpAndSettle();
+
+    verify(() => sesionLocal.borrar()).called(1);
+    verify(() => autenticacion.cerrarSesion()).called(1);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(barra(), findsNothing);
+  });
+
+  testWidgets(
+    'sin internet, Cerrar sesión igual borra la sesión local y sale',
+    (tester) async {
+      when(() => autenticacion.cerrarSesion())
+          .thenThrow(const ExcepcionSinConexion());
+      await entrarANegocio(tester);
+
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      verify(() => sesionLocal.borrar()).called(1);
+      expect(find.text('Entrar'), findsOneWidget);
+      expect(barra(), findsNothing);
+    },
+  );
 }
