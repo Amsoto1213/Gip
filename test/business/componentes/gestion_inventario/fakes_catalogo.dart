@@ -81,9 +81,19 @@ class ProductoRepositorioFalso implements IProductoRepositorio, Restaurable {
       _de(tienda).values.toList()
         ..sort((a, b) => a.getNombre().compareTo(b.getNombre()));
 
+  /// Textos con que se llamó a buscarPorNombre.
+  final List<String> textosBuscados = [];
+
+  /// Coincidencia parcial sin mayúsculas (las tildes las prueba el
+  /// repositorio drift).
   @override
-  Future<List<Producto>> buscarPorNombre(Tienda tienda, String texto) =>
-      throw UnimplementedError();
+  Future<List<Producto>> buscarPorNombre(Tienda tienda, String texto) async {
+    textosBuscados.add(texto);
+    final buscado = texto.toLowerCase();
+    return (await listar(tienda))
+        .where((p) => p.getNombre().toLowerCase().contains(buscado))
+        .toList();
+  }
 
   @override
   Future<Producto?> buscarPorCodigoProducto(Tienda tienda, String valor) =>
