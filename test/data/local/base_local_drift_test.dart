@@ -70,31 +70,85 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    test('de la versión 2 a la 3 crea movimientos_inventario', () async {
+    /// Quita lo que agregó la versión 4 (CUS-02).
+    Future<void> bajarDeLaVersion4(BaseLocalDrift base) async {
+      for (final t in ['formas_pago', 'ventas', 'movimientos_caja', 'cajas']) {
+        await base.customStatement('DROP TABLE $t');
+      }
+    }
+
+    test('de la versión 2 a la actual crea movimientos_inventario', () async {
       final archivo = File('${carpeta.path}/gip.sqlite');
 
       // Deja la base como estaba en la versión 2 (CUS-18).
       final v2 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion4(v2);
       await v2.customStatement('DROP TABLE movimientos_inventario');
       await v2.customStatement('PRAGMA user_version = 2');
       expect(await tablas(v2), isNot(contains('movimientos_inventario')));
       await v2.close();
 
-      final v3 = BaseLocalDrift(NativeDatabase(archivo));
-      expect(v3.schemaVersion, 3);
+      final actual = BaseLocalDrift(NativeDatabase(archivo));
+      expect(actual.schemaVersion, 4);
       expect(
-        await tablas(v3),
+        await tablas(actual),
         containsAll([
           'movimientos_inventario',
           'movimientos_inventario_tienda_idx',
           'movimientos_inventario_item_tipo_fecha_idx',
           'productos',
           'items_inventario',
+          'ventas',
         ]),
       );
-      final version = await v3.customSelect('PRAGMA user_version').getSingle();
-      expect(version.read<int>('user_version'), 3);
+      final version = await actual
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+      expect(version.read<int>('user_version'), 4);
+      await actual.close();
+    });
+
+    test('de la versión 3 a la 4 crea caja y ventas y agrega las columnas de '
+        'SALIDA_VENTA', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      // Deja la base como estaba en la versión 3 (CUS-01).
+      final v3 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion4(v3);
+      await v3.customStatement('DROP TABLE movimientos_inventario');
+      await v3.customStatement(
+        'CREATE TABLE movimientos_inventario (id TEXT NOT NULL, '
+        'tienda_id TEXT NOT NULL, item_id TEXT NOT NULL REFERENCES '
+        'items_inventario (id), tipo TEXT NOT NULL, cantidad TEXT NOT NULL, '
+        'fecha TEXT NOT NULL, estado TEXT NOT NULL, costo_unitario TEXT NULL, '
+        'numero_factura TEXT NULL, PRIMARY KEY (id))',
+      );
+      await v3.customStatement('PRAGMA user_version = 3');
       await v3.close();
+
+      final v4 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(
+        await tablas(v4),
+        containsAll([
+          'cajas',
+          'cajas_tienda_idx',
+          'movimientos_caja',
+          'movimientos_caja_tienda_idx',
+          'movimientos_caja_caja_idx',
+          'ventas',
+          'ventas_tienda_fecha_idx',
+          'formas_pago',
+          'formas_pago_tienda_idx',
+          'formas_pago_venta_idx',
+        ]),
+      );
+      final columnas =
+          (await v4
+                  .customSelect('PRAGMA table_info(movimientos_inventario)')
+                  .get())
+              .map((f) => f.read<String>('name'));
+      expect(columnas, containsAll(['venta_id', 'precio_unitario']));
+      await v4.close();
     });
   });
 }
