@@ -39,6 +39,7 @@ jobs:
 
       # Firma fija: sin esto cada build sale firmado con una llave distinta y el teléfono
       # obliga a desinstalar la app (y se pierde la base local) para instalar la nueva.
+      # Gradle la toma de GIP_KEYSTORE (android/app/build.gradle.kts), no de ~/.android.
       - name: Llave de firma fija
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
@@ -46,8 +47,8 @@ jobs:
           if [ -z "$KEYSTORE_B64" ]; then
             echo "::warning::Falta el secreto ANDROID_DEBUG_KEYSTORE_B64: cada APK tendrá otra firma."
           else
-            mkdir -p ~/.android
-            echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/gip.keystore"
+            echo "GIP_KEYSTORE=$RUNNER_TEMP/gip.keystore" >> "$GITHUB_ENV"
           fi
 
       # El teléfono no ve el Supabase local de nadie: el APK apunta al proyecto de pruebas en Supabase Cloud.
@@ -62,6 +63,21 @@ jobs:
         run: |
           flutter build apk --release --dart-define-from-file=.env.json
           cp build/app/outputs/flutter-apk/app-release.apk "gip-${GITHUB_SHA::7}.apk"
+
+      # Si el APK no salió con la llave fija, no se publica: instalarlo obligaría a desinstalar la app.
+      - name: Verificar la firma
+        if: env.GIP_KEYSTORE != ''
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          esperada=$(keytool -list -v -keystore "$GIP_KEYSTORE" -storepass android -alias androiddebugkey \
+            | grep -m1 'SHA256:' | awk '{print $2}' | tr -d ':' | tr 'A-F' 'a-f')
+          obtenida=$("$apksigner" verify --print-certs gip-*.apk | grep -m1 'SHA-256 digest' | awk '{print $NF}')
+          echo "Firma de la llave fija: $esperada"
+          echo "Firma del APK:          $obtenida"
+          if [ -z "$esperada" ] || [ "$esperada" != "$obtenida" ]; then
+            echo "::error::El APK no salió firmado con la llave fija."
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:

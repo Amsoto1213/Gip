@@ -29,6 +29,20 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // Llave fija del equipo (docs/probar-en-telefono.md). Si GIP_KEYSTORE apunta a ella, la firma de
+        // depuración la usa; sin la variable, cada máquina firma con una llave suya y el teléfono obliga a
+        // desinstalar la app (y se pierde la base local) al instalar un APK firmado con otra.
+        System.getenv("GIP_KEYSTORE")?.let { ruta ->
+            getByName("debug") {
+                storeFile = file(ruta)
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
