@@ -2,6 +2,8 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
+import 'package:gip/presentation/comun/icono_paquete.dart';
+import 'package:gip/presentation/comun/tema/tipografia_gip.dart';
 
 /// Piezas comunes de las pantallas que mueven el surtido de un producto:
 /// Entrada de mercancía (CUS-01) y Pérdida o devolución (CUS-03). Cada pantalla
@@ -33,6 +35,7 @@ class EncabezadoSurtido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final ancho = MediaQuery.sizeOf(context).width >= 720;
     return Row(
       children: [
         IconButton(
@@ -48,15 +51,26 @@ class EncabezadoSurtido extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SURTIDO',
-                style: tema.textTheme.labelMedium?.copyWith(
-                  color: tema.colorScheme.onSurfaceVariant,
-                  letterSpacing: 1.2,
-                ),
+                ancho ? 'Surtido' : 'SURTIDO',
+                style: ancho
+                    ? tema.textTheme.bodyMedium?.copyWith(
+                        color: tema.colorScheme.onSurfaceVariant,
+                      )
+                    : tema.textTheme.labelMedium?.copyWith(
+                        color: tema.colorScheme.onSurfaceVariant,
+                        letterSpacing: 1.2,
+                      ),
               ),
+              // 30 px en la web; 23 px en pantallas internas del móvil
+              // (tokens.md).
               Semantics(
                 header: true,
-                child: Text(titulo, style: tema.textTheme.headlineLarge),
+                child: Text(
+                  titulo,
+                  style: ancho
+                      ? tema.textTheme.headlineLarge
+                      : tema.textTheme.headlineMedium,
+                ),
               ),
             ],
           ),
@@ -113,10 +127,8 @@ class TarjetaProductoMovimiento extends StatelessWidget {
                 color: tema.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.inventory_2_outlined,
-                color: tema.colorScheme.primary,
-              ),
+              alignment: Alignment.center,
+              child: IconoPaquete(color: tema.colorScheme.primary),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -170,20 +182,37 @@ class SelectorCantidad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    Widget paso(int valor, IconData icono, String ayuda) =>
-        IconButton.filledTonal(
-          key: Key('${prefijoClave}_cantidad_${valor > 0 ? 'mas' : 'menos'}'),
-          onPressed: habilitado ? () => onSumar(valor) : null,
-          tooltip: ayuda,
-          iconSize: 28,
-          style: IconButton.styleFrom(
-            minimumSize: const Size(56, 56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          icon: Icon(icono),
-        );
+    final esquema = tema.colorScheme;
+    // Botón gris claro (fondo) con ícono oscuro; se oscurece con el mouse o el
+    // foco (borde) y al presionar (bordeFuerte), como en los mockups.
+    final estilo = ButtonStyle(
+      minimumSize: const WidgetStatePropertyAll(Size(56, 56)),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+      backgroundColor: WidgetStateProperty.resolveWith(
+        (estados) => estados.contains(WidgetState.pressed)
+            ? esquema.outline
+            : estados.contains(WidgetState.hovered) ||
+                  estados.contains(WidgetState.focused)
+            ? esquema.outlineVariant
+            : tema.scaffoldBackgroundColor,
+      ),
+      foregroundColor: WidgetStateProperty.resolveWith(
+        (estados) => estados.contains(WidgetState.disabled)
+            ? esquema.onSurfaceVariant.withValues(alpha: 0.5)
+            : esquema.onSurface,
+      ),
+    );
+    Widget paso(int valor, IconData icono, String ayuda) => IconButton(
+      key: Key('${prefijoClave}_cantidad_${valor > 0 ? 'mas' : 'menos'}'),
+      onPressed: habilitado ? () => onSumar(valor) : null,
+      tooltip: ayuda,
+      iconSize: 28,
+      style: estilo,
+      icon: Icon(icono),
+    );
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -202,9 +231,10 @@ class SelectorCantidad extends StatelessWidget {
               onChanged: onCambio,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.numberWithOptions(decimal: decimales),
-              style: tema.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              // Archivo 800 grande, con cifras tabulares (tokens.md).
+              style: tema.textTheme.headlineLarge
+                  ?.copyWith(fontSize: 40, height: 1.1)
+                  .cifrasTabulares,
               decoration: const InputDecoration(
                 hintText: '0',
                 border: InputBorder.none,
@@ -269,23 +299,21 @@ class FilaResumen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final estilo = destacada
-        ? tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)
-        : tema.textTheme.bodyLarge;
+    final textos = Theme.of(context).textTheme;
+    // Valor en negrita; el destacado ("Quedará en", "Total de la compra") en
+    // Archivo grande, como en los mockups.
+    final estiloEtiqueta = destacada
+        ? textos.titleMedium?.copyWith(fontWeight: FontWeight.w700)
+        : textos.bodyLarge;
+    final estiloValor = destacada
+        ? textos.headlineMedium
+        : textos.bodyLarge?.copyWith(fontWeight: FontWeight.w700);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Expanded(child: Text(etiqueta, style: estilo)),
-          Text(
-            valor,
-            style: destacada
-                ? tema.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  )
-                : estilo,
-          ),
+          Expanded(child: Text(etiqueta, style: estiloEtiqueta)),
+          Text(valor, style: estiloValor?.cifrasTabulares),
         ],
       ),
     );

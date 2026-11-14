@@ -194,7 +194,6 @@ class _PerdidaViewState extends State<PerdidaView> {
         _SelectorMotivo(
           seleccionado: vm.motivo,
           habilitado: habilitado,
-          columnas: ancho ? 4 : 2,
           onElegir: (motivo) {
             // Cierra el teclado de la cantidad al elegir el motivo.
             FocusScope.of(context).unfocus();
@@ -253,18 +252,53 @@ class _SelectorMotivo extends StatelessWidget {
   const _SelectorMotivo({
     required this.seleccionado,
     required this.habilitado,
-    required this.columnas,
     required this.onElegir,
   });
 
   final MotivoMerma? seleccionado;
   final bool habilitado;
-  final int columnas;
   final ValueChanged<MotivoMerma> onElegir;
 
+  static const _separacion = 12.0;
+
+  /// Una fila de 4 (wPerdida) si en cada opción cabe la palabra más larga de
+  /// los motivos; si no, 2 x 2 (mPerdida); en una pantalla muy angosta o con
+  /// letra muy grande, una por fila. Así ninguna palabra se corta
+  /// ("Devuelto al / proveedor").
   @override
   Widget build(BuildContext context) {
-    const separacion = 12.0;
+    final estilo = _OpcionMotivo.estiloTexto(context);
+    final escala = MediaQuery.textScalerOf(context);
+    var palabraMasLarga = 0.0;
+    for (final motivo in MotivoMerma.values) {
+      for (final palabra in _nombreMotivo(motivo).split(' ')) {
+        final medida = TextPainter(
+          text: TextSpan(text: palabra, style: estilo),
+          textDirection: TextDirection.ltr,
+          textScaler: escala,
+          maxLines: 1,
+        )..layout();
+        if (medida.width > palabraMasLarga) palabraMasLarga = medida.width;
+        medida.dispose();
+      }
+    }
+    final anchoNecesario = _OpcionMotivo.anchoFijo + palabraMasLarga.ceil() + 1;
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        double anchoCon(int columnas) =>
+            (restricciones.maxWidth - (columnas - 1) * _separacion) / columnas;
+        final columnas = anchoCon(4) >= anchoNecesario
+            ? 4
+            : anchoCon(2) >= anchoNecesario
+            ? 2
+            : 1;
+        return _cuadricula(columnas);
+      },
+    );
+  }
+
+  Widget _cuadricula(int columnas) {
+    const separacion = _separacion;
     final filas = <Widget>[];
     const motivos = MotivoMerma.values;
     for (var i = 0; i < motivos.length; i += columnas) {
@@ -314,6 +348,18 @@ class _OpcionMotivo extends StatelessWidget {
   final bool habilitado;
   final ValueChanged<MotivoMerma> onElegir;
 
+  static const _relleno = 12.0;
+  static const _icono = 20.0;
+  static const _espacio = 10.0;
+
+  /// Ancho de la opción sin contar el texto: relleno, radio y espacio.
+  static const anchoFijo = 2 * _relleno + _icono + _espacio;
+
+  /// Texto de la opción: Inter 15 en negrita, como en los mockups.
+  static TextStyle? estiloTexto(BuildContext context) =>
+      Theme.of(context).textTheme.bodyMedium
+          ?.copyWith(fontWeight: FontWeight.w700, height: 1.2);
+
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
@@ -337,24 +383,28 @@ class _OpcionMotivo extends StatelessWidget {
           customBorder: forma,
           onTap: habilitado ? () => onElegir(motivo) : null,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 56),
+            constraints: const BoxConstraints(minHeight: 58),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: _relleno,
+                vertical: 10,
+              ),
               child: Row(
                 children: [
                   Icon(
                     seleccionada
                         ? Icons.radio_button_checked
                         : Icons.radio_button_unchecked,
+                    size: _icono,
                     color: seleccionada
                         ? esquema.primary
                         : esquema.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: _espacio),
                   Expanded(
                     child: Text(
                       _nombreMotivo(motivo),
-                      style: tema.textTheme.titleMedium,
+                      style: estiloTexto(context),
                     ),
                   ),
                 ],
