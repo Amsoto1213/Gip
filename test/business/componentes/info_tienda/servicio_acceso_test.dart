@@ -141,6 +141,18 @@ void main() {
     verify(() => autenticacion.cerrarSesion()).called(1);
   });
 
+  test('cerrarSesion borra el usuario guardado aunque Auth falle', () async {
+    when(() => autenticacion.cerrarSesion())
+        .thenThrow(const ExcepcionSinConexion());
+
+    await expectLater(
+      servicio.cerrarSesion(),
+      throwsA(isA<ExcepcionSinConexion>()),
+    );
+
+    verify(() => sesionLocal.borrar()).called(1);
+  });
+
   group('exigirPropietario', () {
     test('deja pasar al administrador', () {
       servicio.exigirPropietario(carmen.usuario);

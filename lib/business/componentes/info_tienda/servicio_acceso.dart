@@ -42,9 +42,14 @@ class ServicioAcceso {
     return _sesionLocal.leer();
   }
 
+  /// Borra primero el usuario guardado en el dispositivo: aunque Auth falle
+  /// (p. ej. sin internet), al volver a abrir la app no entra sola.
   Future<void> cerrarSesion() async {
-    await _sesionLocal.borrar();
-    await _autenticacion.cerrarSesion();
+    try {
+      await _sesionLocal.borrar();
+    } finally {
+      await _autenticacion.cerrarSesion();
+    }
   }
 
   bool _esPropietario(Usuario usuario) => usuario is Administrador;
