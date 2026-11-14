@@ -3,11 +3,14 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view_model.dart';
+import 'package:gip/presentation/surtido/perdida_view.dart';
+import 'package:gip/presentation/surtido/perdida_view_model.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:gip/presentation/surtido/surtido_view.dart';
@@ -27,6 +30,9 @@ const rutaBuscarProducto = '$rutaPrincipalSurtido/buscar';
 
 /// Pantalla Entrada de mercancía (CUS-01).
 const rutaEntradaMercancia = '$rutaPrincipalSurtido/entrada';
+
+/// Pantalla Pérdida o devolución (CUS-03).
+const rutaPerdida = '$rutaPrincipalSurtido/perdida';
 
 /// Rama de la sección Surtido en la navegación principal. Las pantallas de la
 /// sección se agregan aquí como rutas hijas.
@@ -61,6 +67,16 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
           ),
         ),
         GoRoute(
+          path: 'perdida',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => PerdidaViewModel(
+              context.read<RegistrarPerdidaCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
+            ),
+            child: const PerdidaView(),
+          ),
+        ),
+        GoRoute(
           path: 'producto',
           builder: (context, state) => ChangeNotifierProvider(
             create: (context) => ProductoViewModel(
@@ -91,7 +107,7 @@ Future<void> abrirProductoNuevo(BuildContext context) =>
 Future<void> abrirProductoParaEditar(BuildContext context, Producto producto) =>
     context.push<void>(rutaProducto, extra: producto);
 
-/// Abre Buscar producto para elegir uno (CUS-06 → CUS-01). Termina con el
+/// Abre Buscar producto para elegir uno (CUS-06 → CUS-01, CUS-03). Termina con el
 /// producto elegido, o null si el tendero volvió sin elegir.
 Future<Producto?> elegirProducto(BuildContext context) =>
     context.push<Producto>(rutaBuscarProducto, extra: ModoBusqueda.seleccionar);
@@ -99,3 +115,6 @@ Future<Producto?> elegirProducto(BuildContext context) =>
 /// Abre la pantalla Entrada de mercancía.
 void abrirEntradaMercancia(BuildContext context) =>
     context.push(rutaEntradaMercancia);
+
+/// Abre la pantalla Pérdida o devolución.
+void abrirPerdida(BuildContext context) => context.push(rutaPerdida);

@@ -3,8 +3,8 @@ import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 
 /// Sección Surtido (pendiente: ver `docs/ui/pantallas.md`). Por ahora abre
-/// Entrada de mercancía (CUS-01), Buscar producto (CUS-06) y Producto
-/// (CUS-18).
+/// Entrada de mercancía (CUS-01), Pérdida o devolución (CUS-03), Buscar
+/// producto (CUS-06) y Producto (CUS-18).
 class SurtidoView extends StatelessWidget {
   const SurtidoView({super.key});
 
@@ -18,6 +18,13 @@ class SurtidoView extends StatelessWidget {
         onPressed: () => abrirEntradaMercancia(context),
         icon: const Icon(Icons.local_shipping_outlined),
         label: const Text('Registrar entrada'),
+      ),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
+        key: const Key('surtido_registrar_perdida'),
+        onPressed: () => abrirPerdida(context),
+        icon: const Icon(Icons.remove_circle_outline),
+        label: const Text('Registrar pérdida'),
       ),
       const SizedBox(height: 12),
       OutlinedButton.icon(
