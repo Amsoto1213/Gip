@@ -2,9 +2,12 @@ import 'package:flutter/widgets.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
+import 'package:gip/presentation/surtido/entrada_mercancia_view.dart';
+import 'package:gip/presentation/surtido/entrada_mercancia_view_model.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:gip/presentation/surtido/surtido_view.dart';
@@ -17,9 +20,13 @@ const rutaPrincipalSurtido = '/surtido';
 /// [Producto] en `extra` lo edita (así la abrirá CUS-06, DI-16).
 const rutaProducto = '$rutaPrincipalSurtido/producto';
 
-/// Pantalla Buscar producto (CUS-06, por nombre). Al seleccionar abre
-/// [rutaProducto] para editar.
+/// Pantalla Buscar producto (CUS-06, por nombre). Con [ModoBusqueda] en
+/// `extra` decide si al tocar un resultado abre [rutaProducto] para editar
+/// (por defecto) o lo devuelve (seleccionar, DI-20).
 const rutaBuscarProducto = '$rutaPrincipalSurtido/buscar';
+
+/// Pantalla Entrada de mercancía (CUS-01).
+const rutaEntradaMercancia = '$rutaPrincipalSurtido/entrada';
 
 /// Rama de la sección Surtido en la navegación principal. Las pantallas de la
 /// sección se agregan aquí como rutas hijas.
@@ -31,12 +38,26 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
       routes: [
         GoRoute(
           path: 'buscar',
-          builder: (context, _) => ChangeNotifierProvider(
+          builder: (context, state) => ChangeNotifierProvider(
             create: (context) => BuscarProductoViewModel(
               context.read<BuscarProductoCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
             ),
-            child: const BuscarProductoView(),
+            child: BuscarProductoView(
+              modo: state.extra is ModoBusqueda
+                  ? state.extra! as ModoBusqueda
+                  : ModoBusqueda.editar,
+            ),
+          ),
+        ),
+        GoRoute(
+          path: 'entrada',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => EntradaMercanciaViewModel(
+              context.read<RegistrarEntradaMercanciaCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
+            ),
+            child: const EntradaMercanciaView(),
           ),
         ),
         GoRoute(
@@ -69,3 +90,12 @@ Future<void> abrirProductoNuevo(BuildContext context) =>
 /// al volver.
 Future<void> abrirProductoParaEditar(BuildContext context, Producto producto) =>
     context.push<void>(rutaProducto, extra: producto);
+
+/// Abre Buscar producto para elegir uno (CUS-06 → CUS-01). Termina con el
+/// producto elegido, o null si el tendero volvió sin elegir.
+Future<Producto?> elegirProducto(BuildContext context) =>
+    context.push<Producto>(rutaBuscarProducto, extra: ModoBusqueda.seleccionar);
+
+/// Abre la pantalla Entrada de mercancía.
+void abrirEntradaMercancia(BuildContext context) =>
+    context.push(rutaEntradaMercancia);
