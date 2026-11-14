@@ -12,9 +12,13 @@ class MovimientoInventarioRepositorioPendiente
 
   @override
   Future<void> guardar(Tienda tienda, MovimientoInventario movimiento) =>
-      throw UnsupportedError('Movimientos de inventario no disponibles todavía');
+      throw UnsupportedError(
+        'Movimientos de inventario no disponibles todavía',
+      );
 
   @override
   Future<EntradaMercancia?> buscarUltimaEntrada(ItemInventario item) =>
-      throw UnsupportedError('Movimientos de inventario no disponibles todavía');
+      throw UnsupportedError(
+        'Movimientos de inventario no disponibles todavía',
+      );
 }
