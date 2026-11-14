@@ -49,6 +49,10 @@ class ServicioInventario {
     return item;
   }
 
+  /// Verdadero si el stock del ítem alcanza para [cantidad] (RN-01).
+  bool hayExistencia(ItemInventario item, Decimal cantidad) =>
+      item.getStockActual() >= cantidad;
+
   /// Compara [costoUnitario] con el de la última entrada VIGENTE del ítem.
   /// Sin entradas anteriores no hay advertencia. No bloquea (IE-02).
   Future<bool> costoDifiereDelHistorico(
