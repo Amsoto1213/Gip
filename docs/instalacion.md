@@ -49,7 +49,7 @@ En esa carpeta: `claude`, y pegan este mensaje:
 ```text
 Instala las herramientas del proyecto GIP SOLO dentro de esta carpeta, en .herramientas/.
 Tengo otros proyectos con otras versiones: NO modifiques el PATH ni variables de entorno del sistema
-o del usuario, NO uses instaladores globales (winget, msi) para estas herramientas y NO uses
+o del usuario, NO uses instaladores globales (winget, msi, npm -g, scoop) para estas herramientas y NO uses
 "flutter config" (escribe una configuración global). Antes de descargar cada cosa dime qué es y espera
 mi confirmación.
 
@@ -62,13 +62,16 @@ mi confirmación.
      (que quede .herramientas/android-sdk/cmdline-tools/latest/bin/sdkmanager.bat)
    - Node.js 26 LTS, zip x64 de nodejs.org -> .herramientas/node (que node.exe quede en esa carpeta)
 3. Carga el entorno en tu shell con tool/entorno.ps1 (o exporta las mismas variables en Git Bash) y:
-   - sdkmanager --install "platform-tools" "platforms;android-36"
+   - sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
    - flutter doctor --android-licenses (yo acepto las licencias)
-4. Revisa que .gitignore tenga la línea .herramientas/ (si .gitignore ya existe).
-5. Verifica con el entorno cargado: flutter --version (debe decir 3.47 y Dart 3.13), flutter doctor -v,
-   java -version (17), adb --version, node --version (26), docker --version.
+4. Revisa que .gitignore tenga las líneas .herramientas/ y node_modules/.
+5. Instala el Supabase CLI del proyecto con el entorno cargado: npm install (lee package.json, que fija
+   supabase 3.1.0, y lo deja en node_modules/). Se usa siempre con npx supabase ...; no lo instales global.
+6. Verifica con el entorno cargado: flutter --version (debe decir 3.47 y Dart 3.13), flutter doctor -v,
+   java -version (17), adb --version, node --version (26), npx supabase --version (3.1.0),
+   docker --version.
    El aviso de "Android Studio not installed" y el de "Visual Studio" se ignoran.
-6. Dame la lista de lo que todavía falla y de lo que tengo que hacer yo a mano.
+7. Dame la lista de lo que todavía falla y de lo que tengo que hacer yo a mano.
 ```
 
 ## 3. A mano, después de Claude
@@ -99,7 +102,7 @@ flutter doctor           # Flutter, Android toolchain y Chrome en verde
 flutter devices          # aparecen el teléfono y Chrome
 java -version            # 17
 node --version           # v26
-npx supabase --version   # 3.1.0 (después de npm install en el repo)
+npx supabase --version   # 3.1.0 (lo instala npm install, paso 5 del mensaje)
 docker ps                # responde sin error
 ```
 

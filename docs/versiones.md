@@ -11,15 +11,16 @@ Resumen para Claude Code. La matriz completa (con fuentes) está en el documento
 - La cámara solo se usa en la app Android; en la web, solo el lector 2D.
 
 ## Herramientas
-Flutter, JDK, Android SDK y Node están instalados dentro del proyecto en `.herramientas/` y se activan con `tool/entorno.ps1` (ver `docs/instalacion.md`). Supabase local usa los puertos 55321–55329.
+Flutter, JDK, Android SDK y Node están instalados dentro del proyecto en `.herramientas/` y se activan con `tool/entorno.ps1` o `tool/entorno.sh`. El Supabase CLI se instala dentro del proyecto con `npm install` (queda en `node_modules/`). Ver `docs/instalacion.md` y `docs/instalacion-linux.md`. Supabase local usa los puertos 55321–55329.
 
 | Herramienta | Versión |
 |---|---|
 | Flutter | 3.47.x (Dart 3.13). No 3.50 |
 | JDK | Temurin 17 |
 | Android | AGP ≥ 9.1.0, Gradle ≥ 9.3.1, Kotlin ≥ 2.4.0 (los pone flutter create) |
+| Android SDK | platform-tools, platforms;android-36, build-tools;36.0.0 (minSdk 26, compileSdk y targetSdk 36) |
 | Node.js | 26.x LTS |
-| Supabase CLI | 3.1.0 (en package.json; usar `npx supabase`) |
+| Supabase CLI | 3.1.0 exacta (fijada en package.json; se instala con `npm install` y se usa con `npx supabase`; nunca global) |
 | PostgreSQL | 17 (el de Supabase) |
 | Git for Windows | 2.56.x |
 | Docker Desktop | 4.96 o superior |

@@ -48,13 +48,16 @@ Antes de descargar cada cosa dime qué es y espera mi confirmación.
      (que quede .herramientas/android-sdk/cmdline-tools/latest/bin/sdkmanager)
    - Node.js 26 LTS, tar.xz linux-x64 de nodejs.org -> .herramientas/node (que quede node/bin/node)
 3. Con "source tool/entorno.sh" cargado en el mismo comando:
-   - sdkmanager --install "platform-tools" "platforms;android-36"
+   - sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
    - flutter doctor --android-licenses (yo acepto las licencias)
-4. Revisa que .gitignore tenga la línea .herramientas/ (si .gitignore ya existe).
-5. Verifica con el entorno cargado: flutter --version (3.47 y Dart 3.13), flutter doctor -v, java -version (17),
-   adb devices, node --version (26), docker --version.
+4. Revisa que .gitignore tenga las líneas .herramientas/ y node_modules/.
+5. Instala el Supabase CLI del proyecto con el entorno cargado: npm install (lee package.json, que fija
+   supabase 3.1.0, y lo deja en node_modules/). Se usa siempre con npx supabase ...; no lo instales global
+   (ni npm -g, ni apt, ni brew).
+6. Verifica con el entorno cargado: flutter --version (3.47 y Dart 3.13), flutter doctor -v, java -version (17),
+   adb devices, node --version (26), npx supabase --version (3.1.0), docker --version.
    Los avisos de "Android Studio not installed" y de la cadena de Linux desktop se ignoran.
-6. Dame la lista de lo que todavía falla y de lo que tengo que hacer yo a mano.
+7. Dame la lista de lo que todavía falla y de lo que tengo que hacer yo a mano.
 ```
 
 ## 2b. A mano después de Claude: SDK de Android y licencias
@@ -64,13 +67,24 @@ Claude no acepta licencias por ustedes. Con el entorno cargado:
 ```bash
 source tool/entorno.sh
 adb kill-server 2>/dev/null                       # por si quedó corriendo el adb de otro proyecto
-sdkmanager --sdk_root="$ANDROID_HOME" --install "platform-tools" "platforms;android-36"
+sdkmanager --sdk_root="$ANDROID_HOME" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 sdkmanager --sdk_root="$ANDROID_HOME" --licenses  # leer y aceptar con y
 flutter doctor -v                                 # "Android SDK at .../gip/.herramientas/android-sdk"
 which adb                                         # debe ser .../gip/.herramientas/android-sdk/platform-tools/adb
 ```
 
 Si tienen otro proyecto Flutter que fijó `android-sdk` con `flutter config`, `tool/entorno.sh` le da al GIP su propia configuración de Flutter (en `.herramientas/config`), así que esa ruta global no se usa aquí ni se modifica.
+
+## 2c. Supabase CLI (dentro del proyecto)
+
+```bash
+source tool/entorno.sh
+npm install                # instala supabase 3.1.0 (package.json) en node_modules/
+npx supabase --version     # 3.1.0
+npx supabase start         # Docker debe estar corriendo; puertos 55321–55329
+```
+
+Si `npx supabase` pregunta "Need to install the following packages", respondan `n`: falta `npm install` en esta carpeta y bajaría otra versión.
 
 ## 3. Día a día
 
