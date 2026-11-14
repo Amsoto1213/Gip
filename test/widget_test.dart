@@ -8,6 +8,7 @@ import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/main.dart';
+import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -58,7 +59,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Hola, Carmen'), findsOneWidget);
-    expect(find.text('Granero El Porvenir'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(PantallaSeccion),
+        matching: find.text('Vender'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('con la clave mala muestra el mensaje y se queda', (
