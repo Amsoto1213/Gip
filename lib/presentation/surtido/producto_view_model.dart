@@ -4,6 +4,7 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
+import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
 
 /// Estado de la pantalla Producto (CUS-18). Llama solo a
@@ -96,16 +97,6 @@ class ProductoViewModel extends ChangeNotifier {
     }
   }
 
-  /// Convierte un precio escrito en pesos colombianos: el punto separa miles y
-  /// la coma, decimales. Acepta "$", espacios y el signo menos (el servicio
-  /// rechaza los negativos). Devuelve null si no es un número.
-  static Decimal? leerPrecio(String texto) {
-    final limpio = texto
-        .replaceAll(r'$', '')
-        .replaceAll(RegExp(r'\s'), '')
-        .replaceAll('.', '')
-        .replaceAll(',', '.');
-    if (!RegExp(r'^-?\d+(\.\d+)?$').hasMatch(limpio)) return null;
-    return Decimal.parse(limpio);
-  }
+  /// Convierte un precio escrito en pesos colombianos (ver [leerPesos]).
+  static Decimal? leerPrecio(String texto) => leerPesos(texto);
 }

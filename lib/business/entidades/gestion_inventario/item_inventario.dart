@@ -9,7 +9,7 @@ class ItemInventario {
 
   final String _id;
   final Producto _producto;
-  final Decimal _stockActual;
+  Decimal _stockActual;
 
   /// Identificador único del objeto (DA-43).
   String getId() => _id;
@@ -17,4 +17,8 @@ class ItemInventario {
   Producto getProducto() => _producto;
 
   Decimal getStockActual() => _stockActual;
+
+  /// Lo asigna `ServicioInventario` al aplicar un movimiento (CUS-01, paso 27)
+  /// o al recalcular el stock (DI-20).
+  void setStockActual(Decimal stockActual) => _stockActual = stockActual;
 }

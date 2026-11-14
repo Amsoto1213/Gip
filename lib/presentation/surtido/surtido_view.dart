@@ -3,7 +3,8 @@ import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 
 /// Sección Surtido (pendiente: ver `docs/ui/pantallas.md`). Por ahora abre
-/// Buscar producto (CUS-06) y Producto (CUS-18).
+/// Entrada de mercancía (CUS-01), Buscar producto (CUS-06) y Producto
+/// (CUS-18).
 class SurtidoView extends StatelessWidget {
   const SurtidoView({super.key});
 
@@ -13,6 +14,13 @@ class SurtidoView extends StatelessWidget {
     hijos: [
       const SizedBox(height: 24),
       FilledButton.icon(
+        key: const Key('surtido_registrar_entrada'),
+        onPressed: () => abrirEntradaMercancia(context),
+        icon: const Icon(Icons.local_shipping_outlined),
+        label: const Text('Registrar entrada'),
+      ),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
         onPressed: () => abrirBuscarProducto(context),
         icon: const Icon(Icons.search),
         label: const Text('Buscar producto'),

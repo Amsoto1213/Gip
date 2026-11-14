@@ -127,20 +127,27 @@ class InventarioRepositorioFalso
     ..clear()
     ..addAll(_copia);
 
+  /// Guarda y devuelve copias, como una base de datos: cambiar el stock de un
+  /// ítem leído no cambia lo guardado hasta que se llama a guardarItem.
+  static ItemInventario _copiar(ItemInventario i) =>
+      ItemInventario(i.getId(), i.getProducto(), i.getStockActual());
+
   @override
-  Future<ItemInventario?> buscarItem(Tienda tienda, Producto producto) async =>
-      _de(tienda).values
-          .where((i) => i.getProducto().getId() == producto.getId())
-          .firstOrNull;
+  Future<ItemInventario?> buscarItem(Tienda tienda, Producto producto) async {
+    final item = _de(tienda).values
+        .where((i) => i.getProducto().getId() == producto.getId())
+        .firstOrNull;
+    return item == null ? null : _copiar(item);
+  }
 
   @override
   Future<void> guardarItem(Tienda tienda, ItemInventario item) async {
     if (fallar) throw StateError('falla del disco');
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
-    _de(tienda)[item.getId()] = item;
+    _de(tienda)[item.getId()] = _copiar(item);
   }
 
   @override
   Future<List<ItemInventario>> listarItems(Tienda tienda) async =>
-      _de(tienda).values.toList();
+      _de(tienda).values.map(_copiar).toList();
 }

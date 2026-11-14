@@ -13,3 +13,24 @@ class ExcepcionDatosProductoNoValidos extends ExcepcionNegocio {
   const ExcepcionDatosProductoNoValidos.alEditar()
     : super('Faltan datos válidos del producto');
 }
+
+/// Cantidad <= 0 o costo negativo en una entrada de mercancía (CUS-01, pasos
+/// 15 a 17).
+class ExcepcionDatosEntradaNoValidos extends ExcepcionNegocio {
+  const ExcepcionDatosEntradaNoValidos()
+    : super(
+        'La cantidad debe ser mayor que cero y el costo no puede ser negativo',
+      );
+}
+
+/// El producto no tiene ítem de inventario en la tienda (obtenerItem).
+class ExcepcionProductoSinInventario extends ExcepcionNegocio {
+  const ExcepcionProductoSinInventario()
+    : super('El producto no tiene inventario en esta tienda');
+}
+
+/// El movimiento dejaría el stock negativo (ERS 3.2.1 a).
+class ExcepcionStockNegativo extends ExcepcionNegocio {
+  const ExcepcionStockNegativo()
+    : super('No hay suficiente existencia del producto');
+}

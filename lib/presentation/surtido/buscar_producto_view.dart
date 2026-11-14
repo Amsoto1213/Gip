@@ -8,12 +8,25 @@ import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+/// Qué pasa al tocar un resultado de la búsqueda.
+enum ModoBusqueda {
+  /// Abre el producto para editarlo (CUS-18).
+  editar,
+
+  /// Cierra la búsqueda y devuelve el producto a quien la abrió (por ejemplo,
+  /// Entrada de mercancía, CUS-01).
+  seleccionar,
+}
+
 /// Pantalla Buscar producto (CUS-06, mockup `mBuscar`), solo la búsqueda por
-/// nombre. Por ahora vive en Surtido y al seleccionar abre el producto para
-/// editarlo (CUS-18). Las existencias, "Agregar", "Anotar que se fue sin él" y
-/// el botón del lector llegan con CUS-25, CUS-02, CUS-13 y CUS-17 (DI-19).
+/// nombre. Por ahora vive en Surtido. Según [modo], al tocar un resultado abre
+/// el producto para editarlo (CUS-18) o lo devuelve con `pop` (CUS-01, DI-20).
+/// Las existencias, "Agregar", "Anotar que se fue sin él" y el botón del
+/// lector llegan con CUS-25, CUS-02, CUS-13 y CUS-17 (DI-19).
 class BuscarProductoView extends StatefulWidget {
-  const BuscarProductoView({super.key});
+  const BuscarProductoView({super.key, this.modo = ModoBusqueda.editar});
+
+  final ModoBusqueda modo;
 
   @override
   State<BuscarProductoView> createState() => _BuscarProductoViewState();
@@ -33,7 +46,11 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
     context.read<BuscarProductoViewModel>().buscar('');
   }
 
-  Future<void> _editar(Producto producto) async {
+  Future<void> _tocarResultado(Producto producto) async {
+    if (widget.modo == ModoBusqueda.seleccionar) {
+      context.pop(producto);
+      return;
+    }
     final vm = context.read<BuscarProductoViewModel>();
     await abrirProductoParaEditar(context, producto);
     await vm.repetirBusqueda();
@@ -168,7 +185,13 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
             style: secundario,
           ),
           const SizedBox(height: 12),
-          _ListaResultados(productos: vm.productos, onSeleccionar: _editar),
+          _ListaResultados(
+            productos: vm.productos,
+            onSeleccionar: _tocarResultado,
+            accion: widget.modo == ModoBusqueda.seleccionar
+                ? 'Elegir'
+                : 'Editar',
+          ),
         ];
     }
   }
@@ -222,10 +245,14 @@ class _ListaResultados extends StatelessWidget {
   const _ListaResultados({
     required this.productos,
     required this.onSeleccionar,
+    required this.accion,
   });
 
   final List<Producto> productos;
   final ValueChanged<Producto> onSeleccionar;
+
+  /// Etiqueta para el lector de pantalla de la flecha de cada fila.
+  final String accion;
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +267,7 @@ class _ListaResultados extends StatelessWidget {
             if (i > 0) Divider(height: 1, color: extra.separador),
             _FilaProducto(
               producto: productos[i],
+              accion: accion,
               onTap: () => onSeleccionar(productos[i]),
             ),
           ],
@@ -250,9 +278,14 @@ class _ListaResultados extends StatelessWidget {
 }
 
 class _FilaProducto extends StatelessWidget {
-  const _FilaProducto({required this.producto, required this.onTap});
+  const _FilaProducto({
+    required this.producto,
+    required this.accion,
+    required this.onTap,
+  });
 
   final Producto producto;
+  final String accion;
   final VoidCallback onTap;
 
   static String _porUnidad(UnidadMedida unidad) => switch (unidad) {
@@ -294,7 +327,7 @@ class _FilaProducto extends StatelessWidget {
               Icon(
                 Icons.chevron_right,
                 color: tema.colorScheme.onSurfaceVariant,
-                semanticLabel: 'Editar',
+                semanticLabel: accion,
               ),
             ],
           ),
