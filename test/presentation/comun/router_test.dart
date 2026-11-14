@@ -10,6 +10,7 @@ import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordin
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
@@ -27,6 +28,8 @@ class BuscarProductoFalso extends Mock implements BuscarProductoCoordinator {}
 
 class RegistrarEntradaFalso extends Mock
     implements RegistrarEntradaMercanciaCoordinator {}
+
+class RegistrarVentaFalso extends Mock implements RegistrarVentaCoordinator {}
 
 const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
 
@@ -55,6 +58,7 @@ void main() {
         gestionarProducto: GestionarProductoFalso(),
         buscarProducto: BuscarProductoFalso(),
         registrarEntradaMercancia: RegistrarEntradaFalso(),
+        registrarVenta: RegistrarVentaFalso(),
       ),
     );
     await tester.pumpAndSettle();
