@@ -331,4 +331,15 @@ void main() {
       );
     });
   });
+
+  group('hayExistencia (RN-01)', () {
+    test('verdadero si el stock alcanza, incluso justo', () {
+      expect(servicio.hayExistencia(itemAceite, d('7')), isTrue);
+      expect(servicio.hayExistencia(itemAceite, d('8')), isTrue);
+    });
+
+    test('falso si pide más de lo que hay', () {
+      expect(servicio.hayExistencia(itemAceite, d('8.5')), isFalse);
+    });
+  });
 }

@@ -1366,6 +1366,316 @@ class ItemsInventarioCompanion extends UpdateCompanion<FilaItemInventario> {
   }
 }
 
+class $VentasTable extends Ventas with TableInfo<$VentasTable, FilaVenta> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VentasTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fecha =
+      GeneratedColumn<DateTime>(
+        'fecha',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($VentasTable.$converterfecha);
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> total =
+      GeneratedColumn<String>(
+        'total',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>($VentasTable.$convertertotal);
+  @override
+  List<GeneratedColumn> get $columns => [id, tiendaId, fecha, total];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ventas';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaVenta> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaVenta map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaVenta(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      fecha: $VentasTable.$converterfecha.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha'],
+        )!,
+      ),
+      total: $VentasTable.$convertertotal.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}total'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $VentasTable createAlias(String alias) {
+    return $VentasTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterfecha =
+      const ConversorFechaUtc();
+  static TypeConverter<Decimal, String> $convertertotal =
+      const ConversorDecimal();
+}
+
+class FilaVenta extends DataClass implements Insertable<FilaVenta> {
+  final String id;
+  final String tiendaId;
+  final DateTime fecha;
+  final Decimal total;
+  const FilaVenta({
+    required this.id,
+    required this.tiendaId,
+    required this.fecha,
+    required this.total,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    {
+      map['fecha'] = Variable<DateTime>(
+        $VentasTable.$converterfecha.toSql(fecha),
+      );
+    }
+    {
+      map['total'] = Variable<String>(
+        $VentasTable.$convertertotal.toSql(total),
+      );
+    }
+    return map;
+  }
+
+  VentasCompanion toCompanion(bool nullToAbsent) {
+    return VentasCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      fecha: Value(fecha),
+      total: Value(total),
+    );
+  }
+
+  factory FilaVenta.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaVenta(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      fecha: serializer.fromJson<DateTime>(json['fecha']),
+      total: serializer.fromJson<Decimal>(json['total']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'fecha': serializer.toJson<DateTime>(fecha),
+      'total': serializer.toJson<Decimal>(total),
+    };
+  }
+
+  FilaVenta copyWith({
+    String? id,
+    String? tiendaId,
+    DateTime? fecha,
+    Decimal? total,
+  }) => FilaVenta(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    fecha: fecha ?? this.fecha,
+    total: total ?? this.total,
+  );
+  FilaVenta copyWithCompanion(VentasCompanion data) {
+    return FilaVenta(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      total: data.total.present ? data.total.value : this.total,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaVenta(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('fecha: $fecha, ')
+          ..write('total: $total')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, tiendaId, fecha, total);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaVenta &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.fecha == this.fecha &&
+          other.total == this.total);
+}
+
+class VentasCompanion extends UpdateCompanion<FilaVenta> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<DateTime> fecha;
+  final Value<Decimal> total;
+  final Value<int> rowid;
+  const VentasCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.total = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VentasCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required DateTime fecha,
+    required Decimal total,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       fecha = Value(fecha),
+       total = Value(total);
+  static Insertable<FilaVenta> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<DateTime>? fecha,
+    Expression<String>? total,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (fecha != null) 'fecha': fecha,
+      if (total != null) 'total': total,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VentasCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<DateTime>? fecha,
+    Value<Decimal>? total,
+    Value<int>? rowid,
+  }) {
+    return VentasCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      fecha: fecha ?? this.fecha,
+      total: total ?? this.total,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(
+        $VentasTable.$converterfecha.toSql(fecha.value),
+      );
+    }
+    if (total.present) {
+      map['total'] = Variable<String>(
+        $VentasTable.$convertertotal.toSql(total.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VentasCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('fecha: $fecha, ')
+          ..write('total: $total, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $MovimientosInventarioTable extends MovimientosInventario
     with TableInfo<$MovimientosInventarioTable, FilaMovimientoInventario> {
   @override
@@ -1462,6 +1772,31 @@ class $MovimientosInventarioTable extends MovimientosInventario
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _ventaIdMeta = const VerificationMeta(
+    'ventaId',
+  );
+  @override
+  late final GeneratedColumn<String> ventaId = GeneratedColumn<String>(
+    'venta_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ventas (id)',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal?, String> precioUnitario =
+      GeneratedColumn<String>(
+        'precio_unitario',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<Decimal?>(
+        $MovimientosInventarioTable.$converterprecioUnitarion,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1473,6 +1808,8 @@ class $MovimientosInventarioTable extends MovimientosInventario
     estado,
     costoUnitario,
     numeroFactura,
+    ventaId,
+    precioUnitario,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1532,6 +1869,12 @@ class $MovimientosInventarioTable extends MovimientosInventario
         ),
       );
     }
+    if (data.containsKey('venta_id')) {
+      context.handle(
+        _ventaIdMeta,
+        ventaId.isAcceptableOrUnknown(data['venta_id']!, _ventaIdMeta),
+      );
+    }
     return context;
   }
 
@@ -1587,6 +1930,17 @@ class $MovimientosInventarioTable extends MovimientosInventario
         DriftSqlType.string,
         data['${effectivePrefix}numero_factura'],
       ),
+      ventaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}venta_id'],
+      ),
+      precioUnitario: $MovimientosInventarioTable.$converterprecioUnitarion
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}precio_unitario'],
+            ),
+          ),
     );
   }
 
@@ -1603,6 +1957,10 @@ class $MovimientosInventarioTable extends MovimientosInventario
       const ConversorDecimal();
   static TypeConverter<Decimal?, String?> $convertercostoUnitarion =
       NullAwareTypeConverter.wrap($convertercostoUnitario);
+  static TypeConverter<Decimal, String> $converterprecioUnitario =
+      const ConversorDecimal();
+  static TypeConverter<Decimal?, String?> $converterprecioUnitarion =
+      NullAwareTypeConverter.wrap($converterprecioUnitario);
 }
 
 class FilaMovimientoInventario extends DataClass
@@ -1616,6 +1974,8 @@ class FilaMovimientoInventario extends DataClass
   final String estado;
   final Decimal? costoUnitario;
   final String? numeroFactura;
+  final String? ventaId;
+  final Decimal? precioUnitario;
   const FilaMovimientoInventario({
     required this.id,
     required this.tiendaId,
@@ -1626,6 +1986,8 @@ class FilaMovimientoInventario extends DataClass
     required this.estado,
     this.costoUnitario,
     this.numeroFactura,
+    this.ventaId,
+    this.precioUnitario,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1655,6 +2017,16 @@ class FilaMovimientoInventario extends DataClass
     if (!nullToAbsent || numeroFactura != null) {
       map['numero_factura'] = Variable<String>(numeroFactura);
     }
+    if (!nullToAbsent || ventaId != null) {
+      map['venta_id'] = Variable<String>(ventaId);
+    }
+    if (!nullToAbsent || precioUnitario != null) {
+      map['precio_unitario'] = Variable<String>(
+        $MovimientosInventarioTable.$converterprecioUnitarion.toSql(
+          precioUnitario,
+        ),
+      );
+    }
     return map;
   }
 
@@ -1673,6 +2045,12 @@ class FilaMovimientoInventario extends DataClass
       numeroFactura: numeroFactura == null && nullToAbsent
           ? const Value.absent()
           : Value(numeroFactura),
+      ventaId: ventaId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ventaId),
+      precioUnitario: precioUnitario == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precioUnitario),
     );
   }
 
@@ -1691,6 +2069,8 @@ class FilaMovimientoInventario extends DataClass
       estado: serializer.fromJson<String>(json['estado']),
       costoUnitario: serializer.fromJson<Decimal?>(json['costoUnitario']),
       numeroFactura: serializer.fromJson<String?>(json['numeroFactura']),
+      ventaId: serializer.fromJson<String?>(json['ventaId']),
+      precioUnitario: serializer.fromJson<Decimal?>(json['precioUnitario']),
     );
   }
   @override
@@ -1706,6 +2086,8 @@ class FilaMovimientoInventario extends DataClass
       'estado': serializer.toJson<String>(estado),
       'costoUnitario': serializer.toJson<Decimal?>(costoUnitario),
       'numeroFactura': serializer.toJson<String?>(numeroFactura),
+      'ventaId': serializer.toJson<String?>(ventaId),
+      'precioUnitario': serializer.toJson<Decimal?>(precioUnitario),
     };
   }
 
@@ -1719,6 +2101,8 @@ class FilaMovimientoInventario extends DataClass
     String? estado,
     Value<Decimal?> costoUnitario = const Value.absent(),
     Value<String?> numeroFactura = const Value.absent(),
+    Value<String?> ventaId = const Value.absent(),
+    Value<Decimal?> precioUnitario = const Value.absent(),
   }) => FilaMovimientoInventario(
     id: id ?? this.id,
     tiendaId: tiendaId ?? this.tiendaId,
@@ -1733,6 +2117,10 @@ class FilaMovimientoInventario extends DataClass
     numeroFactura: numeroFactura.present
         ? numeroFactura.value
         : this.numeroFactura,
+    ventaId: ventaId.present ? ventaId.value : this.ventaId,
+    precioUnitario: precioUnitario.present
+        ? precioUnitario.value
+        : this.precioUnitario,
   );
   FilaMovimientoInventario copyWithCompanion(
     MovimientosInventarioCompanion data,
@@ -1751,6 +2139,10 @@ class FilaMovimientoInventario extends DataClass
       numeroFactura: data.numeroFactura.present
           ? data.numeroFactura.value
           : this.numeroFactura,
+      ventaId: data.ventaId.present ? data.ventaId.value : this.ventaId,
+      precioUnitario: data.precioUnitario.present
+          ? data.precioUnitario.value
+          : this.precioUnitario,
     );
   }
 
@@ -1765,7 +2157,9 @@ class FilaMovimientoInventario extends DataClass
           ..write('fecha: $fecha, ')
           ..write('estado: $estado, ')
           ..write('costoUnitario: $costoUnitario, ')
-          ..write('numeroFactura: $numeroFactura')
+          ..write('numeroFactura: $numeroFactura, ')
+          ..write('ventaId: $ventaId, ')
+          ..write('precioUnitario: $precioUnitario')
           ..write(')'))
         .toString();
   }
@@ -1781,6 +2175,8 @@ class FilaMovimientoInventario extends DataClass
     estado,
     costoUnitario,
     numeroFactura,
+    ventaId,
+    precioUnitario,
   );
   @override
   bool operator ==(Object other) =>
@@ -1794,7 +2190,9 @@ class FilaMovimientoInventario extends DataClass
           other.fecha == this.fecha &&
           other.estado == this.estado &&
           other.costoUnitario == this.costoUnitario &&
-          other.numeroFactura == this.numeroFactura);
+          other.numeroFactura == this.numeroFactura &&
+          other.ventaId == this.ventaId &&
+          other.precioUnitario == this.precioUnitario);
 }
 
 class MovimientosInventarioCompanion
@@ -1808,6 +2206,8 @@ class MovimientosInventarioCompanion
   final Value<String> estado;
   final Value<Decimal?> costoUnitario;
   final Value<String?> numeroFactura;
+  final Value<String?> ventaId;
+  final Value<Decimal?> precioUnitario;
   final Value<int> rowid;
   const MovimientosInventarioCompanion({
     this.id = const Value.absent(),
@@ -1819,6 +2219,8 @@ class MovimientosInventarioCompanion
     this.estado = const Value.absent(),
     this.costoUnitario = const Value.absent(),
     this.numeroFactura = const Value.absent(),
+    this.ventaId = const Value.absent(),
+    this.precioUnitario = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MovimientosInventarioCompanion.insert({
@@ -1831,6 +2233,8 @@ class MovimientosInventarioCompanion
     required String estado,
     this.costoUnitario = const Value.absent(),
     this.numeroFactura = const Value.absent(),
+    this.ventaId = const Value.absent(),
+    this.precioUnitario = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tiendaId = Value(tiendaId),
@@ -1849,6 +2253,8 @@ class MovimientosInventarioCompanion
     Expression<String>? estado,
     Expression<String>? costoUnitario,
     Expression<String>? numeroFactura,
+    Expression<String>? ventaId,
+    Expression<String>? precioUnitario,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1861,6 +2267,8 @@ class MovimientosInventarioCompanion
       if (estado != null) 'estado': estado,
       if (costoUnitario != null) 'costo_unitario': costoUnitario,
       if (numeroFactura != null) 'numero_factura': numeroFactura,
+      if (ventaId != null) 'venta_id': ventaId,
+      if (precioUnitario != null) 'precio_unitario': precioUnitario,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1875,6 +2283,8 @@ class MovimientosInventarioCompanion
     Value<String>? estado,
     Value<Decimal?>? costoUnitario,
     Value<String?>? numeroFactura,
+    Value<String?>? ventaId,
+    Value<Decimal?>? precioUnitario,
     Value<int>? rowid,
   }) {
     return MovimientosInventarioCompanion(
@@ -1887,6 +2297,8 @@ class MovimientosInventarioCompanion
       estado: estado ?? this.estado,
       costoUnitario: costoUnitario ?? this.costoUnitario,
       numeroFactura: numeroFactura ?? this.numeroFactura,
+      ventaId: ventaId ?? this.ventaId,
+      precioUnitario: precioUnitario ?? this.precioUnitario,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1929,6 +2341,16 @@ class MovimientosInventarioCompanion
     if (numeroFactura.present) {
       map['numero_factura'] = Variable<String>(numeroFactura.value);
     }
+    if (ventaId.present) {
+      map['venta_id'] = Variable<String>(ventaId.value);
+    }
+    if (precioUnitario.present) {
+      map['precio_unitario'] = Variable<String>(
+        $MovimientosInventarioTable.$converterprecioUnitarion.toSql(
+          precioUnitario.value,
+        ),
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1947,6 +2369,1318 @@ class MovimientosInventarioCompanion
           ..write('estado: $estado, ')
           ..write('costoUnitario: $costoUnitario, ')
           ..write('numeroFactura: $numeroFactura, ')
+          ..write('ventaId: $ventaId, ')
+          ..write('precioUnitario: $precioUnitario, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CajasTable extends Cajas with TableInfo<$CajasTable, FilaCaja> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CajasTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fechaMeta = const VerificationMeta('fecha');
+  @override
+  late final GeneratedColumn<String> fecha = GeneratedColumn<String>(
+    'fecha',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, tiendaId, fecha];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cajas';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaCaja> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('fecha')) {
+      context.handle(
+        _fechaMeta,
+        fecha.isAcceptableOrUnknown(data['fecha']!, _fechaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fechaMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaCaja map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaCaja(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      fecha: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fecha'],
+      )!,
+    );
+  }
+
+  @override
+  $CajasTable createAlias(String alias) {
+    return $CajasTable(attachedDatabase, alias);
+  }
+}
+
+class FilaCaja extends DataClass implements Insertable<FilaCaja> {
+  final String id;
+  final String tiendaId;
+  final String fecha;
+  const FilaCaja({
+    required this.id,
+    required this.tiendaId,
+    required this.fecha,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['fecha'] = Variable<String>(fecha);
+    return map;
+  }
+
+  CajasCompanion toCompanion(bool nullToAbsent) {
+    return CajasCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      fecha: Value(fecha),
+    );
+  }
+
+  factory FilaCaja.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaCaja(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      fecha: serializer.fromJson<String>(json['fecha']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'fecha': serializer.toJson<String>(fecha),
+    };
+  }
+
+  FilaCaja copyWith({String? id, String? tiendaId, String? fecha}) => FilaCaja(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    fecha: fecha ?? this.fecha,
+  );
+  FilaCaja copyWithCompanion(CajasCompanion data) {
+    return FilaCaja(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaCaja(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('fecha: $fecha')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, tiendaId, fecha);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaCaja &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.fecha == this.fecha);
+}
+
+class CajasCompanion extends UpdateCompanion<FilaCaja> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> fecha;
+  final Value<int> rowid;
+  const CajasCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CajasCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String fecha,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       fecha = Value(fecha);
+  static Insertable<FilaCaja> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? fecha,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (fecha != null) 'fecha': fecha,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CajasCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? fecha,
+    Value<int>? rowid,
+  }) {
+    return CajasCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      fecha: fecha ?? this.fecha,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<String>(fecha.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CajasCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('fecha: $fecha, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MovimientosCajaTable extends MovimientosCaja
+    with TableInfo<$MovimientosCajaTable, FilaMovimientoCaja> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MovimientosCajaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cajaIdMeta = const VerificationMeta('cajaId');
+  @override
+  late final GeneratedColumn<String> cajaId = GeneratedColumn<String>(
+    'caja_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES cajas (id)',
+    ),
+  );
+  static const VerificationMeta _tipoMeta = const VerificationMeta('tipo');
+  @override
+  late final GeneratedColumn<String> tipo = GeneratedColumn<String>(
+    'tipo',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _clasificacionMeta = const VerificationMeta(
+    'clasificacion',
+  );
+  @override
+  late final GeneratedColumn<String> clasificacion = GeneratedColumn<String>(
+    'clasificacion',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> valor =
+      GeneratedColumn<String>(
+        'valor',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>($MovimientosCajaTable.$convertervalor);
+  static const VerificationMeta _descripcionMeta = const VerificationMeta(
+    'descripcion',
+  );
+  @override
+  late final GeneratedColumn<String> descripcion = GeneratedColumn<String>(
+    'descripcion',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fecha =
+      GeneratedColumn<DateTime>(
+        'fecha',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($MovimientosCajaTable.$converterfecha);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    cajaId,
+    tipo,
+    clasificacion,
+    valor,
+    descripcion,
+    fecha,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'movimientos_caja';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaMovimientoCaja> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('caja_id')) {
+      context.handle(
+        _cajaIdMeta,
+        cajaId.isAcceptableOrUnknown(data['caja_id']!, _cajaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cajaIdMeta);
+    }
+    if (data.containsKey('tipo')) {
+      context.handle(
+        _tipoMeta,
+        tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tipoMeta);
+    }
+    if (data.containsKey('clasificacion')) {
+      context.handle(
+        _clasificacionMeta,
+        clasificacion.isAcceptableOrUnknown(
+          data['clasificacion']!,
+          _clasificacionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_clasificacionMeta);
+    }
+    if (data.containsKey('descripcion')) {
+      context.handle(
+        _descripcionMeta,
+        descripcion.isAcceptableOrUnknown(
+          data['descripcion']!,
+          _descripcionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descripcionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaMovimientoCaja map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaMovimientoCaja(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      cajaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}caja_id'],
+      )!,
+      tipo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tipo'],
+      )!,
+      clasificacion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}clasificacion'],
+      )!,
+      valor: $MovimientosCajaTable.$convertervalor.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}valor'],
+        )!,
+      ),
+      descripcion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}descripcion'],
+      )!,
+      fecha: $MovimientosCajaTable.$converterfecha.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $MovimientosCajaTable createAlias(String alias) {
+    return $MovimientosCajaTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Decimal, String> $convertervalor =
+      const ConversorDecimal();
+  static TypeConverter<DateTime, DateTime> $converterfecha =
+      const ConversorFechaUtc();
+}
+
+class FilaMovimientoCaja extends DataClass
+    implements Insertable<FilaMovimientoCaja> {
+  final String id;
+  final String tiendaId;
+  final String cajaId;
+  final String tipo;
+  final String clasificacion;
+  final Decimal valor;
+  final String descripcion;
+  final DateTime fecha;
+  const FilaMovimientoCaja({
+    required this.id,
+    required this.tiendaId,
+    required this.cajaId,
+    required this.tipo,
+    required this.clasificacion,
+    required this.valor,
+    required this.descripcion,
+    required this.fecha,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['caja_id'] = Variable<String>(cajaId);
+    map['tipo'] = Variable<String>(tipo);
+    map['clasificacion'] = Variable<String>(clasificacion);
+    {
+      map['valor'] = Variable<String>(
+        $MovimientosCajaTable.$convertervalor.toSql(valor),
+      );
+    }
+    map['descripcion'] = Variable<String>(descripcion);
+    {
+      map['fecha'] = Variable<DateTime>(
+        $MovimientosCajaTable.$converterfecha.toSql(fecha),
+      );
+    }
+    return map;
+  }
+
+  MovimientosCajaCompanion toCompanion(bool nullToAbsent) {
+    return MovimientosCajaCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      cajaId: Value(cajaId),
+      tipo: Value(tipo),
+      clasificacion: Value(clasificacion),
+      valor: Value(valor),
+      descripcion: Value(descripcion),
+      fecha: Value(fecha),
+    );
+  }
+
+  factory FilaMovimientoCaja.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaMovimientoCaja(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      cajaId: serializer.fromJson<String>(json['cajaId']),
+      tipo: serializer.fromJson<String>(json['tipo']),
+      clasificacion: serializer.fromJson<String>(json['clasificacion']),
+      valor: serializer.fromJson<Decimal>(json['valor']),
+      descripcion: serializer.fromJson<String>(json['descripcion']),
+      fecha: serializer.fromJson<DateTime>(json['fecha']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'cajaId': serializer.toJson<String>(cajaId),
+      'tipo': serializer.toJson<String>(tipo),
+      'clasificacion': serializer.toJson<String>(clasificacion),
+      'valor': serializer.toJson<Decimal>(valor),
+      'descripcion': serializer.toJson<String>(descripcion),
+      'fecha': serializer.toJson<DateTime>(fecha),
+    };
+  }
+
+  FilaMovimientoCaja copyWith({
+    String? id,
+    String? tiendaId,
+    String? cajaId,
+    String? tipo,
+    String? clasificacion,
+    Decimal? valor,
+    String? descripcion,
+    DateTime? fecha,
+  }) => FilaMovimientoCaja(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    cajaId: cajaId ?? this.cajaId,
+    tipo: tipo ?? this.tipo,
+    clasificacion: clasificacion ?? this.clasificacion,
+    valor: valor ?? this.valor,
+    descripcion: descripcion ?? this.descripcion,
+    fecha: fecha ?? this.fecha,
+  );
+  FilaMovimientoCaja copyWithCompanion(MovimientosCajaCompanion data) {
+    return FilaMovimientoCaja(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      cajaId: data.cajaId.present ? data.cajaId.value : this.cajaId,
+      tipo: data.tipo.present ? data.tipo.value : this.tipo,
+      clasificacion: data.clasificacion.present
+          ? data.clasificacion.value
+          : this.clasificacion,
+      valor: data.valor.present ? data.valor.value : this.valor,
+      descripcion: data.descripcion.present
+          ? data.descripcion.value
+          : this.descripcion,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaMovimientoCaja(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('cajaId: $cajaId, ')
+          ..write('tipo: $tipo, ')
+          ..write('clasificacion: $clasificacion, ')
+          ..write('valor: $valor, ')
+          ..write('descripcion: $descripcion, ')
+          ..write('fecha: $fecha')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    cajaId,
+    tipo,
+    clasificacion,
+    valor,
+    descripcion,
+    fecha,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaMovimientoCaja &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.cajaId == this.cajaId &&
+          other.tipo == this.tipo &&
+          other.clasificacion == this.clasificacion &&
+          other.valor == this.valor &&
+          other.descripcion == this.descripcion &&
+          other.fecha == this.fecha);
+}
+
+class MovimientosCajaCompanion extends UpdateCompanion<FilaMovimientoCaja> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> cajaId;
+  final Value<String> tipo;
+  final Value<String> clasificacion;
+  final Value<Decimal> valor;
+  final Value<String> descripcion;
+  final Value<DateTime> fecha;
+  final Value<int> rowid;
+  const MovimientosCajaCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.cajaId = const Value.absent(),
+    this.tipo = const Value.absent(),
+    this.clasificacion = const Value.absent(),
+    this.valor = const Value.absent(),
+    this.descripcion = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MovimientosCajaCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String cajaId,
+    required String tipo,
+    required String clasificacion,
+    required Decimal valor,
+    required String descripcion,
+    required DateTime fecha,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       cajaId = Value(cajaId),
+       tipo = Value(tipo),
+       clasificacion = Value(clasificacion),
+       valor = Value(valor),
+       descripcion = Value(descripcion),
+       fecha = Value(fecha);
+  static Insertable<FilaMovimientoCaja> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? cajaId,
+    Expression<String>? tipo,
+    Expression<String>? clasificacion,
+    Expression<String>? valor,
+    Expression<String>? descripcion,
+    Expression<DateTime>? fecha,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (cajaId != null) 'caja_id': cajaId,
+      if (tipo != null) 'tipo': tipo,
+      if (clasificacion != null) 'clasificacion': clasificacion,
+      if (valor != null) 'valor': valor,
+      if (descripcion != null) 'descripcion': descripcion,
+      if (fecha != null) 'fecha': fecha,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MovimientosCajaCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? cajaId,
+    Value<String>? tipo,
+    Value<String>? clasificacion,
+    Value<Decimal>? valor,
+    Value<String>? descripcion,
+    Value<DateTime>? fecha,
+    Value<int>? rowid,
+  }) {
+    return MovimientosCajaCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      cajaId: cajaId ?? this.cajaId,
+      tipo: tipo ?? this.tipo,
+      clasificacion: clasificacion ?? this.clasificacion,
+      valor: valor ?? this.valor,
+      descripcion: descripcion ?? this.descripcion,
+      fecha: fecha ?? this.fecha,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (cajaId.present) {
+      map['caja_id'] = Variable<String>(cajaId.value);
+    }
+    if (tipo.present) {
+      map['tipo'] = Variable<String>(tipo.value);
+    }
+    if (clasificacion.present) {
+      map['clasificacion'] = Variable<String>(clasificacion.value);
+    }
+    if (valor.present) {
+      map['valor'] = Variable<String>(
+        $MovimientosCajaTable.$convertervalor.toSql(valor.value),
+      );
+    }
+    if (descripcion.present) {
+      map['descripcion'] = Variable<String>(descripcion.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(
+        $MovimientosCajaTable.$converterfecha.toSql(fecha.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MovimientosCajaCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('cajaId: $cajaId, ')
+          ..write('tipo: $tipo, ')
+          ..write('clasificacion: $clasificacion, ')
+          ..write('valor: $valor, ')
+          ..write('descripcion: $descripcion, ')
+          ..write('fecha: $fecha, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FormasPagoTable extends FormasPago
+    with TableInfo<$FormasPagoTable, FilaFormaPago> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FormasPagoTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ventaIdMeta = const VerificationMeta(
+    'ventaId',
+  );
+  @override
+  late final GeneratedColumn<String> ventaId = GeneratedColumn<String>(
+    'venta_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ventas (id)',
+    ),
+  );
+  static const VerificationMeta _tipoMeta = const VerificationMeta('tipo');
+  @override
+  late final GeneratedColumn<String> tipo = GeneratedColumn<String>(
+    'tipo',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal?, String> montoRecibido =
+      GeneratedColumn<String>(
+        'monto_recibido',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<Decimal?>($FormasPagoTable.$convertermontoRecibidon);
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal?, String> cambio =
+      GeneratedColumn<String>(
+        'cambio',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<Decimal?>($FormasPagoTable.$convertercambion);
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal?, String> monto =
+      GeneratedColumn<String>(
+        'monto',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<Decimal?>($FormasPagoTable.$convertermonton);
+  static const VerificationMeta _referenciaMeta = const VerificationMeta(
+    'referencia',
+  );
+  @override
+  late final GeneratedColumn<String> referencia = GeneratedColumn<String>(
+    'referencia',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    ventaId,
+    tipo,
+    montoRecibido,
+    cambio,
+    monto,
+    referencia,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'formas_pago';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaFormaPago> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('venta_id')) {
+      context.handle(
+        _ventaIdMeta,
+        ventaId.isAcceptableOrUnknown(data['venta_id']!, _ventaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ventaIdMeta);
+    }
+    if (data.containsKey('tipo')) {
+      context.handle(
+        _tipoMeta,
+        tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tipoMeta);
+    }
+    if (data.containsKey('referencia')) {
+      context.handle(
+        _referenciaMeta,
+        referencia.isAcceptableOrUnknown(data['referencia']!, _referenciaMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaFormaPago map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaFormaPago(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      ventaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}venta_id'],
+      )!,
+      tipo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tipo'],
+      )!,
+      montoRecibido: $FormasPagoTable.$convertermontoRecibidon.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}monto_recibido'],
+        ),
+      ),
+      cambio: $FormasPagoTable.$convertercambion.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}cambio'],
+        ),
+      ),
+      monto: $FormasPagoTable.$convertermonton.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}monto'],
+        ),
+      ),
+      referencia: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}referencia'],
+      ),
+    );
+  }
+
+  @override
+  $FormasPagoTable createAlias(String alias) {
+    return $FormasPagoTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Decimal, String> $convertermontoRecibido =
+      const ConversorDecimal();
+  static TypeConverter<Decimal?, String?> $convertermontoRecibidon =
+      NullAwareTypeConverter.wrap($convertermontoRecibido);
+  static TypeConverter<Decimal, String> $convertercambio =
+      const ConversorDecimal();
+  static TypeConverter<Decimal?, String?> $convertercambion =
+      NullAwareTypeConverter.wrap($convertercambio);
+  static TypeConverter<Decimal, String> $convertermonto =
+      const ConversorDecimal();
+  static TypeConverter<Decimal?, String?> $convertermonton =
+      NullAwareTypeConverter.wrap($convertermonto);
+}
+
+class FilaFormaPago extends DataClass implements Insertable<FilaFormaPago> {
+  final String id;
+  final String tiendaId;
+  final String ventaId;
+  final String tipo;
+  final Decimal? montoRecibido;
+  final Decimal? cambio;
+  final Decimal? monto;
+  final String? referencia;
+  const FilaFormaPago({
+    required this.id,
+    required this.tiendaId,
+    required this.ventaId,
+    required this.tipo,
+    this.montoRecibido,
+    this.cambio,
+    this.monto,
+    this.referencia,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['venta_id'] = Variable<String>(ventaId);
+    map['tipo'] = Variable<String>(tipo);
+    if (!nullToAbsent || montoRecibido != null) {
+      map['monto_recibido'] = Variable<String>(
+        $FormasPagoTable.$convertermontoRecibidon.toSql(montoRecibido),
+      );
+    }
+    if (!nullToAbsent || cambio != null) {
+      map['cambio'] = Variable<String>(
+        $FormasPagoTable.$convertercambion.toSql(cambio),
+      );
+    }
+    if (!nullToAbsent || monto != null) {
+      map['monto'] = Variable<String>(
+        $FormasPagoTable.$convertermonton.toSql(monto),
+      );
+    }
+    if (!nullToAbsent || referencia != null) {
+      map['referencia'] = Variable<String>(referencia);
+    }
+    return map;
+  }
+
+  FormasPagoCompanion toCompanion(bool nullToAbsent) {
+    return FormasPagoCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      ventaId: Value(ventaId),
+      tipo: Value(tipo),
+      montoRecibido: montoRecibido == null && nullToAbsent
+          ? const Value.absent()
+          : Value(montoRecibido),
+      cambio: cambio == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cambio),
+      monto: monto == null && nullToAbsent
+          ? const Value.absent()
+          : Value(monto),
+      referencia: referencia == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referencia),
+    );
+  }
+
+  factory FilaFormaPago.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaFormaPago(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      ventaId: serializer.fromJson<String>(json['ventaId']),
+      tipo: serializer.fromJson<String>(json['tipo']),
+      montoRecibido: serializer.fromJson<Decimal?>(json['montoRecibido']),
+      cambio: serializer.fromJson<Decimal?>(json['cambio']),
+      monto: serializer.fromJson<Decimal?>(json['monto']),
+      referencia: serializer.fromJson<String?>(json['referencia']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'ventaId': serializer.toJson<String>(ventaId),
+      'tipo': serializer.toJson<String>(tipo),
+      'montoRecibido': serializer.toJson<Decimal?>(montoRecibido),
+      'cambio': serializer.toJson<Decimal?>(cambio),
+      'monto': serializer.toJson<Decimal?>(monto),
+      'referencia': serializer.toJson<String?>(referencia),
+    };
+  }
+
+  FilaFormaPago copyWith({
+    String? id,
+    String? tiendaId,
+    String? ventaId,
+    String? tipo,
+    Value<Decimal?> montoRecibido = const Value.absent(),
+    Value<Decimal?> cambio = const Value.absent(),
+    Value<Decimal?> monto = const Value.absent(),
+    Value<String?> referencia = const Value.absent(),
+  }) => FilaFormaPago(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    ventaId: ventaId ?? this.ventaId,
+    tipo: tipo ?? this.tipo,
+    montoRecibido: montoRecibido.present
+        ? montoRecibido.value
+        : this.montoRecibido,
+    cambio: cambio.present ? cambio.value : this.cambio,
+    monto: monto.present ? monto.value : this.monto,
+    referencia: referencia.present ? referencia.value : this.referencia,
+  );
+  FilaFormaPago copyWithCompanion(FormasPagoCompanion data) {
+    return FilaFormaPago(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      ventaId: data.ventaId.present ? data.ventaId.value : this.ventaId,
+      tipo: data.tipo.present ? data.tipo.value : this.tipo,
+      montoRecibido: data.montoRecibido.present
+          ? data.montoRecibido.value
+          : this.montoRecibido,
+      cambio: data.cambio.present ? data.cambio.value : this.cambio,
+      monto: data.monto.present ? data.monto.value : this.monto,
+      referencia: data.referencia.present
+          ? data.referencia.value
+          : this.referencia,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaFormaPago(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('ventaId: $ventaId, ')
+          ..write('tipo: $tipo, ')
+          ..write('montoRecibido: $montoRecibido, ')
+          ..write('cambio: $cambio, ')
+          ..write('monto: $monto, ')
+          ..write('referencia: $referencia')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    ventaId,
+    tipo,
+    montoRecibido,
+    cambio,
+    monto,
+    referencia,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaFormaPago &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.ventaId == this.ventaId &&
+          other.tipo == this.tipo &&
+          other.montoRecibido == this.montoRecibido &&
+          other.cambio == this.cambio &&
+          other.monto == this.monto &&
+          other.referencia == this.referencia);
+}
+
+class FormasPagoCompanion extends UpdateCompanion<FilaFormaPago> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> ventaId;
+  final Value<String> tipo;
+  final Value<Decimal?> montoRecibido;
+  final Value<Decimal?> cambio;
+  final Value<Decimal?> monto;
+  final Value<String?> referencia;
+  final Value<int> rowid;
+  const FormasPagoCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.ventaId = const Value.absent(),
+    this.tipo = const Value.absent(),
+    this.montoRecibido = const Value.absent(),
+    this.cambio = const Value.absent(),
+    this.monto = const Value.absent(),
+    this.referencia = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FormasPagoCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String ventaId,
+    required String tipo,
+    this.montoRecibido = const Value.absent(),
+    this.cambio = const Value.absent(),
+    this.monto = const Value.absent(),
+    this.referencia = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       ventaId = Value(ventaId),
+       tipo = Value(tipo);
+  static Insertable<FilaFormaPago> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? ventaId,
+    Expression<String>? tipo,
+    Expression<String>? montoRecibido,
+    Expression<String>? cambio,
+    Expression<String>? monto,
+    Expression<String>? referencia,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (ventaId != null) 'venta_id': ventaId,
+      if (tipo != null) 'tipo': tipo,
+      if (montoRecibido != null) 'monto_recibido': montoRecibido,
+      if (cambio != null) 'cambio': cambio,
+      if (monto != null) 'monto': monto,
+      if (referencia != null) 'referencia': referencia,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FormasPagoCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? ventaId,
+    Value<String>? tipo,
+    Value<Decimal?>? montoRecibido,
+    Value<Decimal?>? cambio,
+    Value<Decimal?>? monto,
+    Value<String?>? referencia,
+    Value<int>? rowid,
+  }) {
+    return FormasPagoCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      ventaId: ventaId ?? this.ventaId,
+      tipo: tipo ?? this.tipo,
+      montoRecibido: montoRecibido ?? this.montoRecibido,
+      cambio: cambio ?? this.cambio,
+      monto: monto ?? this.monto,
+      referencia: referencia ?? this.referencia,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (ventaId.present) {
+      map['venta_id'] = Variable<String>(ventaId.value);
+    }
+    if (tipo.present) {
+      map['tipo'] = Variable<String>(tipo.value);
+    }
+    if (montoRecibido.present) {
+      map['monto_recibido'] = Variable<String>(
+        $FormasPagoTable.$convertermontoRecibidon.toSql(montoRecibido.value),
+      );
+    }
+    if (cambio.present) {
+      map['cambio'] = Variable<String>(
+        $FormasPagoTable.$convertercambion.toSql(cambio.value),
+      );
+    }
+    if (monto.present) {
+      map['monto'] = Variable<String>(
+        $FormasPagoTable.$convertermonton.toSql(monto.value),
+      );
+    }
+    if (referencia.present) {
+      map['referencia'] = Variable<String>(referencia.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FormasPagoCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('ventaId: $ventaId, ')
+          ..write('tipo: $tipo, ')
+          ..write('montoRecibido: $montoRecibido, ')
+          ..write('cambio: $cambio, ')
+          ..write('monto: $monto, ')
+          ..write('referencia: $referencia, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1961,8 +3695,14 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   late final $ItemsInventarioTable itemsInventario = $ItemsInventarioTable(
     this,
   );
+  late final $VentasTable ventas = $VentasTable(this);
   late final $MovimientosInventarioTable movimientosInventario =
       $MovimientosInventarioTable(this);
+  late final $CajasTable cajas = $CajasTable(this);
+  late final $MovimientosCajaTable movimientosCaja = $MovimientosCajaTable(
+    this,
+  );
+  late final $FormasPagoTable formasPago = $FormasPagoTable(this);
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -1983,6 +3723,30 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'movimientos_inventario_item_tipo_fecha_idx',
     'CREATE INDEX movimientos_inventario_item_tipo_fecha_idx ON movimientos_inventario (item_id, tipo, fecha)',
   );
+  late final Index cajasTiendaIdx = Index(
+    'cajas_tienda_idx',
+    'CREATE INDEX cajas_tienda_idx ON cajas (tienda_id)',
+  );
+  late final Index movimientosCajaTiendaIdx = Index(
+    'movimientos_caja_tienda_idx',
+    'CREATE INDEX movimientos_caja_tienda_idx ON movimientos_caja (tienda_id)',
+  );
+  late final Index movimientosCajaCajaIdx = Index(
+    'movimientos_caja_caja_idx',
+    'CREATE INDEX movimientos_caja_caja_idx ON movimientos_caja (caja_id)',
+  );
+  late final Index ventasTiendaFechaIdx = Index(
+    'ventas_tienda_fecha_idx',
+    'CREATE INDEX ventas_tienda_fecha_idx ON ventas (tienda_id, fecha)',
+  );
+  late final Index formasPagoTiendaIdx = Index(
+    'formas_pago_tienda_idx',
+    'CREATE INDEX formas_pago_tienda_idx ON formas_pago (tienda_id)',
+  );
+  late final Index formasPagoVentaIdx = Index(
+    'formas_pago_venta_idx',
+    'CREATE INDEX formas_pago_venta_idx ON formas_pago (venta_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1991,12 +3755,22 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     colaPendientes,
     productos,
     itemsInventario,
+    ventas,
     movimientosInventario,
+    cajas,
+    movimientosCaja,
+    formasPago,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
     movimientosInventarioTiendaIdx,
     movimientosInventarioItemTipoFechaIdx,
+    cajasTiendaIdx,
+    movimientosCajaTiendaIdx,
+    movimientosCajaCajaIdx,
+    ventasTiendaFechaIdx,
+    formasPagoTiendaIdx,
+    formasPagoVentaIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -3067,6 +4841,396 @@ typedef $$ItemsInventarioTableProcessedTableManager =
       FilaItemInventario,
       PrefetchHooks Function({bool productoId, bool movimientosInventarioRefs})
     >;
+typedef $$VentasTableCreateCompanionBuilder = VentasCompanion Function({
+  required String id,
+  required String tiendaId,
+  required DateTime fecha,
+  required Decimal total,
+  Value<int> rowid,
+});
+typedef $$VentasTableUpdateCompanionBuilder = VentasCompanion Function({
+  Value<String> id,
+  Value<String> tiendaId,
+  Value<DateTime> fecha,
+  Value<Decimal> total,
+  Value<int> rowid,
+});
+
+final class $$VentasTableReferences
+    extends BaseReferences<_$BaseLocalDrift, $VentasTable, FilaVenta> {
+  $$VentasTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<
+    $MovimientosInventarioTable,
+    List<FilaMovimientoInventario>
+  >
+  _movimientosInventarioRefsTable(_$BaseLocalDrift db) =>
+      MultiTypedResultKey.fromTable(
+        db.movimientosInventario,
+        aliasName: 'ventas__id__movimientos_inventario__venta_id',
+      );
+
+  $$MovimientosInventarioTableProcessedTableManager
+  get movimientosInventarioRefs {
+    final manager = $$MovimientosInventarioTableTableManager(
+      $_db,
+      $_db.movimientosInventario,
+    ).filter((f) => f.ventaId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _movimientosInventarioRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FormasPagoTable, List<FilaFormaPago>>
+  _formasPagoRefsTable(_$BaseLocalDrift db) => MultiTypedResultKey.fromTable(
+    db.formasPago,
+    aliasName: 'ventas__id__formas_pago__venta_id',
+  );
+
+  $$FormasPagoTableProcessedTableManager get formasPagoRefs {
+    final manager = $$FormasPagoTableTableManager(
+      $_db,
+      $_db.formasPago,
+    ).filter((f) => f.ventaId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_formasPagoRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$VentasTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $VentasTable> {
+  $$VentasTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get fecha =>
+      $composableBuilder(
+        column: $table.fecha,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get total =>
+      $composableBuilder(
+        column: $table.total,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  Expression<bool> movimientosInventarioRefs(
+    Expression<bool> Function($$MovimientosInventarioTableFilterComposer f) f,
+  ) {
+    final $$MovimientosInventarioTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.movimientosInventario,
+          getReferencedColumn: (t) => t.ventaId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$MovimientosInventarioTableFilterComposer(
+                $db: $db,
+                $table: $db.movimientosInventario,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> formasPagoRefs(
+    Expression<bool> Function($$FormasPagoTableFilterComposer f) f,
+  ) {
+    final $$FormasPagoTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.formasPago,
+      getReferencedColumn: (t) => t.ventaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FormasPagoTableFilterComposer(
+            $db: $db,
+            $table: $db.formasPago,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$VentasTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $VentasTable> {
+  $$VentasTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VentasTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $VentasTable> {
+  $$VentasTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  Expression<T> movimientosInventarioRefs<T extends Object>(
+    Expression<T> Function($$MovimientosInventarioTableAnnotationComposer a) f,
+  ) {
+    final $$MovimientosInventarioTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.movimientosInventario,
+          getReferencedColumn: (t) => t.ventaId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$MovimientosInventarioTableAnnotationComposer(
+                $db: $db,
+                $table: $db.movimientosInventario,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> formasPagoRefs<T extends Object>(
+    Expression<T> Function($$FormasPagoTableAnnotationComposer a) f,
+  ) {
+    final $$FormasPagoTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.formasPago,
+      getReferencedColumn: (t) => t.ventaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FormasPagoTableAnnotationComposer(
+            $db: $db,
+            $table: $db.formasPago,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$VentasTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $VentasTable,
+          FilaVenta,
+          $$VentasTableFilterComposer,
+          $$VentasTableOrderingComposer,
+          $$VentasTableAnnotationComposer,
+          $$VentasTableCreateCompanionBuilder,
+          $$VentasTableUpdateCompanionBuilder,
+          (FilaVenta, $$VentasTableReferences),
+          FilaVenta,
+          PrefetchHooks Function({
+            bool movimientosInventarioRefs,
+            bool formasPagoRefs,
+          })
+        > {
+  $$VentasTableTableManager(_$BaseLocalDrift db, $VentasTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VentasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VentasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VentasTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<DateTime> fecha = const Value.absent(),
+                Value<Decimal> total = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VentasCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                fecha: fecha,
+                total: total,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required DateTime fecha,
+                required Decimal total,
+                Value<int> rowid = const Value.absent(),
+              }) => VentasCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                fecha: fecha,
+                total: total,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VentasTable, FilaVenta>(table),
+                  $$VentasTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({movimientosInventarioRefs = false, formasPagoRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (movimientosInventarioRefs) db.movimientosInventario,
+                    if (formasPagoRefs) db.formasPago,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (movimientosInventarioRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaVenta,
+                          $VentasTable,
+                          FilaMovimientoInventario,
+                          $MovimientosInventarioTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VentasTableReferences
+                              ._movimientosInventarioRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VentasTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).movimientosInventarioRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'venta_id',
+                          typedResults: items,
+                        ),
+                      if (formasPagoRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaVenta,
+                          $VentasTable,
+                          FilaFormaPago,
+                          $FormasPagoTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VentasTableReferences
+                              ._formasPagoRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VentasTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).formasPagoRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'venta_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$VentasTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $VentasTable,
+      FilaVenta,
+      $$VentasTableFilterComposer,
+      $$VentasTableOrderingComposer,
+      $$VentasTableAnnotationComposer,
+      $$VentasTableCreateCompanionBuilder,
+      $$VentasTableUpdateCompanionBuilder,
+      (FilaVenta, $$VentasTableReferences),
+      FilaVenta,
+      PrefetchHooks Function({
+        bool movimientosInventarioRefs,
+        bool formasPagoRefs,
+      })
+    >;
 typedef $$MovimientosInventarioTableCreateCompanionBuilder =
     MovimientosInventarioCompanion Function({
       required String id,
@@ -3078,6 +5242,8 @@ typedef $$MovimientosInventarioTableCreateCompanionBuilder =
       required String estado,
       Value<Decimal?> costoUnitario,
       Value<String?> numeroFactura,
+      Value<String?> ventaId,
+      Value<Decimal?> precioUnitario,
       Value<int> rowid,
     });
 typedef $$MovimientosInventarioTableUpdateCompanionBuilder =
@@ -3091,6 +5257,8 @@ typedef $$MovimientosInventarioTableUpdateCompanionBuilder =
       Value<String> estado,
       Value<Decimal?> costoUnitario,
       Value<String?> numeroFactura,
+      Value<String?> ventaId,
+      Value<Decimal?> precioUnitario,
       Value<int> rowid,
     });
 
@@ -3119,6 +5287,23 @@ final class $$MovimientosInventarioTableReferences
       $_db.itemsInventario,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $VentasTable _ventaIdTable(_$BaseLocalDrift db) =>
+      db.ventas.createAlias('movimientos_inventario__venta_id__ventas__id');
+
+  $$VentasTableProcessedTableManager? get ventaId {
+    final $_column = $_itemColumn<String>('venta_id');
+    if ($_column == null) return null;
+    final manager = $$VentasTableTableManager(
+      $_db,
+      $_db.ventas,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ventaIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -3178,6 +5363,12 @@ class $$MovimientosInventarioTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<Decimal?, Decimal, String>
+  get precioUnitario => $composableBuilder(
+    column: $table.precioUnitario,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   $$ItemsInventarioTableFilterComposer get itemId {
     final $$ItemsInventarioTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3192,6 +5383,29 @@ class $$MovimientosInventarioTableFilterComposer
           }) => $$ItemsInventarioTableFilterComposer(
             $db: $db,
             $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$VentasTableFilterComposer get ventaId {
+    final $$VentasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableFilterComposer(
+            $db: $db,
+            $table: $db.ventas,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3251,6 +5465,11 @@ class $$MovimientosInventarioTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get precioUnitario => $composableBuilder(
+    column: $table.precioUnitario,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ItemsInventarioTableOrderingComposer get itemId {
     final $$ItemsInventarioTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3265,6 +5484,29 @@ class $$MovimientosInventarioTableOrderingComposer
           }) => $$ItemsInventarioTableOrderingComposer(
             $db: $db,
             $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$VentasTableOrderingComposer get ventaId {
+    final $$VentasTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableOrderingComposer(
+            $db: $db,
+            $table: $db.ventas,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3313,6 +5555,12 @@ class $$MovimientosInventarioTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumnWithTypeConverter<Decimal?, String> get precioUnitario =>
+      $composableBuilder(
+        column: $table.precioUnitario,
+        builder: (column) => column,
+      );
+
   $$ItemsInventarioTableAnnotationComposer get itemId {
     final $$ItemsInventarioTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -3327,6 +5575,29 @@ class $$MovimientosInventarioTableAnnotationComposer
           }) => $$ItemsInventarioTableAnnotationComposer(
             $db: $db,
             $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$VentasTableAnnotationComposer get ventaId {
+    final $$VentasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ventas,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3350,7 +5621,7 @@ class $$MovimientosInventarioTableTableManager
           $$MovimientosInventarioTableUpdateCompanionBuilder,
           (FilaMovimientoInventario, $$MovimientosInventarioTableReferences),
           FilaMovimientoInventario,
-          PrefetchHooks Function({bool itemId})
+          PrefetchHooks Function({bool itemId, bool ventaId})
         > {
   $$MovimientosInventarioTableTableManager(
     _$BaseLocalDrift db,
@@ -3385,6 +5656,8 @@ class $$MovimientosInventarioTableTableManager
                 Value<String> estado = const Value.absent(),
                 Value<Decimal?> costoUnitario = const Value.absent(),
                 Value<String?> numeroFactura = const Value.absent(),
+                Value<String?> ventaId = const Value.absent(),
+                Value<Decimal?> precioUnitario = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MovimientosInventarioCompanion(
                 id: id,
@@ -3396,6 +5669,8 @@ class $$MovimientosInventarioTableTableManager
                 estado: estado,
                 costoUnitario: costoUnitario,
                 numeroFactura: numeroFactura,
+                ventaId: ventaId,
+                precioUnitario: precioUnitario,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3409,6 +5684,8 @@ class $$MovimientosInventarioTableTableManager
                 required String estado,
                 Value<Decimal?> costoUnitario = const Value.absent(),
                 Value<String?> numeroFactura = const Value.absent(),
+                Value<String?> ventaId = const Value.absent(),
+                Value<Decimal?> precioUnitario = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MovimientosInventarioCompanion.insert(
                 id: id,
@@ -3420,6 +5697,8 @@ class $$MovimientosInventarioTableTableManager
                 estado: estado,
                 costoUnitario: costoUnitario,
                 numeroFactura: numeroFactura,
+                ventaId: ventaId,
+                precioUnitario: precioUnitario,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3433,7 +5712,7 @@ class $$MovimientosInventarioTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({itemId = false}) {
+          prefetchHooksCallback: ({itemId = false, ventaId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -3464,6 +5743,17 @@ class $$MovimientosInventarioTableTableManager
                             .id,
                       ) as T;
                     }
+                    if (ventaId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ventaId,
+                        referencedTable: $$MovimientosInventarioTableReferences
+                            ._ventaIdTable(db),
+                        referencedColumn: $$MovimientosInventarioTableReferences
+                            ._ventaIdTable(db)
+                            .id,
+                      ) as T;
+                    }
 
                     return state;
                   },
@@ -3488,7 +5778,1040 @@ typedef $$MovimientosInventarioTableProcessedTableManager =
       $$MovimientosInventarioTableUpdateCompanionBuilder,
       (FilaMovimientoInventario, $$MovimientosInventarioTableReferences),
       FilaMovimientoInventario,
-      PrefetchHooks Function({bool itemId})
+      PrefetchHooks Function({bool itemId, bool ventaId})
+    >;
+typedef $$CajasTableCreateCompanionBuilder = CajasCompanion Function({
+  required String id,
+  required String tiendaId,
+  required String fecha,
+  Value<int> rowid,
+});
+typedef $$CajasTableUpdateCompanionBuilder = CajasCompanion Function({
+  Value<String> id,
+  Value<String> tiendaId,
+  Value<String> fecha,
+  Value<int> rowid,
+});
+
+final class $$CajasTableReferences
+    extends BaseReferences<_$BaseLocalDrift, $CajasTable, FilaCaja> {
+  $$CajasTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$MovimientosCajaTable, List<FilaMovimientoCaja>>
+  _movimientosCajaRefsTable(_$BaseLocalDrift db) =>
+      MultiTypedResultKey.fromTable(
+        db.movimientosCaja,
+        aliasName: 'cajas__id__movimientos_caja__caja_id',
+      );
+
+  $$MovimientosCajaTableProcessedTableManager get movimientosCajaRefs {
+    final manager = $$MovimientosCajaTableTableManager(
+      $_db,
+      $_db.movimientosCaja,
+    ).filter((f) => f.cajaId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _movimientosCajaRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$CajasTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $CajasTable> {
+  $$CajasTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> movimientosCajaRefs(
+    Expression<bool> Function($$MovimientosCajaTableFilterComposer f) f,
+  ) {
+    final $$MovimientosCajaTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.movimientosCaja,
+      getReferencedColumn: (t) => t.cajaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MovimientosCajaTableFilterComposer(
+            $db: $db,
+            $table: $db.movimientosCaja,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CajasTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $CajasTable> {
+  $$CajasTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CajasTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $CajasTable> {
+  $$CajasTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  Expression<T> movimientosCajaRefs<T extends Object>(
+    Expression<T> Function($$MovimientosCajaTableAnnotationComposer a) f,
+  ) {
+    final $$MovimientosCajaTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.movimientosCaja,
+      getReferencedColumn: (t) => t.cajaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MovimientosCajaTableAnnotationComposer(
+            $db: $db,
+            $table: $db.movimientosCaja,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CajasTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $CajasTable,
+          FilaCaja,
+          $$CajasTableFilterComposer,
+          $$CajasTableOrderingComposer,
+          $$CajasTableAnnotationComposer,
+          $$CajasTableCreateCompanionBuilder,
+          $$CajasTableUpdateCompanionBuilder,
+          (FilaCaja, $$CajasTableReferences),
+          FilaCaja,
+          PrefetchHooks Function({bool movimientosCajaRefs})
+        > {
+  $$CajasTableTableManager(_$BaseLocalDrift db, $CajasTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CajasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CajasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CajasTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> fecha = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CajasCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                fecha: fecha,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String fecha,
+                Value<int> rowid = const Value.absent(),
+              }) => CajasCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                fecha: fecha,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CajasTable, FilaCaja>(table),
+                  $$CajasTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({movimientosCajaRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (movimientosCajaRefs) db.movimientosCaja,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (movimientosCajaRefs)
+                    await $_getPrefetchedDataByColumns<
+                      FilaCaja,
+                      $CajasTable,
+                      FilaMovimientoCaja,
+                      $MovimientosCajaTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CajasTableReferences
+                          ._movimientosCajaRefsTable(db),
+                      managerFromTypedResult: (p0) => $$CajasTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).movimientosCajaRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'caja_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CajasTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $CajasTable,
+      FilaCaja,
+      $$CajasTableFilterComposer,
+      $$CajasTableOrderingComposer,
+      $$CajasTableAnnotationComposer,
+      $$CajasTableCreateCompanionBuilder,
+      $$CajasTableUpdateCompanionBuilder,
+      (FilaCaja, $$CajasTableReferences),
+      FilaCaja,
+      PrefetchHooks Function({bool movimientosCajaRefs})
+    >;
+typedef $$MovimientosCajaTableCreateCompanionBuilder =
+    MovimientosCajaCompanion Function({
+      required String id,
+      required String tiendaId,
+      required String cajaId,
+      required String tipo,
+      required String clasificacion,
+      required Decimal valor,
+      required String descripcion,
+      required DateTime fecha,
+      Value<int> rowid,
+    });
+typedef $$MovimientosCajaTableUpdateCompanionBuilder =
+    MovimientosCajaCompanion Function({
+      Value<String> id,
+      Value<String> tiendaId,
+      Value<String> cajaId,
+      Value<String> tipo,
+      Value<String> clasificacion,
+      Value<Decimal> valor,
+      Value<String> descripcion,
+      Value<DateTime> fecha,
+      Value<int> rowid,
+    });
+
+final class $$MovimientosCajaTableReferences
+    extends
+        BaseReferences<
+          _$BaseLocalDrift,
+          $MovimientosCajaTable,
+          FilaMovimientoCaja
+        > {
+  $$MovimientosCajaTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CajasTable _cajaIdTable(_$BaseLocalDrift db) =>
+      db.cajas.createAlias('movimientos_caja__caja_id__cajas__id');
+
+  $$CajasTableProcessedTableManager get cajaId {
+    final $_column = $_itemColumn<String>('caja_id')!;
+
+    final manager = $$CajasTableTableManager(
+      $_db,
+      $_db.cajas,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_cajaIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$MovimientosCajaTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $MovimientosCajaTable> {
+  $$MovimientosCajaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tipo => $composableBuilder(
+    column: $table.tipo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clasificacion => $composableBuilder(
+    column: $table.clasificacion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get valor =>
+      $composableBuilder(
+        column: $table.valor,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get descripcion => $composableBuilder(
+    column: $table.descripcion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get fecha =>
+      $composableBuilder(
+        column: $table.fecha,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$CajasTableFilterComposer get cajaId {
+    final $$CajasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cajaId,
+      referencedTable: $db.cajas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CajasTableFilterComposer(
+            $db: $db,
+            $table: $db.cajas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MovimientosCajaTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $MovimientosCajaTable> {
+  $$MovimientosCajaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tipo => $composableBuilder(
+    column: $table.tipo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get clasificacion => $composableBuilder(
+    column: $table.clasificacion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valor => $composableBuilder(
+    column: $table.valor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get descripcion => $composableBuilder(
+    column: $table.descripcion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CajasTableOrderingComposer get cajaId {
+    final $$CajasTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cajaId,
+      referencedTable: $db.cajas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CajasTableOrderingComposer(
+            $db: $db,
+            $table: $db.cajas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MovimientosCajaTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $MovimientosCajaTable> {
+  $$MovimientosCajaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get tipo =>
+      $composableBuilder(column: $table.tipo, builder: (column) => column);
+
+  GeneratedColumn<String> get clasificacion => $composableBuilder(
+    column: $table.clasificacion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get valor =>
+      $composableBuilder(column: $table.valor, builder: (column) => column);
+
+  GeneratedColumn<String> get descripcion => $composableBuilder(
+    column: $table.descripcion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  $$CajasTableAnnotationComposer get cajaId {
+    final $$CajasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cajaId,
+      referencedTable: $db.cajas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CajasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.cajas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$MovimientosCajaTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $MovimientosCajaTable,
+          FilaMovimientoCaja,
+          $$MovimientosCajaTableFilterComposer,
+          $$MovimientosCajaTableOrderingComposer,
+          $$MovimientosCajaTableAnnotationComposer,
+          $$MovimientosCajaTableCreateCompanionBuilder,
+          $$MovimientosCajaTableUpdateCompanionBuilder,
+          (FilaMovimientoCaja, $$MovimientosCajaTableReferences),
+          FilaMovimientoCaja,
+          PrefetchHooks Function({bool cajaId})
+        > {
+  $$MovimientosCajaTableTableManager(
+    _$BaseLocalDrift db,
+    $MovimientosCajaTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MovimientosCajaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MovimientosCajaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MovimientosCajaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> cajaId = const Value.absent(),
+                Value<String> tipo = const Value.absent(),
+                Value<String> clasificacion = const Value.absent(),
+                Value<Decimal> valor = const Value.absent(),
+                Value<String> descripcion = const Value.absent(),
+                Value<DateTime> fecha = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MovimientosCajaCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                cajaId: cajaId,
+                tipo: tipo,
+                clasificacion: clasificacion,
+                valor: valor,
+                descripcion: descripcion,
+                fecha: fecha,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String cajaId,
+                required String tipo,
+                required String clasificacion,
+                required Decimal valor,
+                required String descripcion,
+                required DateTime fecha,
+                Value<int> rowid = const Value.absent(),
+              }) => MovimientosCajaCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                cajaId: cajaId,
+                tipo: tipo,
+                clasificacion: clasificacion,
+                valor: valor,
+                descripcion: descripcion,
+                fecha: fecha,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MovimientosCajaTable, FilaMovimientoCaja>(table),
+                  $$MovimientosCajaTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({cajaId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (cajaId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.cajaId,
+                        referencedTable: $$MovimientosCajaTableReferences
+                            ._cajaIdTable(db),
+                        referencedColumn: $$MovimientosCajaTableReferences
+                            ._cajaIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$MovimientosCajaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $MovimientosCajaTable,
+      FilaMovimientoCaja,
+      $$MovimientosCajaTableFilterComposer,
+      $$MovimientosCajaTableOrderingComposer,
+      $$MovimientosCajaTableAnnotationComposer,
+      $$MovimientosCajaTableCreateCompanionBuilder,
+      $$MovimientosCajaTableUpdateCompanionBuilder,
+      (FilaMovimientoCaja, $$MovimientosCajaTableReferences),
+      FilaMovimientoCaja,
+      PrefetchHooks Function({bool cajaId})
+    >;
+typedef $$FormasPagoTableCreateCompanionBuilder = FormasPagoCompanion Function({
+  required String id,
+  required String tiendaId,
+  required String ventaId,
+  required String tipo,
+  Value<Decimal?> montoRecibido,
+  Value<Decimal?> cambio,
+  Value<Decimal?> monto,
+  Value<String?> referencia,
+  Value<int> rowid,
+});
+typedef $$FormasPagoTableUpdateCompanionBuilder = FormasPagoCompanion Function({
+  Value<String> id,
+  Value<String> tiendaId,
+  Value<String> ventaId,
+  Value<String> tipo,
+  Value<Decimal?> montoRecibido,
+  Value<Decimal?> cambio,
+  Value<Decimal?> monto,
+  Value<String?> referencia,
+  Value<int> rowid,
+});
+
+final class $$FormasPagoTableReferences
+    extends BaseReferences<_$BaseLocalDrift, $FormasPagoTable, FilaFormaPago> {
+  $$FormasPagoTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $VentasTable _ventaIdTable(_$BaseLocalDrift db) =>
+      db.ventas.createAlias('formas_pago__venta_id__ventas__id');
+
+  $$VentasTableProcessedTableManager get ventaId {
+    final $_column = $_itemColumn<String>('venta_id')!;
+
+    final manager = $$VentasTableTableManager(
+      $_db,
+      $_db.ventas,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ventaIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FormasPagoTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $FormasPagoTable> {
+  $$FormasPagoTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tipo => $composableBuilder(
+    column: $table.tipo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Decimal?, Decimal, String> get montoRecibido =>
+      $composableBuilder(
+        column: $table.montoRecibido,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<Decimal?, Decimal, String> get cambio =>
+      $composableBuilder(
+        column: $table.cambio,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<Decimal?, Decimal, String> get monto =>
+      $composableBuilder(
+        column: $table.monto,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get referencia => $composableBuilder(
+    column: $table.referencia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VentasTableFilterComposer get ventaId {
+    final $$VentasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableFilterComposer(
+            $db: $db,
+            $table: $db.ventas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FormasPagoTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $FormasPagoTable> {
+  $$FormasPagoTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tipo => $composableBuilder(
+    column: $table.tipo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get montoRecibido => $composableBuilder(
+    column: $table.montoRecibido,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cambio => $composableBuilder(
+    column: $table.cambio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get monto => $composableBuilder(
+    column: $table.monto,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referencia => $composableBuilder(
+    column: $table.referencia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VentasTableOrderingComposer get ventaId {
+    final $$VentasTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableOrderingComposer(
+            $db: $db,
+            $table: $db.ventas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FormasPagoTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $FormasPagoTable> {
+  $$FormasPagoTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get tipo =>
+      $composableBuilder(column: $table.tipo, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal?, String> get montoRecibido =>
+      $composableBuilder(
+        column: $table.montoRecibido,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<Decimal?, String> get cambio =>
+      $composableBuilder(column: $table.cambio, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal?, String> get monto =>
+      $composableBuilder(column: $table.monto, builder: (column) => column);
+
+  GeneratedColumn<String> get referencia => $composableBuilder(
+    column: $table.referencia,
+    builder: (column) => column,
+  );
+
+  $$VentasTableAnnotationComposer get ventaId {
+    final $$VentasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ventas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FormasPagoTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $FormasPagoTable,
+          FilaFormaPago,
+          $$FormasPagoTableFilterComposer,
+          $$FormasPagoTableOrderingComposer,
+          $$FormasPagoTableAnnotationComposer,
+          $$FormasPagoTableCreateCompanionBuilder,
+          $$FormasPagoTableUpdateCompanionBuilder,
+          (FilaFormaPago, $$FormasPagoTableReferences),
+          FilaFormaPago,
+          PrefetchHooks Function({bool ventaId})
+        > {
+  $$FormasPagoTableTableManager(_$BaseLocalDrift db, $FormasPagoTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FormasPagoTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FormasPagoTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FormasPagoTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> ventaId = const Value.absent(),
+                Value<String> tipo = const Value.absent(),
+                Value<Decimal?> montoRecibido = const Value.absent(),
+                Value<Decimal?> cambio = const Value.absent(),
+                Value<Decimal?> monto = const Value.absent(),
+                Value<String?> referencia = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FormasPagoCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                ventaId: ventaId,
+                tipo: tipo,
+                montoRecibido: montoRecibido,
+                cambio: cambio,
+                monto: monto,
+                referencia: referencia,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String ventaId,
+                required String tipo,
+                Value<Decimal?> montoRecibido = const Value.absent(),
+                Value<Decimal?> cambio = const Value.absent(),
+                Value<Decimal?> monto = const Value.absent(),
+                Value<String?> referencia = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FormasPagoCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                ventaId: ventaId,
+                tipo: tipo,
+                montoRecibido: montoRecibido,
+                cambio: cambio,
+                monto: monto,
+                referencia: referencia,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FormasPagoTable, FilaFormaPago>(table),
+                  $$FormasPagoTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ventaId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (ventaId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ventaId,
+                        referencedTable: $$FormasPagoTableReferences
+                            ._ventaIdTable(db),
+                        referencedColumn: $$FormasPagoTableReferences
+                            ._ventaIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FormasPagoTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $FormasPagoTable,
+      FilaFormaPago,
+      $$FormasPagoTableFilterComposer,
+      $$FormasPagoTableOrderingComposer,
+      $$FormasPagoTableAnnotationComposer,
+      $$FormasPagoTableCreateCompanionBuilder,
+      $$FormasPagoTableUpdateCompanionBuilder,
+      (FilaFormaPago, $$FormasPagoTableReferences),
+      FilaFormaPago,
+      PrefetchHooks Function({bool ventaId})
     >;
 
 class $BaseLocalDriftManager {
@@ -3500,6 +6823,14 @@ class $BaseLocalDriftManager {
       $$ProductosTableTableManager(_db, _db.productos);
   $$ItemsInventarioTableTableManager get itemsInventario =>
       $$ItemsInventarioTableTableManager(_db, _db.itemsInventario);
+  $$VentasTableTableManager get ventas =>
+      $$VentasTableTableManager(_db, _db.ventas);
   $$MovimientosInventarioTableTableManager get movimientosInventario =>
       $$MovimientosInventarioTableTableManager(_db, _db.movimientosInventario);
+  $$CajasTableTableManager get cajas =>
+      $$CajasTableTableManager(_db, _db.cajas);
+  $$MovimientosCajaTableTableManager get movimientosCaja =>
+      $$MovimientosCajaTableTableManager(_db, _db.movimientosCaja);
+  $$FormasPagoTableTableManager get formasPago =>
+      $$FormasPagoTableTableManager(_db, _db.formasPago);
 }

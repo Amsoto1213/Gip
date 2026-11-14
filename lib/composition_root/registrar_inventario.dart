@@ -11,11 +11,13 @@ import 'package:gip/data/repositorios/gestion_inventario/movimiento_inventario_r
 import 'package:gip/data/repositorios/gestion_inventario/producto_repositorio_drift.dart';
 import 'package:gip/data/service_agents/impresion_etiquetas_pendiente.dart';
 
-/// Coordinadores del módulo gestion_inventario.
+/// Coordinadores del módulo gestion_inventario y el [ServicioInventario], que
+/// usa el módulo pagos (CUS-02).
 typedef CoordinadoresInventario = ({
   GestionarProductoCoordinator gestionarProducto,
   BuscarProductoCoordinator buscarProducto,
   RegistrarEntradaMercanciaCoordinator registrarEntradaMercancia,
+  ServicioInventario servicioInventario,
 });
 
 /// Arma el módulo de inventario con sus implementaciones concretas.
@@ -48,5 +50,6 @@ CoordinadoresInventario registrarInventario(
     registrarEntradaMercancia: RegistrarEntradaMercanciaCoordinator(
       servicioInventario,
     ),
+    servicioInventario: servicioInventario,
   );
 }
