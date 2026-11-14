@@ -155,6 +155,80 @@ void main() {
         expect(await productos.buscarPorNombre(otraTienda, 'cafe'), isEmpty);
       },
     );
+
+    test(
+      'buscarPorNombre normaliza también el texto buscado (RD-08)',
+      () async {
+        await productos.guardar(
+          tienda,
+          producto('p1', 'A', 'Azúcar Manuelita'),
+        );
+        await productos.guardar(tienda, producto('p2', 'B', 'ARROZ Diana'));
+
+        for (final texto in ['azucar', 'AZÚCAR', 'Azúcar']) {
+          expect(
+            (await productos.buscarPorNombre(
+              tienda,
+              texto,
+            )).map((p) => p.getId()),
+            ['p1'],
+            reason: texto,
+          );
+        }
+        expect(
+          (await productos.buscarPorNombre(
+            tienda,
+            'arroz',
+          )).map((p) => p.getId()),
+          ['p2'],
+        );
+      },
+    );
+
+    test('buscarPorNombre no muestra productos de otra tienda', () async {
+      await productos.guardar(tienda, producto('p1', 'A', 'Arroz Diana'));
+      await productos.guardar(otraTienda, producto('p2', 'A', 'Arroz Roa'));
+
+      expect(
+        (await productos.buscarPorNombre(
+          tienda,
+          'arroz',
+        )).map((p) => p.getId()),
+        ['p1'],
+      );
+      expect(
+        (await productos.buscarPorNombre(
+          otraTienda,
+          'arroz',
+        )).map((p) => p.getId()),
+        ['p2'],
+      );
+    });
+
+    test(
+      'buscarPorNombre entre 2.000 productos tarda 1 s o menos (RD-08)',
+      () async {
+        await base.transaction(() async {
+          for (var i = 0; i < 2000; i++) {
+            final nombre = i % 100 == 0
+                ? 'Café molido $i'
+                : 'Producto de prueba $i';
+            await productos.guardar(tienda, producto('p$i', 'C$i', nombre));
+          }
+        });
+
+        final reloj = Stopwatch()..start();
+        final resultado = await productos.buscarPorNombre(tienda, 'CAFE');
+        reloj.stop();
+
+        expect(resultado, hasLength(20));
+        expect(
+          reloj.elapsedMilliseconds,
+          lessThanOrEqualTo(1000),
+          reason: 'tardó ${reloj.elapsedMilliseconds} ms',
+        );
+      },
+    );
   });
 
   group('InventarioRepositorioDrift', () {

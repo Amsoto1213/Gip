@@ -6,10 +6,12 @@ import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
+import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
+import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -19,6 +21,8 @@ class SesionLocalFalsa extends Mock implements ISesionLocal {}
 
 class GestionarProductoFalso extends Mock
     implements GestionarProductoCoordinator {}
+
+class BuscarProductoFalso extends Mock implements BuscarProductoCoordinator {}
 
 const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
 
@@ -45,6 +49,7 @@ void main() {
           ServicioAcceso(autenticacion, sesionLocal),
         ),
         gestionarProducto: GestionarProductoFalso(),
+        buscarProducto: BuscarProductoFalso(),
       ),
     );
     await tester.pumpAndSettle();
@@ -124,6 +129,21 @@ void main() {
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     expect(find.byType(ProductoView), findsNothing);
+    expect(titulo('Surtido'), findsOneWidget);
+  });
+
+  testWidgets('Surtido abre Buscar producto y Volver regresa', (tester) async {
+    await abrir(tester, 390, 844);
+
+    await tester.tap(find.text('Surtido').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Buscar producto'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuscarProductoView), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuscarProductoView), findsNothing);
     expect(titulo('Surtido'), findsOneWidget);
   });
 }

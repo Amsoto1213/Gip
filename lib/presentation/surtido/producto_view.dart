@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
+import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
@@ -35,21 +36,9 @@ class _ProductoViewState extends State<ProductoView> {
     _codigo.text = producto.getCodigo();
     _nombre.text = producto.getNombre();
     _unidad = producto.getUnidadMedida();
-    _precioVenta.text = _mostrarPrecio(producto.getPrecioVenta().toString());
+    _precioVenta.text = mostrarPrecio(producto.getPrecioVenta());
     final compra = producto.getPrecioCompra();
-    _precioCompra.text = compra == null
-        ? ''
-        : _mostrarPrecio(compra.toString());
-  }
-
-  /// "3500.5" → "3.500,5": miles con punto y decimales con coma.
-  static String _mostrarPrecio(String valor) {
-    final partes = valor.split('.');
-    final entero = partes.first.replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-      (_) => '.',
-    );
-    return partes.length > 1 ? '$entero,${partes[1]}' : entero;
+    _precioCompra.text = compra == null ? '' : mostrarPrecio(compra);
   }
 
   @override

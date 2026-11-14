@@ -13,7 +13,7 @@ import 'package:uuid/uuid.dart';
 /// Pure Fabrication e Information Expert del catálogo: búsqueda por nombre o
 /// por código y creación de productos (CUR-06, RF-06).
 ///
-/// Por ahora tiene crear y editar (CUS-18). `interpretes` e `impresion` están
+/// Por ahora tiene buscar por nombre (CUS-06), crear y editar (CUS-18). `interpretes` e `impresion` están
 /// en el constructor de EA y los usarán "Asociar código" (CUS-17) y
 /// "Etiquetas" (iteración 4); ningún flujo de CUS-18 los llama (DI-15).
 class ServicioCatalogo {
@@ -35,6 +35,11 @@ class ServicioCatalogo {
   final List<InterpreteCodigo> _interpretes;
   // ignore: unused_field
   final IImpresionEtiquetas _impresion;
+
+  /// Delega en productos.buscarPorNombre; la coincidencia sin tildes ni
+  /// mayúsculas la resuelve el repositorio (RD-08, CUS-06).
+  Future<List<Producto>> buscarPorNombre(Tienda tienda, String texto) =>
+      _productos.buscarPorNombre(tienda, texto);
 
   /// Creator: valida que el código no exista, el nombre no esté vacío y los
   /// precios no sean negativos ([precioCompra] puede ser nulo). Crea el

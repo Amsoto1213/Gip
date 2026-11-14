@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_catalogo.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
@@ -12,6 +13,7 @@ import 'package:gip/data/service_agents/impresion_etiquetas_pendiente.dart';
 /// Coordinadores del módulo gestion_inventario.
 typedef CoordinadoresInventario = ({
   GestionarProductoCoordinator gestionarProducto,
+  BuscarProductoCoordinator buscarProducto,
 });
 
 /// Arma el módulo de inventario con sus implementaciones concretas.
@@ -39,5 +41,8 @@ CoordinadoresInventario registrarInventario(
     const ImpresionEtiquetasPendiente(),
     unidadTrabajo,
   );
-  return (gestionarProducto: GestionarProductoCoordinator(servicioCatalogo));
+  return (
+    gestionarProducto: GestionarProductoCoordinator(servicioCatalogo),
+    buscarProducto: BuscarProductoCoordinator(servicioCatalogo),
+  );
 }

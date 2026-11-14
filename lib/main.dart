@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/composition_root/registrar_acceso.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
     GipApp(
       iniciarSesion: registrarAcceso(cliente),
       gestionarProducto: inventario.gestionarProducto,
+      buscarProducto: inventario.buscarProducto,
     ),
   );
 }
@@ -36,10 +38,12 @@ class GipApp extends StatefulWidget {
     super.key,
     required this.iniciarSesion,
     required this.gestionarProducto,
+    required this.buscarProducto,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
   final GestionarProductoCoordinator gestionarProducto;
+  final BuscarProductoCoordinator buscarProducto;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -64,6 +68,7 @@ class _GipAppState extends State<GipApp> {
       providers: [
         ChangeNotifierProvider.value(value: _sesion),
         Provider.value(value: widget.gestionarProducto),
+        Provider.value(value: widget.buscarProducto),
       ],
       child: MaterialApp.router(
         title: 'GIP',

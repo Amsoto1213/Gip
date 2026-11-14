@@ -323,4 +323,36 @@ void main() {
       });
     }
   });
+
+  group('buscarPorNombre', () {
+    test('delega en el repositorio y devuelve sus coincidencias', () async {
+      final galletas = await crearGalletas();
+      await servicio.crearProducto(
+        tienda,
+        'ARR-1',
+        'Arroz Diana',
+        UnidadMedida.libra,
+        null,
+        Decimal.parse('2800'),
+      );
+
+      final resultado = await servicio.buscarPorNombre(tienda, 'COCO');
+
+      expect(resultado.map((p) => p.getId()), [galletas.getId()]);
+      expect(productos.textosBuscados, ['COCO']);
+      verificarPiezasPendientesSinUso();
+    });
+
+    test('solo busca en la tienda indicada', () async {
+      await crearGalletas();
+
+      expect(await servicio.buscarPorNombre(otraTienda, 'galletas'), isEmpty);
+    });
+
+    test('sin coincidencias devuelve una lista vacía', () async {
+      await crearGalletas();
+
+      expect(await servicio.buscarPorNombre(tienda, 'leche'), isEmpty);
+    });
+  });
 }
