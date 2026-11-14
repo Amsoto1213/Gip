@@ -11,6 +11,7 @@ import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coor
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
+import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -128,6 +129,21 @@ void main() {
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     expect(find.byType(ProductoView), findsNothing);
+    expect(titulo('Surtido'), findsOneWidget);
+  });
+
+  testWidgets('Surtido abre Buscar producto y Volver regresa', (tester) async {
+    await abrir(tester, 390, 844);
+
+    await tester.tap(find.text('Surtido').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Buscar producto'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuscarProductoView), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuscarProductoView), findsNothing);
     expect(titulo('Surtido'), findsOneWidget);
   });
 }
