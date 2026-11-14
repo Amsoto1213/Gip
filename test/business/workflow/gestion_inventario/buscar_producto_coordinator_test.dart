@@ -27,13 +27,11 @@ void main() {
       null,
       Decimal.parse('3000'),
     );
-    when(
-      () => servicio.buscarPorNombre(tienda, 'co'),
-    ).thenAnswer((_) async => [coco]);
+    when(() => servicio.buscarPorNombre(tienda, 'co'))
+        .thenAnswer((_) async => [coco]);
 
-    final resultado = await BuscarProductoCoordinator(
-      servicio,
-    ).buscarPorNombre(tienda, 'co');
+    final resultado = await BuscarProductoCoordinator(servicio)
+        .buscarPorNombre(tienda, 'co');
 
     expect(resultado, [coco]);
     verify(() => servicio.buscarPorNombre(tienda, 'co')).called(1);
