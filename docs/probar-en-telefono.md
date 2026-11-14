@@ -18,6 +18,8 @@ El día a día se hace en Chrome (`flutter run -d chrome`); el teléfono se usa 
    base64 -w0 debug.keystore     # Linux. En Windows: [Convert]::ToBase64String([IO.File]::ReadAllBytes("debug.keystore"))
    ```
    Copiar el texto y guardarlo en GitHub: *Settings → Secrets and variables → Actions → New repository secret*, nombre `ANDROID_DEBUG_KEYSTORE_B64`. Después borrar `debug.keystore` del disco (no se sube al repo).
+
+   El workflow escribe la llave en un archivo y se la pasa a Gradle con la variable `GIP_KEYSTORE` (`android/app/build.gradle.kts`); el paso *Verificar la firma* no publica el APK si no salió con esa llave. `flutter run` en el teléfono firma con la llave de cada computador: al pasar de una instalación con `flutter run` al APK de GitHub (o al revés) hay que desinstalar la app primero.
 2. **Supabase para el teléfono.** El APK no puede usar el Supabase local de nadie (127.0.0.1 es el propio teléfono). Se apunta al proyecto de pruebas en Supabase Cloud: secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY`. Si aún no existe, el APK igual funciona sin conexión (la app es offline-first), pero no sincroniza.
 
 ## Instalar el APK en el teléfono
