@@ -308,7 +308,8 @@ void main() {
   });
 
   group('migración', () {
-    test('una base en versión 1 sube a 2 y crea productos e ítems', () async {
+    test('una base en versión 1 sube a la última y crea productos, ítems y '
+        'movimientos', () async {
       await base.close();
       base = BaseLocalDrift(
         NativeDatabase.memory(
@@ -334,7 +335,11 @@ void main() {
       final version = await base
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 2);
+      expect(version.read<int>('user_version'), base.schemaVersion);
+      final movimientos = await base
+          .customSelect('SELECT count(*) AS n FROM movimientos_inventario')
+          .getSingle();
+      expect(movimientos.read<int>('n'), 0);
     });
   });
 }

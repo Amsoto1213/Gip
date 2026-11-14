@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:decimal/decimal.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,6 +52,49 @@ void main() {
           .customSelect('SELECT creado_en FROM cola_pendientes')
           .getSingle();
       expect(crudo.read<String>('creado_en'), endsWith('Z'));
+    });
+  });
+
+  group('migración', () {
+    late Directory carpeta;
+
+    setUp(() => carpeta = Directory.systemTemp.createTempSync('gip_migracion'));
+    tearDown(() => carpeta.deleteSync(recursive: true));
+
+    Future<List<String>> tablas(BaseLocalDrift base) async =>
+        (await base
+                .customSelect(
+                  "SELECT name FROM sqlite_master WHERE type IN ('table', 'index')",
+                )
+                .get())
+            .map((f) => f.read<String>('name'))
+            .toList();
+
+    test('de la versión 2 a la 3 crea movimientos_inventario', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      // Deja la base como estaba en la versión 2 (CUS-18).
+      final v2 = BaseLocalDrift(NativeDatabase(archivo));
+      await v2.customStatement('DROP TABLE movimientos_inventario');
+      await v2.customStatement('PRAGMA user_version = 2');
+      expect(await tablas(v2), isNot(contains('movimientos_inventario')));
+      await v2.close();
+
+      final v3 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(v3.schemaVersion, 3);
+      expect(
+        await tablas(v3),
+        containsAll([
+          'movimientos_inventario',
+          'movimientos_inventario_tienda_idx',
+          'movimientos_inventario_item_tipo_fecha_idx',
+          'productos',
+          'items_inventario',
+        ]),
+      );
+      final version = await v3.customSelect('PRAGMA user_version').getSingle();
+      expect(version.read<int>('user_version'), 3);
+      await v3.close();
     });
   });
 }
