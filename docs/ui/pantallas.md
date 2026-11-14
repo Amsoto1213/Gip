@@ -6,7 +6,7 @@ Exporten cada tablero como PNG a `docs/ui/mockups/` con el nombre de la columna 
 | Sección | Pantalla | Móvil | Web | CUS |
 |---|---|---|---|---|
 | Acceso | Inicio de sesión (correo y contraseña) | sin mockup | sin mockup | DI-05 |
-| Paridad | Matriz de paridad móvil–web | — | `Paridad` | todos |
+| Paridad | Matriz de paridad móvil–web | — | ver `paridad.md` (sin PNG) | todos |
 | Vender | Vender | `Main` | `Vender` | CUS-02 |
 | Vender | Buscar producto | `mBuscar` | `Vender` | CUS-06, CUS-13 |
 | Vender | Leer código (lector 2D o cámara) | `Escanear` | `Vender` (solo lector 2D) | CUS-17 |
