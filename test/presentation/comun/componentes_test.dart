@@ -9,12 +9,14 @@ import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/logo_gip.dart';
 import 'package:gip/presentation/comun/nota_info.dart';
 import 'package:gip/presentation/comun/opcion_con_icono.dart';
+import 'package:gip/presentation/comun/opcion_radio.dart';
 import 'package:gip/presentation/comun/pildora_estado.dart';
 import 'package:gip/presentation/comun/resumen_movimiento.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
 import 'package:gip/presentation/comun/selector_filtro.dart';
 import 'package:gip/presentation/comun/tarjeta_accion.dart';
 import 'package:gip/presentation/comun/tarjeta_aviso.dart';
+import 'package:gip/presentation/comun/tarjeta_cifra.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 
@@ -888,6 +890,132 @@ void main() {
         );
       }
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('TarjetaCifra', () {
+    testWidgets('etiqueta, valor con cifras tabulares y detalle', (
+      tester,
+    ) async {
+      await montar(
+        tester,
+        const TarjetaCifra(
+          etiqueta: 'Total',
+          valor: r'$ 13.400',
+          detalle: 'la venta',
+        ),
+      );
+      expect(find.text('Total'), findsOneWidget);
+      expect(find.text('la venta'), findsOneWidget);
+      final valor = tester.widget<Text>(find.text(r'$ 13.400'));
+      expect(
+        valor.style?.fontFeatures,
+        contains(const FontFeature.tabularFigures()),
+      );
+      expect(valor.style?.color, isNot(ColoresGip.errorTexto));
+    });
+
+    testWidgets('enRojo: el valor va en errorTexto', (tester) async {
+      await montar(
+        tester,
+        const TarjetaCifra(etiqueta: 'Falta', valor: r'$ 8.400', enRojo: true),
+      );
+      expect(
+        tester.widget<Text>(find.text(r'$ 8.400')).style?.color,
+        ColoresGip.errorTexto,
+      );
+    });
+
+    testWidgets('tres en fila caben en 360 px sin desbordar', (tester) async {
+      await montar(
+        tester,
+        const Row(
+          children: [
+            Expanded(
+              child: TarjetaCifra(
+                etiqueta: 'Total',
+                valor: r'$ 1.284.000',
+                detalle: 'la venta',
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: TarjetaCifra(
+                etiqueta: 'Ya pagó',
+                valor: r'$ 1.000.000',
+                detalle: 'efectivo y Nequi',
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: TarjetaCifra(
+                etiqueta: 'Falta',
+                valor: r'$ 284.000',
+                detalle: 'por cubrir',
+                enRojo: true,
+              ),
+            ),
+          ],
+        ),
+        ancho: 360,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('OpcionRadio', () {
+    testWidgets('elegida: fondo primarioSuave y radio marcado; valor en rojo', (
+      tester,
+    ) async {
+      await montar(
+        tester,
+        const OpcionRadio(
+          titulo: 'María Pérez',
+          subtitulo: '300 412 4521 · 3 fiados pendientes',
+          valor: r'debe $ 47.500',
+          valorEnRojo: true,
+          elegida: true,
+          onTap: null,
+        ),
+      );
+      expect(find.byIcon(Icons.radio_button_checked), findsOneWidget);
+      final material = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byType(OpcionRadio),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(material.color, ColoresGip.primarioSuave);
+      expect(
+        tester.widget<Text>(find.text(r'debe $ 47.500')).style?.color,
+        ColoresGip.errorTexto,
+      );
+    });
+
+    testWidgets('sin elegir: radio vacío, 56 px y tocar la elige', (
+      tester,
+    ) async {
+      var tocada = 0;
+      await montar(
+        tester,
+        OpcionRadio(
+          key: const Key('opcion'),
+          titulo: 'Ana',
+          valor: r'$ 0',
+          elegida: false,
+          onTap: () => tocada++,
+        ),
+        ancho: 360,
+      );
+      expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
+      expect(
+        tester.getSize(find.byKey(const Key('opcion'))).height,
+        greaterThanOrEqualTo(56),
+      );
+      await tester.tap(find.text('Ana'));
+      expect(tocada, 1);
     });
   });
 }

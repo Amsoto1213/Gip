@@ -5,7 +5,8 @@ import 'package:gip/data/local/tablas/ventas.dart';
 /// Formas de pago de cada venta (clase `FormaPago` y sus subclases) en una
 /// sola tabla con columna `tipo`, como `movimientos_inventario` (DI-03,
 /// DI-21): CONTADO usa `monto_recibido` y `cambio`; NEQUI, `monto` y
-/// `referencia`. FIADO llega con CUS-07. Solo se agregan.
+/// `referencia`; FIADO, `monto` (su cliente y saldo están en `fiados`, con el
+/// mismo id; DI-26). Solo se agregan.
 @DataClassName('FilaFormaPago')
 @TableIndex(name: 'formas_pago_tienda_idx', columns: {#tiendaId})
 @TableIndex(name: 'formas_pago_venta_idx', columns: {#ventaId})

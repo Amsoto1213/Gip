@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
@@ -60,6 +61,14 @@ class VentaRepositorioDrift implements IVentaRepositorio {
           tipo: 'NEQUI',
           monto: Value(forma.getMonto()),
           referencia: Value(forma.getReferencia()),
+        ),
+        // El cliente y el saldo van en `fiados`, con el mismo id (DI-26).
+        Fiado() => FormasPagoCompanion.insert(
+          id: forma.getId(),
+          tiendaId: tienda.getId(),
+          ventaId: venta.getId(),
+          tipo: 'FIADO',
+          monto: Value(forma.getMontoInicial()),
         ),
         _ => throw UnsupportedError(
           'Forma de pago no disponible todavía: ${forma.runtimeType}',

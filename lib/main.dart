@@ -7,6 +7,7 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_merca
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/composition_root/registrar_acceso.dart';
 import 'package:gip/composition_root/registrar_alertas.dart';
@@ -52,6 +53,7 @@ Future<void> main() async {
       registrarPerdida: inventario.registrarPerdida,
       registrarConteo: inventario.registrarConteo,
       registrarVenta: pagos.registrarVenta,
+      registrarFiado: pagos.registrarFiado,
       generarAlertas: alertas.generarAlertas,
       consultarAlertas: alertas.consultarAlertas,
     ),
@@ -68,6 +70,7 @@ class GipApp extends StatefulWidget {
     required this.registrarPerdida,
     required this.registrarConteo,
     required this.registrarVenta,
+    required this.registrarFiado,
     required this.generarAlertas,
     required this.consultarAlertas,
   });
@@ -79,6 +82,7 @@ class GipApp extends StatefulWidget {
   final RegistrarPerdidaCoordinator registrarPerdida;
   final RegistrarConteoCoordinator registrarConteo;
   final RegistrarVentaCoordinator registrarVenta;
+  final RegistrarFiadoCoordinator registrarFiado;
   final GenerarAlertasDiariasCoordinator generarAlertas;
   final ConsultarAlertasCoordinator consultarAlertas;
 
@@ -120,6 +124,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarPerdida),
         Provider.value(value: widget.registrarConteo),
         Provider.value(value: widget.registrarVenta),
+        Provider.value(value: widget.registrarFiado),
         Provider.value(value: widget.consultarAlertas),
       ],
       child: MaterialApp.router(

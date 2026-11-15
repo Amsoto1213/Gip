@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/presentation/vender/cobrar_view_model.dart';
 
@@ -134,5 +135,114 @@ void main() {
     expect(await vm.confirmar(), isFalse);
     expect(vm.error, 'No se pudo registrar la venta. Intente de nuevo');
     expect(prueba.ventas.datos[tiendaPrueba.getId()] ?? [], isEmpty);
+  });
+
+  group('fiado (CUS-07)', () {
+    final maria = Cliente('c1', 'María Pérez', '');
+
+    test(
+      'fiado solo: completa el pago, guarda el fiado y no toca la caja',
+      () async {
+        final vm = await cobrar(arroz: 2, cafe: 1); // 14.500
+        final datos = vm.datosFiar;
+        expect(datos.yaPago, d('0'));
+        expect(datos.falta, d('14500'));
+        expect(datos.detallePagado, 'nada aún');
+
+        vm.agregarFiado(
+          prueba.registrarFiado.prepararFiado(maria, datos.falta),
+        );
+        expect(vm.pagoCompleto, isTrue);
+        expect(vm.efectivoACubrir, d('0'));
+
+        expect(await vm.confirmar(), isTrue);
+        expect(
+          prueba.fiados.de(tiendaPrueba).single.getMontoInicial(),
+          d('14500'),
+        );
+        expect(prueba.cajas.movimientos, isEmpty);
+      },
+    );
+
+    test('efectivo que no alcanza + fiado de lo que falta: el efectivo '
+        'queda justo y solo él entra a la caja', () async {
+      final vm = await cobrar(arroz: 2, cafe: 1); // 14.500
+      vm.cambiarEfectivo('5.000');
+      expect(vm.errorEfectivo, 'El monto recibido no alcanza');
+
+      final datos = vm.datosFiar;
+      expect(datos.yaPago, d('5000'));
+      expect(datos.falta, d('9500'));
+      expect(datos.detallePagado, 'efectivo');
+
+      vm.agregarFiado(prueba.registrarFiado.prepararFiado(maria, datos.falta));
+      expect(vm.errorEfectivo, isNull);
+      expect(vm.contado!.getCambio(), d('0'));
+      expect(vm.formasPago, hasLength(2));
+      expect(vm.pagoCompleto, isTrue);
+
+      expect(await vm.confirmar(), isTrue);
+      expect(
+        prueba.cajas.movimientosDe(tiendaPrueba).single.getValor(),
+        d('5000'),
+      );
+      expect(prueba.fiados.de(tiendaPrueba), hasLength(1));
+    });
+
+    test('Nequi + fiado: no mueve la caja', () async {
+      final vm = await cobrar(arroz: 2, cafe: 1); // 14.500
+      vm.cambiarNequi('10.000', '');
+      final datos = vm.datosFiar;
+      expect(datos.detallePagado, 'Nequi');
+      expect(datos.falta, d('4500'));
+
+      vm.agregarFiado(prueba.registrarFiado.prepararFiado(maria, datos.falta));
+
+      expect(await vm.confirmar(), isTrue);
+      expect(prueba.cajas.movimientos, isEmpty);
+      expect(prueba.fiados.de(tiendaPrueba), hasLength(1));
+    });
+
+    test(
+      'las tres formas, y quitar el fiado vuelve a pedir el efectivo',
+      () async {
+        final vm = await cobrar(arroz: 2, cafe: 1); // 14.500
+        vm.cambiarNequi('4.500', '');
+        vm.cambiarEfectivo('5.000');
+        expect(vm.datosFiar.detallePagado, 'efectivo y Nequi');
+        vm.agregarFiado(prueba.registrarFiado.prepararFiado(maria, d('5000')));
+        expect(vm.formasPago, hasLength(3));
+        expect(vm.pagoCompleto, isTrue);
+
+        vm.quitarFiado();
+        expect(vm.fiado, isNull);
+        expect(vm.errorEfectivo, 'El monto recibido no alcanza');
+        expect(vm.pagoCompleto, isFalse);
+      },
+    );
+
+    test('un fiado mayor que lo que falta: los pagos pasan el total y no se '
+        'confirma', () async {
+      final vm = await cobrar(arroz: 1); // 2.800
+      vm.cambiarNequi('2.000', '');
+      vm.agregarFiado(prueba.registrarFiado.prepararFiado(maria, d('1000')));
+
+      expect(vm.faltante, d('-200'));
+      expect(vm.pagoCompleto, isFalse);
+      expect(await vm.confirmar(), isFalse);
+      expect(vm.error, 'Las formas de pago no cubren el total de la venta');
+      expect(prueba.fiados.datos[tiendaPrueba.getId()] ?? [], isEmpty);
+    });
+
+    test('si falla al guardar el fiado: no queda venta ni fiado', () async {
+      final vm = await cobrar(arroz: 1);
+      vm.agregarFiado(prueba.registrarFiado.prepararFiado(maria, d('2800')));
+      prueba.fiados.fallar = true;
+
+      expect(await vm.confirmar(), isFalse);
+      expect(vm.error, 'No se pudo registrar la venta. Intente de nuevo');
+      expect(prueba.ventas.datos[tiendaPrueba.getId()] ?? [], isEmpty);
+      expect(prueba.fiados.datos[tiendaPrueba.getId()] ?? [], isEmpty);
+    });
   });
 }

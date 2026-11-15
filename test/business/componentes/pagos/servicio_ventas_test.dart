@@ -2,14 +2,18 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/componentes/pagos/procesador_fiado.dart';
 import 'package:gip/business/componentes/pagos/procesador_nequi.dart';
 import 'package:gip/business/componentes/pagos/procesador_pago_contado.dart';
+import 'package:gip/business/componentes/pagos/servicio_fiados.dart';
 import 'package:gip/business/componentes/pagos/servicio_ventas.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/cliente.dart';
+import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
@@ -35,6 +39,8 @@ void main() {
   late MovimientoRepositorioFalso movimientos;
   late VentaRepositorioFalso ventas;
   late CajaRepositorioFalso cajas;
+  late FiadoRepositorioFalso fiados;
+  late ServicioFiados servicioFiados;
   late UnidadTrabajoFalsa unidad;
   late ServicioInventario inventario;
   late ServicioVentas servicio;
@@ -57,7 +63,10 @@ void main() {
     movimientos = MovimientoRepositorioFalso();
     ventas = VentaRepositorioFalso();
     cajas = CajaRepositorioFalso();
-    unidad = UnidadTrabajoFalsa([items, movimientos, ventas, cajas]);
+    fiados = FiadoRepositorioFalso();
+    unidad = UnidadTrabajoFalsa([items, movimientos, ventas, cajas, fiados]);
+    fiados.unidad = unidad;
+    servicioFiados = ServicioFiados(fiados);
     items.unidad = unidad;
     movimientos.unidad = unidad;
     ventas.unidad = unidad;
@@ -65,7 +74,11 @@ void main() {
     inventario = ServicioInventario(items, movimientos, d('5'), unidad);
     servicio = ServicioVentas(
       inventario,
-      [ProcesadorPagoContado(ServicioCaja(cajas)), ProcesadorNequi()],
+      [
+        ProcesadorPagoContado(ServicioCaja(cajas)),
+        ProcesadorNequi(),
+        ProcesadorFiado(servicioFiados),
+      ],
       ventas,
       unidad,
     );
@@ -426,6 +439,125 @@ void main() {
       expect(movimientos.de(tienda), isEmpty);
       expect(await stock(arroz), d('10'));
       expect(ls.single.getItem().getStockActual(), d('10'));
+    });
+
+    group('con fiado (CUS-07)', () {
+      late Cliente maria;
+      setUp(() => maria = Cliente('c1', 'María Pérez', '3004124521'));
+
+      Fiado fiar(String monto) => servicioFiados.crearFiado(maria, d(monto));
+
+      test('fiado solo: guarda venta y fiado en la transacción y no toca la '
+          'caja', () async {
+        final ls = await lineas({arroz: '2'}); // 5.600
+        final fiado = fiar('5600');
+
+        final venta = await servicio.confirmar(tienda, ls, [fiado]);
+
+        expect(unidad.transacciones, 1);
+        expect(venta.getFormasPago(), [fiado]);
+        expect(ventas.de(tienda), [venta]);
+        expect(fiados.de(tienda), [fiado]);
+        expect(fiados.guardadosEnTransaccion, [isTrue]);
+        expect(cajas.movimientos, isEmpty);
+        expect(await stock(arroz), d('8'));
+        expect(maria.calcularSaldoPendiente(), d('5600'));
+      });
+
+      test('fiado + efectivo: a la caja entra solo el efectivo', () async {
+        final ls = await lineas32000();
+        final fiado = fiar('12000');
+        final contado = servicio.crearPagoContado(d('20000'), d('20000'));
+
+        await servicio.confirmar(tienda, ls, [contado, fiado]);
+
+        expect(fiados.de(tienda), [fiado]);
+        expect(cajas.movimientosDe(tienda).single.getValor(), d('20000'));
+      });
+
+      test('fiado + Nequi: no mueve la caja', () async {
+        final ls = await lineas32000();
+        final fiado = fiar('2000');
+        final nequi = servicio.crearPagoNequi(d('30000'), '4471');
+
+        await servicio.confirmar(tienda, ls, [nequi, fiado]);
+
+        expect(fiados.de(tienda), [fiado]);
+        expect(cajas.movimientos, isEmpty);
+      });
+
+      test('efectivo + Nequi + fiado: las tres formas', () async {
+        final ls = await lineas32000();
+        final formas = [
+          servicio.crearPagoContado(d('10000'), d('20000')),
+          servicio.crearPagoNequi(d('12000'), null),
+          fiar('10000'),
+        ];
+
+        final venta = await servicio.confirmar(tienda, ls, formas);
+
+        expect(venta.getFormasPago(), hasLength(3));
+        expect(cajas.movimientosDe(tienda).single.getValor(), d('10000'));
+        expect(fiados.de(tienda), hasLength(1));
+      });
+
+      test('dos fiados o un fiado que no completa el total: formas no '
+          'válidas', () async {
+        final ls = await lineas({arroz: '2'}); // 5.600
+        for (final formas in [
+          [fiar('2800'), fiar('2800')],
+          [fiar('5000')],
+          [fiar('6000')],
+        ]) {
+          await expectLater(
+            servicio.confirmar(tienda, ls, formas),
+            throwsA(isA<ExcepcionFormasPagoNoValidas>()),
+          );
+        }
+        expect(ventas.de(tienda), isEmpty);
+        expect(fiados.de(tienda), isEmpty);
+      });
+
+      test('si falla el guardado del fiado: rollback, no quedan venta, '
+          'salidas, caja ni fiado', () async {
+        final ls = await lineas({arroz: '2'}); // 5.600
+        fiados.fallar = true;
+
+        await expectLater(
+          servicio.confirmar(tienda, ls, [
+            servicio.crearPagoContado(d('600'), d('1000')),
+            fiar('5000'),
+          ]),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(ventas.de(tienda), isEmpty);
+        expect(movimientos.de(tienda), isEmpty);
+        expect(cajas.movimientos[tienda.getId()] ?? [], isEmpty);
+        expect(fiados.de(tienda), isEmpty);
+        expect(await stock(arroz), d('10'));
+      });
+
+      test(
+        'stock negativo con fiado: rollback, el fiado no se guarda',
+        () async {
+          final ls = await lineas({arroz: '2'});
+          // Otro movimiento deja el arroz en 1 antes de confirmar.
+          final item = (await items.buscarItem(tienda, arroz))!;
+          await items.guardarItem(
+            tienda,
+            ItemInventario(item.getId(), arroz, d('1')),
+          );
+
+          await expectLater(
+            servicio.confirmar(tienda, ls, [fiar('5600')]),
+            throwsA(isA<ExcepcionStockNegativo>()),
+          );
+
+          expect(ventas.de(tienda), isEmpty);
+          expect(fiados.de(tienda), isEmpty);
+        },
+      );
     });
   });
 }

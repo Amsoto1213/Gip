@@ -112,6 +112,7 @@ void main() {
         registrarPerdida: inventario.registrarPerdida,
         registrarConteo: inventario.registrarConteo,
         registrarVenta: pagos.registrarVenta,
+        registrarFiado: pagos.registrarFiado,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
       ),
@@ -266,6 +267,131 @@ void main() {
       () => base.select(base.movimientosCaja).getSingle(),
     ))!;
     expect(caja.valor, d('2600'));
+    expect(tester.takeException(), isNull);
+  });
+
+  /// Lleva [buscador] a la vista y lo toca (en 5" la pantalla se desplaza).
+  Future<void> tocar(WidgetTester tester, Finder buscador) async {
+    await tester.ensureVisible(buscador);
+    await tester.pumpAndSettle();
+    await tester.tap(buscador);
+    await tester.pumpAndSettle();
+  }
+
+  Future<int> contar(WidgetTester tester, String tabla) async =>
+      (await tester.runAsync(
+        () => base.customSelect('SELECT COUNT(*) AS n FROM $tabla').getSingle(),
+      ))!.read<int>('n');
+
+  testWidgets('fiar en 5": efectivo que no alcanza + fiado a un cliente '
+      'nuevo, con los mensajes de nombre y monto (CUS-07)', (tester) async {
+    final arroz = await crear(tester, 'ARR', 'Arroz 500 g', '2800', '10');
+    await abrir(tester, tamano: const Size(360, 640));
+    await agregar(tester, 'arroz', 'Arroz 500 g');
+    await tester.tap(find.byKey(Key('vender_mas_${arroz.getId()}')));
+    await esperarBase(tester);
+    await tester.tap(find.byKey(const Key('vender_cobrar')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('cobrar_efectivo')), '2.000');
+    await tester.pumpAndSettle();
+    await tocar(tester, find.text('Fiado'));
+    await tocar(tester, find.byKey(const Key('cobrar_fiar')));
+
+    expect(find.text('Fiar parte de la venta'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('fiar_falta'))).data,
+      '\$ 3.600',
+    );
+    expect(tester.takeException(), isNull);
+
+    await tocar(tester, find.byKey(const Key('fiar_cliente_nuevo')));
+    await tocar(tester, find.byKey(const Key('fiar_nuevo_registrar')));
+    await esperarBase(tester);
+    expect(find.text('El nombre del cliente es obligatorio'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('fiar_nuevo_nombre')),
+      'Ana Gómez',
+    );
+    await tocar(tester, find.byKey(const Key('fiar_nuevo_registrar')));
+    await esperarBase(tester);
+    expect(find.text('Ana Gómez'), findsOneWidget);
+    expect(
+      find.text('Ana quedará debiendo \$ 3.600 en total.'),
+      findsOneWidget,
+    );
+
+    await tester.enterText(find.byKey(const Key('fiar_monto')), '0');
+    await tester.pumpAndSettle();
+    await tocar(tester, find.byKey(const Key('fiar_agregar')));
+    expect(
+      find.text('El monto del fiado debe ser mayor que cero'),
+      findsOneWidget,
+    );
+
+    await tester.enterText(find.byKey(const Key('fiar_monto')), '3.600');
+    await tester.pumpAndSettle();
+    await tocar(tester, find.byKey(const Key('fiar_agregar')));
+
+    expect(find.text('Fiar parte de la venta'), findsNothing);
+    expect(find.text('Fiado · Ana Gómez'), findsOneWidget);
+    expect(find.text('Pago completo · cambio \$ 0'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tocar(tester, find.byKey(const Key('cobrar_confirmar')));
+    await esperarBase(tester);
+
+    expect(find.text('Venta registrada'), findsOneWidget);
+    expect(await contar(tester, 'fiados'), 1);
+    expect(await contar(tester, 'clientes'), 1);
+    final caja = (await tester.runAsync(
+      () => base.select(base.movimientosCaja).getSingle(),
+    ))!;
+    expect(caja.valor, d('2000'));
+  });
+
+  testWidgets('fiar en la web: diálogo, busca sin tildes y fía toda la venta '
+      'sin mover la caja (CUS-07)', (tester) async {
+    await crear(tester, 'ARR', 'Arroz 500 g', '2800', '10');
+    await tester.runAsync(
+      () => pagos.registrarFiado.registrarCliente(
+        tienda,
+        'María Pérez',
+        '300 412 4521',
+      ),
+    );
+    await abrir(tester, tamano: const Size(1280, 800));
+    await agregar(tester, 'arroz', 'Arroz 500 g');
+    await tester.tap(find.byKey(const Key('vender_cobrar')));
+    await tester.pumpAndSettle();
+
+    await tocar(tester, find.text('Fiado'));
+    await tocar(tester, find.byKey(const Key('cobrar_fiar')));
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.text('Cancelar'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('fiar_buscar')), 'MARIA');
+    await esperarBase(tester);
+    expect(find.text('300 412 4521 · al día'), findsOneWidget);
+    expect(
+      tester
+          .widget<BotonPrimario>(find.byKey(const Key('fiar_agregar')))
+          .onPressed,
+      isNull,
+    );
+
+    await tocar(tester, find.text('María Pérez'));
+    await tocar(tester, find.byKey(const Key('fiar_agregar')));
+
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.text('Fiado · María Pérez'), findsOneWidget);
+    await tocar(tester, find.byKey(const Key('cobrar_confirmar')));
+    await esperarBase(tester);
+
+    expect(find.text('Venta registrada'), findsOneWidget);
+    expect(await contar(tester, 'fiados'), 1);
+    expect(await contar(tester, 'movimientos_caja'), 0);
     expect(tester.takeException(), isNull);
   });
 }

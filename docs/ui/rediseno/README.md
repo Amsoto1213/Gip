@@ -86,6 +86,13 @@ ignora; lo que importa son los estilos y la estructura.
 16. **NotaInfo**: nota que explica cómo leer un dato (mockups `Alertas` y `wAlertas`): fondo `info`,
     ícono de información y texto 15 px en `infoTexto`, con una parte destacada en negrilla al comienzo
     ("**Provisional =** lleva menos de 30 días…"). No es una acción ni un error.
+17. **TarjetaCifra**: cifra pequeña en una tarjeta blanca (radio 18) con etiqueta 14 px, valor 19 px con
+    cifras tabulares y detalle (mockups `mFiar` y `wFiar`: "Total", "Ya pagó", "Falta"). Lo que falta o
+    se resta va en `errorTexto`.
+18. **OpcionRadio**: fila de una lista de opción única (los clientes al fiar): círculo de radio, título en
+    negrilla, subtítulo y un valor a la derecha (en `errorTexto` si es una deuda). Elegida: fondo
+    `primarioSuave` y radio `primario`. Sin borde propio: va dentro de una TarjetaGip con separadores;
+    56 px de alto mínimo.
 
 ## Pantallas
 
@@ -142,5 +149,11 @@ ignora; lo que importa son los estilos y la estructura.
   - Las advertencias van en rojo, no en amarillo. Sin "Urgente"/"Pronto", hora del cálculo, "Datos de N
     días", barra de "Alcanza para" ni "Armar lista de pedido". Sin alertas: "No hay productos por agotarse".
     Al empleado: TarjetaAviso "Esta consulta es solo para el propietario".
+- **Fiar** (mockups `mFiar` y `wFiar`, CUS-07, DI-26): en el móvil, pantalla hija de Cobrar con
+  EncabezadoPantalla ("Cobrar" / "Fiar parte de la venta") y el botón fijo abajo; en la web, diálogo sobre
+  Cobrar (radio 22, ancho 720) con la X, "Cancelar" y "Agregar fiado al pago". Tres TarjetaCifra (Total,
+  Ya pagó, Falta en rojo), BarraBusqueda como campo, la lista de clientes con OpcionRadio ("debe $ N" en
+  rojo o "$ 0") y "+ Cliente nuevo (nombre y teléfono)", que abre ahí mismo los dos CampoGip. Debajo, el
+  monto con su ayuda y la frase "X quedará debiendo $ N en total.". Las advertencias van en rojo.
 - **Producto, Buscar producto, Vender y Cobrar:** aplicar los mismos componentes (tarjetas, campos, botones,
   chips), sin cambiar su funcionamiento.

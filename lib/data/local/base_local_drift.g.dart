@@ -4666,6 +4666,901 @@ class VentasPerdidasCompanion extends UpdateCompanion<FilaVentaPerdida> {
   }
 }
 
+class $ClientesTable extends Clientes
+    with TableInfo<$ClientesTable, FilaCliente> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ClientesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nombreMeta = const VerificationMeta('nombre');
+  @override
+  late final GeneratedColumn<String> nombre = GeneratedColumn<String>(
+    'nombre',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nombreNormalizadoMeta = const VerificationMeta(
+    'nombreNormalizado',
+  );
+  @override
+  late final GeneratedColumn<String> nombreNormalizado =
+      GeneratedColumn<String>(
+        'nombre_normalizado',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _telefonoMeta = const VerificationMeta(
+    'telefono',
+  );
+  @override
+  late final GeneratedColumn<String> telefono = GeneratedColumn<String>(
+    'telefono',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime>
+  actualizadoEn = GeneratedColumn<DateTime>(
+    'actualizado_en',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  ).withConverter<DateTime>($ClientesTable.$converteractualizadoEn);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    nombre,
+    nombreNormalizado,
+    telefono,
+    actualizadoEn,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'clientes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaCliente> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('nombre')) {
+      context.handle(
+        _nombreMeta,
+        nombre.isAcceptableOrUnknown(data['nombre']!, _nombreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nombreMeta);
+    }
+    if (data.containsKey('nombre_normalizado')) {
+      context.handle(
+        _nombreNormalizadoMeta,
+        nombreNormalizado.isAcceptableOrUnknown(
+          data['nombre_normalizado']!,
+          _nombreNormalizadoMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_nombreNormalizadoMeta);
+    }
+    if (data.containsKey('telefono')) {
+      context.handle(
+        _telefonoMeta,
+        telefono.isAcceptableOrUnknown(data['telefono']!, _telefonoMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaCliente map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaCliente(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      nombre: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nombre'],
+      )!,
+      nombreNormalizado: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nombre_normalizado'],
+      )!,
+      telefono: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}telefono'],
+      )!,
+      actualizadoEn: $ClientesTable.$converteractualizadoEn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}actualizado_en'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $ClientesTable createAlias(String alias) {
+    return $ClientesTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converteractualizadoEn =
+      const ConversorFechaUtc();
+}
+
+class FilaCliente extends DataClass implements Insertable<FilaCliente> {
+  final String id;
+  final String tiendaId;
+  final String nombre;
+  final String nombreNormalizado;
+  final String telefono;
+  final DateTime actualizadoEn;
+  const FilaCliente({
+    required this.id,
+    required this.tiendaId,
+    required this.nombre,
+    required this.nombreNormalizado,
+    required this.telefono,
+    required this.actualizadoEn,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['nombre'] = Variable<String>(nombre);
+    map['nombre_normalizado'] = Variable<String>(nombreNormalizado);
+    map['telefono'] = Variable<String>(telefono);
+    {
+      map['actualizado_en'] = Variable<DateTime>(
+        $ClientesTable.$converteractualizadoEn.toSql(actualizadoEn),
+      );
+    }
+    return map;
+  }
+
+  ClientesCompanion toCompanion(bool nullToAbsent) {
+    return ClientesCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      nombre: Value(nombre),
+      nombreNormalizado: Value(nombreNormalizado),
+      telefono: Value(telefono),
+      actualizadoEn: Value(actualizadoEn),
+    );
+  }
+
+  factory FilaCliente.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaCliente(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      nombre: serializer.fromJson<String>(json['nombre']),
+      nombreNormalizado: serializer.fromJson<String>(json['nombreNormalizado']),
+      telefono: serializer.fromJson<String>(json['telefono']),
+      actualizadoEn: serializer.fromJson<DateTime>(json['actualizadoEn']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'nombre': serializer.toJson<String>(nombre),
+      'nombreNormalizado': serializer.toJson<String>(nombreNormalizado),
+      'telefono': serializer.toJson<String>(telefono),
+      'actualizadoEn': serializer.toJson<DateTime>(actualizadoEn),
+    };
+  }
+
+  FilaCliente copyWith({
+    String? id,
+    String? tiendaId,
+    String? nombre,
+    String? nombreNormalizado,
+    String? telefono,
+    DateTime? actualizadoEn,
+  }) => FilaCliente(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    nombre: nombre ?? this.nombre,
+    nombreNormalizado: nombreNormalizado ?? this.nombreNormalizado,
+    telefono: telefono ?? this.telefono,
+    actualizadoEn: actualizadoEn ?? this.actualizadoEn,
+  );
+  FilaCliente copyWithCompanion(ClientesCompanion data) {
+    return FilaCliente(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      nombre: data.nombre.present ? data.nombre.value : this.nombre,
+      nombreNormalizado: data.nombreNormalizado.present
+          ? data.nombreNormalizado.value
+          : this.nombreNormalizado,
+      telefono: data.telefono.present ? data.telefono.value : this.telefono,
+      actualizadoEn: data.actualizadoEn.present
+          ? data.actualizadoEn.value
+          : this.actualizadoEn,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaCliente(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('nombre: $nombre, ')
+          ..write('nombreNormalizado: $nombreNormalizado, ')
+          ..write('telefono: $telefono, ')
+          ..write('actualizadoEn: $actualizadoEn')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    nombre,
+    nombreNormalizado,
+    telefono,
+    actualizadoEn,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaCliente &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.nombre == this.nombre &&
+          other.nombreNormalizado == this.nombreNormalizado &&
+          other.telefono == this.telefono &&
+          other.actualizadoEn == this.actualizadoEn);
+}
+
+class ClientesCompanion extends UpdateCompanion<FilaCliente> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> nombre;
+  final Value<String> nombreNormalizado;
+  final Value<String> telefono;
+  final Value<DateTime> actualizadoEn;
+  final Value<int> rowid;
+  const ClientesCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.nombre = const Value.absent(),
+    this.nombreNormalizado = const Value.absent(),
+    this.telefono = const Value.absent(),
+    this.actualizadoEn = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ClientesCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String nombre,
+    required String nombreNormalizado,
+    this.telefono = const Value.absent(),
+    required DateTime actualizadoEn,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       nombre = Value(nombre),
+       nombreNormalizado = Value(nombreNormalizado),
+       actualizadoEn = Value(actualizadoEn);
+  static Insertable<FilaCliente> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? nombre,
+    Expression<String>? nombreNormalizado,
+    Expression<String>? telefono,
+    Expression<DateTime>? actualizadoEn,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (nombre != null) 'nombre': nombre,
+      if (nombreNormalizado != null) 'nombre_normalizado': nombreNormalizado,
+      if (telefono != null) 'telefono': telefono,
+      if (actualizadoEn != null) 'actualizado_en': actualizadoEn,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ClientesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? nombre,
+    Value<String>? nombreNormalizado,
+    Value<String>? telefono,
+    Value<DateTime>? actualizadoEn,
+    Value<int>? rowid,
+  }) {
+    return ClientesCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      nombre: nombre ?? this.nombre,
+      nombreNormalizado: nombreNormalizado ?? this.nombreNormalizado,
+      telefono: telefono ?? this.telefono,
+      actualizadoEn: actualizadoEn ?? this.actualizadoEn,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (nombre.present) {
+      map['nombre'] = Variable<String>(nombre.value);
+    }
+    if (nombreNormalizado.present) {
+      map['nombre_normalizado'] = Variable<String>(nombreNormalizado.value);
+    }
+    if (telefono.present) {
+      map['telefono'] = Variable<String>(telefono.value);
+    }
+    if (actualizadoEn.present) {
+      map['actualizado_en'] = Variable<DateTime>(
+        $ClientesTable.$converteractualizadoEn.toSql(actualizadoEn.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClientesCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('nombre: $nombre, ')
+          ..write('nombreNormalizado: $nombreNormalizado, ')
+          ..write('telefono: $telefono, ')
+          ..write('actualizadoEn: $actualizadoEn, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FiadosTable extends Fiados with TableInfo<$FiadosTable, FilaFiado> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FiadosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES formas_pago (id)',
+    ),
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _clienteIdMeta = const VerificationMeta(
+    'clienteId',
+  );
+  @override
+  late final GeneratedColumn<String> clienteId = GeneratedColumn<String>(
+    'cliente_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES clientes (id)',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> montoInicial =
+      GeneratedColumn<String>(
+        'monto_inicial',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>($FiadosTable.$convertermontoInicial);
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> saldoPendiente =
+      GeneratedColumn<String>(
+        'saldo_pendiente',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>($FiadosTable.$convertersaldoPendiente);
+  static const VerificationMeta _estadoMeta = const VerificationMeta('estado');
+  @override
+  late final GeneratedColumn<String> estado = GeneratedColumn<String>(
+    'estado',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fechaInicio =
+      GeneratedColumn<DateTime>(
+        'fecha_inicio',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($FiadosTable.$converterfechaInicio);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    clienteId,
+    montoInicial,
+    saldoPendiente,
+    estado,
+    fechaInicio,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fiados';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaFiado> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('cliente_id')) {
+      context.handle(
+        _clienteIdMeta,
+        clienteId.isAcceptableOrUnknown(data['cliente_id']!, _clienteIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clienteIdMeta);
+    }
+    if (data.containsKey('estado')) {
+      context.handle(
+        _estadoMeta,
+        estado.isAcceptableOrUnknown(data['estado']!, _estadoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_estadoMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaFiado map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaFiado(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      clienteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cliente_id'],
+      )!,
+      montoInicial: $FiadosTable.$convertermontoInicial.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}monto_inicial'],
+        )!,
+      ),
+      saldoPendiente: $FiadosTable.$convertersaldoPendiente.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}saldo_pendiente'],
+        )!,
+      ),
+      estado: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}estado'],
+      )!,
+      fechaInicio: $FiadosTable.$converterfechaInicio.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha_inicio'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $FiadosTable createAlias(String alias) {
+    return $FiadosTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Decimal, String> $convertermontoInicial =
+      const ConversorDecimal();
+  static TypeConverter<Decimal, String> $convertersaldoPendiente =
+      const ConversorDecimal();
+  static TypeConverter<DateTime, DateTime> $converterfechaInicio =
+      const ConversorFechaUtc();
+}
+
+class FilaFiado extends DataClass implements Insertable<FilaFiado> {
+  final String id;
+  final String tiendaId;
+  final String clienteId;
+  final Decimal montoInicial;
+  final Decimal saldoPendiente;
+  final String estado;
+  final DateTime fechaInicio;
+  const FilaFiado({
+    required this.id,
+    required this.tiendaId,
+    required this.clienteId,
+    required this.montoInicial,
+    required this.saldoPendiente,
+    required this.estado,
+    required this.fechaInicio,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['cliente_id'] = Variable<String>(clienteId);
+    {
+      map['monto_inicial'] = Variable<String>(
+        $FiadosTable.$convertermontoInicial.toSql(montoInicial),
+      );
+    }
+    {
+      map['saldo_pendiente'] = Variable<String>(
+        $FiadosTable.$convertersaldoPendiente.toSql(saldoPendiente),
+      );
+    }
+    map['estado'] = Variable<String>(estado);
+    {
+      map['fecha_inicio'] = Variable<DateTime>(
+        $FiadosTable.$converterfechaInicio.toSql(fechaInicio),
+      );
+    }
+    return map;
+  }
+
+  FiadosCompanion toCompanion(bool nullToAbsent) {
+    return FiadosCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      clienteId: Value(clienteId),
+      montoInicial: Value(montoInicial),
+      saldoPendiente: Value(saldoPendiente),
+      estado: Value(estado),
+      fechaInicio: Value(fechaInicio),
+    );
+  }
+
+  factory FilaFiado.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaFiado(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      clienteId: serializer.fromJson<String>(json['clienteId']),
+      montoInicial: serializer.fromJson<Decimal>(json['montoInicial']),
+      saldoPendiente: serializer.fromJson<Decimal>(json['saldoPendiente']),
+      estado: serializer.fromJson<String>(json['estado']),
+      fechaInicio: serializer.fromJson<DateTime>(json['fechaInicio']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'clienteId': serializer.toJson<String>(clienteId),
+      'montoInicial': serializer.toJson<Decimal>(montoInicial),
+      'saldoPendiente': serializer.toJson<Decimal>(saldoPendiente),
+      'estado': serializer.toJson<String>(estado),
+      'fechaInicio': serializer.toJson<DateTime>(fechaInicio),
+    };
+  }
+
+  FilaFiado copyWith({
+    String? id,
+    String? tiendaId,
+    String? clienteId,
+    Decimal? montoInicial,
+    Decimal? saldoPendiente,
+    String? estado,
+    DateTime? fechaInicio,
+  }) => FilaFiado(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    clienteId: clienteId ?? this.clienteId,
+    montoInicial: montoInicial ?? this.montoInicial,
+    saldoPendiente: saldoPendiente ?? this.saldoPendiente,
+    estado: estado ?? this.estado,
+    fechaInicio: fechaInicio ?? this.fechaInicio,
+  );
+  FilaFiado copyWithCompanion(FiadosCompanion data) {
+    return FilaFiado(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      clienteId: data.clienteId.present ? data.clienteId.value : this.clienteId,
+      montoInicial: data.montoInicial.present
+          ? data.montoInicial.value
+          : this.montoInicial,
+      saldoPendiente: data.saldoPendiente.present
+          ? data.saldoPendiente.value
+          : this.saldoPendiente,
+      estado: data.estado.present ? data.estado.value : this.estado,
+      fechaInicio: data.fechaInicio.present
+          ? data.fechaInicio.value
+          : this.fechaInicio,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaFiado(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('clienteId: $clienteId, ')
+          ..write('montoInicial: $montoInicial, ')
+          ..write('saldoPendiente: $saldoPendiente, ')
+          ..write('estado: $estado, ')
+          ..write('fechaInicio: $fechaInicio')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    clienteId,
+    montoInicial,
+    saldoPendiente,
+    estado,
+    fechaInicio,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaFiado &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.clienteId == this.clienteId &&
+          other.montoInicial == this.montoInicial &&
+          other.saldoPendiente == this.saldoPendiente &&
+          other.estado == this.estado &&
+          other.fechaInicio == this.fechaInicio);
+}
+
+class FiadosCompanion extends UpdateCompanion<FilaFiado> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> clienteId;
+  final Value<Decimal> montoInicial;
+  final Value<Decimal> saldoPendiente;
+  final Value<String> estado;
+  final Value<DateTime> fechaInicio;
+  final Value<int> rowid;
+  const FiadosCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.clienteId = const Value.absent(),
+    this.montoInicial = const Value.absent(),
+    this.saldoPendiente = const Value.absent(),
+    this.estado = const Value.absent(),
+    this.fechaInicio = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FiadosCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String clienteId,
+    required Decimal montoInicial,
+    required Decimal saldoPendiente,
+    required String estado,
+    required DateTime fechaInicio,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       clienteId = Value(clienteId),
+       montoInicial = Value(montoInicial),
+       saldoPendiente = Value(saldoPendiente),
+       estado = Value(estado),
+       fechaInicio = Value(fechaInicio);
+  static Insertable<FilaFiado> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? clienteId,
+    Expression<String>? montoInicial,
+    Expression<String>? saldoPendiente,
+    Expression<String>? estado,
+    Expression<DateTime>? fechaInicio,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (clienteId != null) 'cliente_id': clienteId,
+      if (montoInicial != null) 'monto_inicial': montoInicial,
+      if (saldoPendiente != null) 'saldo_pendiente': saldoPendiente,
+      if (estado != null) 'estado': estado,
+      if (fechaInicio != null) 'fecha_inicio': fechaInicio,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FiadosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? clienteId,
+    Value<Decimal>? montoInicial,
+    Value<Decimal>? saldoPendiente,
+    Value<String>? estado,
+    Value<DateTime>? fechaInicio,
+    Value<int>? rowid,
+  }) {
+    return FiadosCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      clienteId: clienteId ?? this.clienteId,
+      montoInicial: montoInicial ?? this.montoInicial,
+      saldoPendiente: saldoPendiente ?? this.saldoPendiente,
+      estado: estado ?? this.estado,
+      fechaInicio: fechaInicio ?? this.fechaInicio,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (clienteId.present) {
+      map['cliente_id'] = Variable<String>(clienteId.value);
+    }
+    if (montoInicial.present) {
+      map['monto_inicial'] = Variable<String>(
+        $FiadosTable.$convertermontoInicial.toSql(montoInicial.value),
+      );
+    }
+    if (saldoPendiente.present) {
+      map['saldo_pendiente'] = Variable<String>(
+        $FiadosTable.$convertersaldoPendiente.toSql(saldoPendiente.value),
+      );
+    }
+    if (estado.present) {
+      map['estado'] = Variable<String>(estado.value);
+    }
+    if (fechaInicio.present) {
+      map['fecha_inicio'] = Variable<DateTime>(
+        $FiadosTable.$converterfechaInicio.toSql(fechaInicio.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiadosCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('clienteId: $clienteId, ')
+          ..write('montoInicial: $montoInicial, ')
+          ..write('saldoPendiente: $saldoPendiente, ')
+          ..write('estado: $estado, ')
+          ..write('fechaInicio: $fechaInicio, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -4685,6 +5580,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   late final $AlertasReabastecimientoTable alertasReabastecimiento =
       $AlertasReabastecimientoTable(this);
   late final $VentasPerdidasTable ventasPerdidas = $VentasPerdidasTable(this);
+  late final $ClientesTable clientes = $ClientesTable(this);
+  late final $FiadosTable fiados = $FiadosTable(this);
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -4741,6 +5638,18 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'ventas_perdidas_producto_fecha_idx',
     'CREATE INDEX ventas_perdidas_producto_fecha_idx ON ventas_perdidas (producto_id, fecha)',
   );
+  late final Index clientesTiendaNombreIdx = Index(
+    'clientes_tienda_nombre_idx',
+    'CREATE INDEX clientes_tienda_nombre_idx ON clientes (tienda_id, nombre_normalizado)',
+  );
+  late final Index fiadosTiendaIdx = Index(
+    'fiados_tienda_idx',
+    'CREATE INDEX fiados_tienda_idx ON fiados (tienda_id)',
+  );
+  late final Index fiadosClienteIdx = Index(
+    'fiados_cliente_idx',
+    'CREATE INDEX fiados_cliente_idx ON fiados (cliente_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4756,6 +5665,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     formasPago,
     alertasReabastecimiento,
     ventasPerdidas,
+    clientes,
+    fiados,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -4770,6 +5681,9 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     alertasReabastecimientoTiendaFechaIdx,
     ventasPerdidasTiendaFechaIdx,
     ventasPerdidasProductoFechaIdx,
+    clientesTiendaNombreIdx,
+    fiadosTiendaIdx,
+    fiadosClienteIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -7721,6 +8635,25 @@ final class $$FormasPagoTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$FiadosTable, List<FilaFiado>> _fiadosRefsTable(
+    _$BaseLocalDrift db,
+  ) => MultiTypedResultKey.fromTable(
+    db.fiados,
+    aliasName: 'formas_pago__id__fiados__id',
+  );
+
+  $$FiadosTableProcessedTableManager get fiadosRefs {
+    final manager = $$FiadosTableTableManager(
+      $_db,
+      $_db.fiados,
+    ).filter((f) => f.id.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_fiadosRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$FormasPagoTableFilterComposer
@@ -7791,6 +8724,31 @@ class $$FormasPagoTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> fiadosRefs(
+    Expression<bool> Function($$FiadosTableFilterComposer f) f,
+  ) {
+    final $$FiadosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiados,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadosTableFilterComposer(
+            $db: $db,
+            $table: $db.fiados,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -7919,6 +8877,31 @@ class $$FormasPagoTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> fiadosRefs<T extends Object>(
+    Expression<T> Function($$FiadosTableAnnotationComposer a) f,
+  ) {
+    final $$FiadosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiados,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fiados,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$FormasPagoTableTableManager
@@ -7934,7 +8917,7 @@ class $$FormasPagoTableTableManager
           $$FormasPagoTableUpdateCompanionBuilder,
           (FilaFormaPago, $$FormasPagoTableReferences),
           FilaFormaPago,
-          PrefetchHooks Function({bool ventaId})
+          PrefetchHooks Function({bool ventaId, bool fiadosRefs})
         > {
   $$FormasPagoTableTableManager(_$BaseLocalDrift db, $FormasPagoTable table)
     : super(
@@ -7999,10 +8982,10 @@ class $$FormasPagoTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({ventaId = false}) {
+          prefetchHooksCallback: ({ventaId = false, fiadosRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [if (fiadosRefs) db.fiados],
               addJoins:
                   <
                     T extends TableManagerState<
@@ -8034,7 +9017,24 @@ class $$FormasPagoTableTableManager
                     return state;
                   },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (fiadosRefs)
+                    await $_getPrefetchedDataByColumns<
+                      FilaFormaPago,
+                      $FormasPagoTable,
+                      FilaFiado,
+                      $FiadosTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$FormasPagoTableReferences
+                          ._fiadosRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$FormasPagoTableReferences(db, table, p0).fiadosRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'id',
+                      typedResults: items,
+                    ),
+                ];
               },
             );
           },
@@ -8054,7 +9054,7 @@ typedef $$FormasPagoTableProcessedTableManager =
       $$FormasPagoTableUpdateCompanionBuilder,
       (FilaFormaPago, $$FormasPagoTableReferences),
       FilaFormaPago,
-      PrefetchHooks Function({bool ventaId})
+      PrefetchHooks Function({bool ventaId, bool fiadosRefs})
     >;
 typedef $$AlertasReabastecimientoTableCreateCompanionBuilder =
     AlertasReabastecimientoCompanion Function({
@@ -8773,6 +9773,774 @@ typedef $$VentasPerdidasTableProcessedTableManager =
       FilaVentaPerdida,
       PrefetchHooks Function({bool productoId})
     >;
+typedef $$ClientesTableCreateCompanionBuilder = ClientesCompanion Function({
+  required String id,
+  required String tiendaId,
+  required String nombre,
+  required String nombreNormalizado,
+  Value<String> telefono,
+  required DateTime actualizadoEn,
+  Value<int> rowid,
+});
+typedef $$ClientesTableUpdateCompanionBuilder = ClientesCompanion Function({
+  Value<String> id,
+  Value<String> tiendaId,
+  Value<String> nombre,
+  Value<String> nombreNormalizado,
+  Value<String> telefono,
+  Value<DateTime> actualizadoEn,
+  Value<int> rowid,
+});
+
+final class $$ClientesTableReferences
+    extends BaseReferences<_$BaseLocalDrift, $ClientesTable, FilaCliente> {
+  $$ClientesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$FiadosTable, List<FilaFiado>> _fiadosRefsTable(
+    _$BaseLocalDrift db,
+  ) => MultiTypedResultKey.fromTable(
+    db.fiados,
+    aliasName: 'clientes__id__fiados__cliente_id',
+  );
+
+  $$FiadosTableProcessedTableManager get fiadosRefs {
+    final manager = $$FiadosTableTableManager(
+      $_db,
+      $_db.fiados,
+    ).filter((f) => f.clienteId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_fiadosRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ClientesTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $ClientesTable> {
+  $$ClientesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nombre => $composableBuilder(
+    column: $table.nombre,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nombreNormalizado => $composableBuilder(
+    column: $table.nombreNormalizado,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get telefono => $composableBuilder(
+    column: $table.telefono,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime>
+  get actualizadoEn => $composableBuilder(
+    column: $table.actualizadoEn,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  Expression<bool> fiadosRefs(
+    Expression<bool> Function($$FiadosTableFilterComposer f) f,
+  ) {
+    final $$FiadosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiados,
+      getReferencedColumn: (t) => t.clienteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadosTableFilterComposer(
+            $db: $db,
+            $table: $db.fiados,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ClientesTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $ClientesTable> {
+  $$ClientesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nombre => $composableBuilder(
+    column: $table.nombre,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nombreNormalizado => $composableBuilder(
+    column: $table.nombreNormalizado,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get telefono => $composableBuilder(
+    column: $table.telefono,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get actualizadoEn => $composableBuilder(
+    column: $table.actualizadoEn,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ClientesTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $ClientesTable> {
+  $$ClientesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get nombre =>
+      $composableBuilder(column: $table.nombre, builder: (column) => column);
+
+  GeneratedColumn<String> get nombreNormalizado => $composableBuilder(
+    column: $table.nombreNormalizado,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get telefono =>
+      $composableBuilder(column: $table.telefono, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get actualizadoEn =>
+      $composableBuilder(
+        column: $table.actualizadoEn,
+        builder: (column) => column,
+      );
+
+  Expression<T> fiadosRefs<T extends Object>(
+    Expression<T> Function($$FiadosTableAnnotationComposer a) f,
+  ) {
+    final $$FiadosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.fiados,
+      getReferencedColumn: (t) => t.clienteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FiadosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.fiados,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ClientesTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $ClientesTable,
+          FilaCliente,
+          $$ClientesTableFilterComposer,
+          $$ClientesTableOrderingComposer,
+          $$ClientesTableAnnotationComposer,
+          $$ClientesTableCreateCompanionBuilder,
+          $$ClientesTableUpdateCompanionBuilder,
+          (FilaCliente, $$ClientesTableReferences),
+          FilaCliente,
+          PrefetchHooks Function({bool fiadosRefs})
+        > {
+  $$ClientesTableTableManager(_$BaseLocalDrift db, $ClientesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ClientesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ClientesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ClientesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> nombre = const Value.absent(),
+                Value<String> nombreNormalizado = const Value.absent(),
+                Value<String> telefono = const Value.absent(),
+                Value<DateTime> actualizadoEn = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ClientesCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                nombre: nombre,
+                nombreNormalizado: nombreNormalizado,
+                telefono: telefono,
+                actualizadoEn: actualizadoEn,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String nombre,
+                required String nombreNormalizado,
+                Value<String> telefono = const Value.absent(),
+                required DateTime actualizadoEn,
+                Value<int> rowid = const Value.absent(),
+              }) => ClientesCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                nombre: nombre,
+                nombreNormalizado: nombreNormalizado,
+                telefono: telefono,
+                actualizadoEn: actualizadoEn,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ClientesTable, FilaCliente>(table),
+                  $$ClientesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({fiadosRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (fiadosRefs) db.fiados],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (fiadosRefs)
+                    await $_getPrefetchedDataByColumns<
+                      FilaCliente,
+                      $ClientesTable,
+                      FilaFiado,
+                      $FiadosTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ClientesTableReferences
+                          ._fiadosRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ClientesTableReferences(db, table, p0).fiadosRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'cliente_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ClientesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $ClientesTable,
+      FilaCliente,
+      $$ClientesTableFilterComposer,
+      $$ClientesTableOrderingComposer,
+      $$ClientesTableAnnotationComposer,
+      $$ClientesTableCreateCompanionBuilder,
+      $$ClientesTableUpdateCompanionBuilder,
+      (FilaCliente, $$ClientesTableReferences),
+      FilaCliente,
+      PrefetchHooks Function({bool fiadosRefs})
+    >;
+typedef $$FiadosTableCreateCompanionBuilder = FiadosCompanion Function({
+  required String id,
+  required String tiendaId,
+  required String clienteId,
+  required Decimal montoInicial,
+  required Decimal saldoPendiente,
+  required String estado,
+  required DateTime fechaInicio,
+  Value<int> rowid,
+});
+typedef $$FiadosTableUpdateCompanionBuilder = FiadosCompanion Function({
+  Value<String> id,
+  Value<String> tiendaId,
+  Value<String> clienteId,
+  Value<Decimal> montoInicial,
+  Value<Decimal> saldoPendiente,
+  Value<String> estado,
+  Value<DateTime> fechaInicio,
+  Value<int> rowid,
+});
+
+final class $$FiadosTableReferences
+    extends BaseReferences<_$BaseLocalDrift, $FiadosTable, FilaFiado> {
+  $$FiadosTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $FormasPagoTable _idTable(_$BaseLocalDrift db) =>
+      db.formasPago.createAlias('fiados__id__formas_pago__id');
+
+  $$FormasPagoTableProcessedTableManager get id {
+    final $_column = $_itemColumn<String>('id')!;
+
+    final manager = $$FormasPagoTableTableManager(
+      $_db,
+      $_db.formasPago,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_idTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ClientesTable _clienteIdTable(_$BaseLocalDrift db) =>
+      db.clientes.createAlias('fiados__cliente_id__clientes__id');
+
+  $$ClientesTableProcessedTableManager get clienteId {
+    final $_column = $_itemColumn<String>('cliente_id')!;
+
+    final manager = $$ClientesTableTableManager(
+      $_db,
+      $_db.clientes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_clienteIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FiadosTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $FiadosTable> {
+  $$FiadosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get montoInicial =>
+      $composableBuilder(
+        column: $table.montoInicial,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get saldoPendiente =>
+      $composableBuilder(
+        column: $table.saldoPendiente,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get estado => $composableBuilder(
+    column: $table.estado,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime>
+  get fechaInicio => $composableBuilder(
+    column: $table.fechaInicio,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  $$FormasPagoTableFilterComposer get id {
+    final $$FormasPagoTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.formasPago,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FormasPagoTableFilterComposer(
+            $db: $db,
+            $table: $db.formasPago,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ClientesTableFilterComposer get clienteId {
+    final $$ClientesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clienteId,
+      referencedTable: $db.clientes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ClientesTableFilterComposer(
+            $db: $db,
+            $table: $db.clientes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadosTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $FiadosTable> {
+  $$FiadosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get montoInicial => $composableBuilder(
+    column: $table.montoInicial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get saldoPendiente => $composableBuilder(
+    column: $table.saldoPendiente,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get estado => $composableBuilder(
+    column: $table.estado,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fechaInicio => $composableBuilder(
+    column: $table.fechaInicio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$FormasPagoTableOrderingComposer get id {
+    final $$FormasPagoTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.formasPago,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FormasPagoTableOrderingComposer(
+            $db: $db,
+            $table: $db.formasPago,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ClientesTableOrderingComposer get clienteId {
+    final $$ClientesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clienteId,
+      referencedTable: $db.clientes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ClientesTableOrderingComposer(
+            $db: $db,
+            $table: $db.clientes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadosTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $FiadosTable> {
+  $$FiadosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get montoInicial =>
+      $composableBuilder(
+        column: $table.montoInicial,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get saldoPendiente =>
+      $composableBuilder(
+        column: $table.saldoPendiente,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get estado =>
+      $composableBuilder(column: $table.estado, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fechaInicio =>
+      $composableBuilder(
+        column: $table.fechaInicio,
+        builder: (column) => column,
+      );
+
+  $$FormasPagoTableAnnotationComposer get id {
+    final $$FormasPagoTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.formasPago,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FormasPagoTableAnnotationComposer(
+            $db: $db,
+            $table: $db.formasPago,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ClientesTableAnnotationComposer get clienteId {
+    final $$ClientesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.clienteId,
+      referencedTable: $db.clientes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ClientesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.clientes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FiadosTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $FiadosTable,
+          FilaFiado,
+          $$FiadosTableFilterComposer,
+          $$FiadosTableOrderingComposer,
+          $$FiadosTableAnnotationComposer,
+          $$FiadosTableCreateCompanionBuilder,
+          $$FiadosTableUpdateCompanionBuilder,
+          (FilaFiado, $$FiadosTableReferences),
+          FilaFiado,
+          PrefetchHooks Function({bool id, bool clienteId})
+        > {
+  $$FiadosTableTableManager(_$BaseLocalDrift db, $FiadosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FiadosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FiadosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FiadosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> clienteId = const Value.absent(),
+                Value<Decimal> montoInicial = const Value.absent(),
+                Value<Decimal> saldoPendiente = const Value.absent(),
+                Value<String> estado = const Value.absent(),
+                Value<DateTime> fechaInicio = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FiadosCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                clienteId: clienteId,
+                montoInicial: montoInicial,
+                saldoPendiente: saldoPendiente,
+                estado: estado,
+                fechaInicio: fechaInicio,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String clienteId,
+                required Decimal montoInicial,
+                required Decimal saldoPendiente,
+                required String estado,
+                required DateTime fechaInicio,
+                Value<int> rowid = const Value.absent(),
+              }) => FiadosCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                clienteId: clienteId,
+                montoInicial: montoInicial,
+                saldoPendiente: saldoPendiente,
+                estado: estado,
+                fechaInicio: fechaInicio,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FiadosTable, FilaFiado>(table),
+                  $$FiadosTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({id = false, clienteId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (id) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.id,
+                        referencedTable: $$FiadosTableReferences._idTable(db),
+                        referencedColumn: $$FiadosTableReferences
+                            ._idTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (clienteId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.clienteId,
+                        referencedTable: $$FiadosTableReferences
+                            ._clienteIdTable(db),
+                        referencedColumn: $$FiadosTableReferences
+                            ._clienteIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FiadosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $FiadosTable,
+      FilaFiado,
+      $$FiadosTableFilterComposer,
+      $$FiadosTableOrderingComposer,
+      $$FiadosTableAnnotationComposer,
+      $$FiadosTableCreateCompanionBuilder,
+      $$FiadosTableUpdateCompanionBuilder,
+      (FilaFiado, $$FiadosTableReferences),
+      FilaFiado,
+      PrefetchHooks Function({bool id, bool clienteId})
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -8800,4 +10568,8 @@ class $BaseLocalDriftManager {
       );
   $$VentasPerdidasTableTableManager get ventasPerdidas =>
       $$VentasPerdidasTableTableManager(_db, _db.ventasPerdidas);
+  $$ClientesTableTableManager get clientes =>
+      $$ClientesTableTableManager(_db, _db.clientes);
+  $$FiadosTableTableManager get fiados =>
+      $$FiadosTableTableManager(_db, _db.fiados);
 }
