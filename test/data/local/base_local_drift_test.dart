@@ -70,11 +70,20 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 8 (CUS-07).
-    /// Quita lo que agregó la versión 9 (CUS-08).
+    /// Quita lo que agregó la versión 10 (CUS-21).
+    Future<void> bajarDeLaVersion10(BaseLocalDrift base) async {
+      await base.customStatement(
+        'ALTER TABLE clientes DROP COLUMN eliminado_en',
+      );
+    }
+
+    /// Quita lo que agregó la versión 9 (CUS-08), y antes la 10.
     Future<void> bajarDeLaVersion9(BaseLocalDrift base) async {
+      await bajarDeLaVersion10(base);
       await base.customStatement('DROP TABLE abonos');
     }
+
+    /// Quita lo que agregó la versión 8 (CUS-07).
 
     Future<void> bajarDeLaVersion8(BaseLocalDrift base) async {
       for (final t in ['fiados', 'clientes']) {
@@ -111,7 +120,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 9);
+      expect(actual.schemaVersion, 10);
       expect(
         await tablas(actual),
         containsAll([
@@ -131,7 +140,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 9);
+      expect(version.read<int>('user_version'), 10);
       await actual.close();
     });
 
@@ -325,6 +334,32 @@ void main() {
         containsAll(['abonos', 'abonos_tienda_idx', 'abonos_fiado_idx']),
       );
       await v9.close();
+    });
+
+    test('de la versión 9 a la 10 agrega eliminado_en a clientes sin perder '
+        'filas', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v9 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion10(v9);
+      await v9.customStatement(
+        "INSERT INTO clientes (id, tienda_id, nombre, nombre_normalizado, "
+        "telefono, actualizado_en) VALUES ('c1', 't1', 'Ana', 'ana', '300', "
+        "'2026-11-14T10:00:00.000Z')",
+      );
+      await v9.customStatement('PRAGMA user_version = 9');
+      await v9.close();
+
+      final v10 = BaseLocalDrift(NativeDatabase(archivo));
+      final columnas =
+          (await v10.customSelect('PRAGMA table_info(clientes)').get()).map(
+            (f) => f.read<String>('name'),
+          );
+      expect(columnas, contains('eliminado_en'));
+      final filas = await v10.select(v10.clientes).get();
+      expect(filas.single.nombre, 'Ana');
+      expect(filas.single.eliminadoEn, isNull);
+      await v10.close();
     });
   });
 }
