@@ -37,6 +37,10 @@ class VentaPerdidaRepositorioFalso implements IVentaPerdidaRepositorio {
   void agregar(Tienda tienda, VentaPerdida venta) =>
       datos.putIfAbsent(tienda.getId(), () => []).add(venta);
 
+  @override
+  Future<void> guardar(Tienda tienda, VentaPerdida ventaPerdida) async =>
+      agregar(tienda, ventaPerdida);
+
   bool _enPeriodo(VentaPerdida v, DateTime desde, DateTime hasta) =>
       !v.getFecha().isBefore(desde) && v.getFecha().isBefore(hasta);
 

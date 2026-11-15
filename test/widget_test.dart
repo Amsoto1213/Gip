@@ -89,6 +89,7 @@ void main() {
     consultarCliente: ConsultarClienteFalso(),
     generarAlertas: GenerarAlertasFalso(),
     consultarAlertas: ConsultarAlertasFalso(),
+    registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
     consultarMargen: ConsultarMargenFalso(),
     generarReporteDiario: GenerarReporteDiarioFalso(),
   );

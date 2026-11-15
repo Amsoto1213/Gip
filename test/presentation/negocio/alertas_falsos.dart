@@ -4,6 +4,7 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
 import 'package:mocktail/mocktail.dart';
 
 /// Anota cada ejecución de CUS-24 sin calcular nada.
@@ -18,6 +19,10 @@ class GenerarAlertasFalso extends Fake
     if (error case final e?) throw e;
   }
 }
+
+/// CUS-13 sin guardar nada.
+class RegistrarVentaPerdidaFalso extends Fake
+    implements RegistrarVentaPerdidaCoordinator {}
 
 class ConsultarAlertasFalso extends Mock
     implements ConsultarAlertasCoordinator {}
