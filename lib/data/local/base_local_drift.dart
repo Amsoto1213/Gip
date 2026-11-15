@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:gip/data/local/conversores/conversor_decimal.dart';
 import 'package:gip/data/local/conversores/conversor_fecha_utc.dart';
+import 'package:gip/data/local/tablas/alertas_reabastecimiento.dart';
 import 'package:gip/data/local/tablas/cajas.dart';
 import 'package:gip/data/local/tablas/cola_pendientes.dart';
 import 'package:gip/data/local/tablas/formas_pago.dart';
@@ -11,6 +12,7 @@ import 'package:gip/data/local/tablas/movimientos_caja.dart';
 import 'package:gip/data/local/tablas/movimientos_inventario.dart';
 import 'package:gip/data/local/tablas/productos.dart';
 import 'package:gip/data/local/tablas/ventas.dart';
+import 'package:gip/data/local/tablas/ventas_perdidas.dart';
 
 part 'base_local_drift.g.dart';
 
@@ -26,6 +28,8 @@ part 'base_local_drift.g.dart';
     MovimientosCaja,
     Ventas,
     FormasPago,
+    AlertasReabastecimiento,
+    VentasPerdidas,
   ],
 )
 class BaseLocalDrift extends _$BaseLocalDrift {
@@ -50,8 +54,9 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// formas_pago y las columnas de SALIDA_VENTA (CUS-02). 5: columna `motivo`
   /// de MERMA en movimientos_inventario (CUS-03). 6: columna
   /// `cantidad_contada` de AJUSTE_CONTEO en movimientos_inventario (CUS-04).
+  /// 7: alertas_reabastecimiento y ventas_perdidas (CUS-24 y CUS-05).
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -102,6 +107,13 @@ class BaseLocalDrift extends _$BaseLocalDrift {
           movimientosInventario,
           movimientosInventario.cantidadContada,
         );
+      }
+      if (desde < 7) {
+        await m.createTable(alertasReabastecimiento);
+        await m.createIndex(alertasReabastecimientoTiendaFechaIdx);
+        await m.createTable(ventasPerdidas);
+        await m.createIndex(ventasPerdidasTiendaFechaIdx);
+        await m.createIndex(ventasPerdidasProductoFechaIdx);
       }
     },
   );

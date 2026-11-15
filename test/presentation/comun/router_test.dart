@@ -19,10 +19,13 @@ import 'package:gip/presentation/comun/marco_navegacion.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
+import 'package:gip/presentation/negocio/alertas_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/perdida_view.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../negocio/alertas_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -73,6 +76,8 @@ void main() {
         registrarPerdida: RegistrarPerdidaFalso(),
         registrarConteo: RegistrarConteoFalso(),
         registrarVenta: RegistrarVentaFalso(),
+        generarAlertas: GenerarAlertasFalso(),
+        consultarAlertas: ConsultarAlertasVacio(),
       ),
     );
     await tester.pumpAndSettle();
@@ -169,6 +174,23 @@ void main() {
       ),
     );
     expect(subseccion, isSemantics(isSelected: true));
+  });
+
+  testWidgets('el menú abre Alertas de surtido desde Negocio', (tester) async {
+    await abrir(tester, 1280, 800);
+
+    await tester.tap(find.text('Negocio').first);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(MenuLateral),
+        matching: find.text('Alertas de surtido'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertasView), findsOneWidget);
+    expect(find.text('No hay productos por agotarse'), findsOneWidget);
   });
 
   test('el rol se muestra como Administrador o Empleado', () {

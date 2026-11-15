@@ -3797,6 +3797,875 @@ class FormasPagoCompanion extends UpdateCompanion<FilaFormaPago> {
   }
 }
 
+class $AlertasReabastecimientoTable extends AlertasReabastecimiento
+    with TableInfo<$AlertasReabastecimientoTable, FilaAlerta> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AlertasReabastecimientoTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES items_inventario (id)',
+    ),
+  );
+  static const VerificationMeta _fechaMeta = const VerificationMeta('fecha');
+  @override
+  late final GeneratedColumn<String> fecha = GeneratedColumn<String>(
+    'fecha',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> existencia =
+      GeneratedColumn<String>(
+        'existencia',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>(
+        $AlertasReabastecimientoTable.$converterexistencia,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String>
+  consumoPromedioDiario =
+      GeneratedColumn<String>(
+        'consumo_promedio_diario',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>(
+        $AlertasReabastecimientoTable.$converterconsumoPromedioDiario,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> diasCobertura =
+      GeneratedColumn<String>(
+        'dias_cobertura',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>(
+        $AlertasReabastecimientoTable.$converterdiasCobertura,
+      );
+  static const VerificationMeta _provisionalMeta = const VerificationMeta(
+    'provisional',
+  );
+  @override
+  late final GeneratedColumn<bool> provisional = GeneratedColumn<bool>(
+    'provisional',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("provisional" IN (0, 1))',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    itemId,
+    fecha,
+    existencia,
+    consumoPromedioDiario,
+    diasCobertura,
+    provisional,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'alertas_reabastecimiento';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaAlerta> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('fecha')) {
+      context.handle(
+        _fechaMeta,
+        fecha.isAcceptableOrUnknown(data['fecha']!, _fechaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fechaMeta);
+    }
+    if (data.containsKey('provisional')) {
+      context.handle(
+        _provisionalMeta,
+        provisional.isAcceptableOrUnknown(
+          data['provisional']!,
+          _provisionalMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_provisionalMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaAlerta map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaAlerta(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      fecha: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fecha'],
+      )!,
+      existencia: $AlertasReabastecimientoTable.$converterexistencia.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}existencia'],
+        )!,
+      ),
+      consumoPromedioDiario: $AlertasReabastecimientoTable
+          .$converterconsumoPromedioDiario
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}consumo_promedio_diario'],
+            )!,
+          ),
+      diasCobertura: $AlertasReabastecimientoTable.$converterdiasCobertura
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}dias_cobertura'],
+            )!,
+          ),
+      provisional: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}provisional'],
+      )!,
+    );
+  }
+
+  @override
+  $AlertasReabastecimientoTable createAlias(String alias) {
+    return $AlertasReabastecimientoTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Decimal, String> $converterexistencia =
+      const ConversorDecimal();
+  static TypeConverter<Decimal, String> $converterconsumoPromedioDiario =
+      const ConversorDecimal();
+  static TypeConverter<Decimal, String> $converterdiasCobertura =
+      const ConversorDecimal();
+}
+
+class FilaAlerta extends DataClass implements Insertable<FilaAlerta> {
+  final String id;
+  final String tiendaId;
+  final String itemId;
+  final String fecha;
+  final Decimal existencia;
+  final Decimal consumoPromedioDiario;
+  final Decimal diasCobertura;
+  final bool provisional;
+  const FilaAlerta({
+    required this.id,
+    required this.tiendaId,
+    required this.itemId,
+    required this.fecha,
+    required this.existencia,
+    required this.consumoPromedioDiario,
+    required this.diasCobertura,
+    required this.provisional,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['item_id'] = Variable<String>(itemId);
+    map['fecha'] = Variable<String>(fecha);
+    {
+      map['existencia'] = Variable<String>(
+        $AlertasReabastecimientoTable.$converterexistencia.toSql(existencia),
+      );
+    }
+    {
+      map['consumo_promedio_diario'] = Variable<String>(
+        $AlertasReabastecimientoTable.$converterconsumoPromedioDiario.toSql(
+          consumoPromedioDiario,
+        ),
+      );
+    }
+    {
+      map['dias_cobertura'] = Variable<String>(
+        $AlertasReabastecimientoTable.$converterdiasCobertura.toSql(
+          diasCobertura,
+        ),
+      );
+    }
+    map['provisional'] = Variable<bool>(provisional);
+    return map;
+  }
+
+  AlertasReabastecimientoCompanion toCompanion(bool nullToAbsent) {
+    return AlertasReabastecimientoCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      itemId: Value(itemId),
+      fecha: Value(fecha),
+      existencia: Value(existencia),
+      consumoPromedioDiario: Value(consumoPromedioDiario),
+      diasCobertura: Value(diasCobertura),
+      provisional: Value(provisional),
+    );
+  }
+
+  factory FilaAlerta.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaAlerta(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      fecha: serializer.fromJson<String>(json['fecha']),
+      existencia: serializer.fromJson<Decimal>(json['existencia']),
+      consumoPromedioDiario: serializer.fromJson<Decimal>(
+        json['consumoPromedioDiario'],
+      ),
+      diasCobertura: serializer.fromJson<Decimal>(json['diasCobertura']),
+      provisional: serializer.fromJson<bool>(json['provisional']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'itemId': serializer.toJson<String>(itemId),
+      'fecha': serializer.toJson<String>(fecha),
+      'existencia': serializer.toJson<Decimal>(existencia),
+      'consumoPromedioDiario': serializer.toJson<Decimal>(
+        consumoPromedioDiario,
+      ),
+      'diasCobertura': serializer.toJson<Decimal>(diasCobertura),
+      'provisional': serializer.toJson<bool>(provisional),
+    };
+  }
+
+  FilaAlerta copyWith({
+    String? id,
+    String? tiendaId,
+    String? itemId,
+    String? fecha,
+    Decimal? existencia,
+    Decimal? consumoPromedioDiario,
+    Decimal? diasCobertura,
+    bool? provisional,
+  }) => FilaAlerta(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    itemId: itemId ?? this.itemId,
+    fecha: fecha ?? this.fecha,
+    existencia: existencia ?? this.existencia,
+    consumoPromedioDiario: consumoPromedioDiario ?? this.consumoPromedioDiario,
+    diasCobertura: diasCobertura ?? this.diasCobertura,
+    provisional: provisional ?? this.provisional,
+  );
+  FilaAlerta copyWithCompanion(AlertasReabastecimientoCompanion data) {
+    return FilaAlerta(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      existencia: data.existencia.present
+          ? data.existencia.value
+          : this.existencia,
+      consumoPromedioDiario: data.consumoPromedioDiario.present
+          ? data.consumoPromedioDiario.value
+          : this.consumoPromedioDiario,
+      diasCobertura: data.diasCobertura.present
+          ? data.diasCobertura.value
+          : this.diasCobertura,
+      provisional: data.provisional.present
+          ? data.provisional.value
+          : this.provisional,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaAlerta(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('itemId: $itemId, ')
+          ..write('fecha: $fecha, ')
+          ..write('existencia: $existencia, ')
+          ..write('consumoPromedioDiario: $consumoPromedioDiario, ')
+          ..write('diasCobertura: $diasCobertura, ')
+          ..write('provisional: $provisional')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    itemId,
+    fecha,
+    existencia,
+    consumoPromedioDiario,
+    diasCobertura,
+    provisional,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaAlerta &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.itemId == this.itemId &&
+          other.fecha == this.fecha &&
+          other.existencia == this.existencia &&
+          other.consumoPromedioDiario == this.consumoPromedioDiario &&
+          other.diasCobertura == this.diasCobertura &&
+          other.provisional == this.provisional);
+}
+
+class AlertasReabastecimientoCompanion extends UpdateCompanion<FilaAlerta> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> itemId;
+  final Value<String> fecha;
+  final Value<Decimal> existencia;
+  final Value<Decimal> consumoPromedioDiario;
+  final Value<Decimal> diasCobertura;
+  final Value<bool> provisional;
+  final Value<int> rowid;
+  const AlertasReabastecimientoCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.existencia = const Value.absent(),
+    this.consumoPromedioDiario = const Value.absent(),
+    this.diasCobertura = const Value.absent(),
+    this.provisional = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AlertasReabastecimientoCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String itemId,
+    required String fecha,
+    required Decimal existencia,
+    required Decimal consumoPromedioDiario,
+    required Decimal diasCobertura,
+    required bool provisional,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       itemId = Value(itemId),
+       fecha = Value(fecha),
+       existencia = Value(existencia),
+       consumoPromedioDiario = Value(consumoPromedioDiario),
+       diasCobertura = Value(diasCobertura),
+       provisional = Value(provisional);
+  static Insertable<FilaAlerta> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? itemId,
+    Expression<String>? fecha,
+    Expression<String>? existencia,
+    Expression<String>? consumoPromedioDiario,
+    Expression<String>? diasCobertura,
+    Expression<bool>? provisional,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (itemId != null) 'item_id': itemId,
+      if (fecha != null) 'fecha': fecha,
+      if (existencia != null) 'existencia': existencia,
+      if (consumoPromedioDiario != null)
+        'consumo_promedio_diario': consumoPromedioDiario,
+      if (diasCobertura != null) 'dias_cobertura': diasCobertura,
+      if (provisional != null) 'provisional': provisional,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AlertasReabastecimientoCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? itemId,
+    Value<String>? fecha,
+    Value<Decimal>? existencia,
+    Value<Decimal>? consumoPromedioDiario,
+    Value<Decimal>? diasCobertura,
+    Value<bool>? provisional,
+    Value<int>? rowid,
+  }) {
+    return AlertasReabastecimientoCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      itemId: itemId ?? this.itemId,
+      fecha: fecha ?? this.fecha,
+      existencia: existencia ?? this.existencia,
+      consumoPromedioDiario:
+          consumoPromedioDiario ?? this.consumoPromedioDiario,
+      diasCobertura: diasCobertura ?? this.diasCobertura,
+      provisional: provisional ?? this.provisional,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<String>(fecha.value);
+    }
+    if (existencia.present) {
+      map['existencia'] = Variable<String>(
+        $AlertasReabastecimientoTable.$converterexistencia.toSql(
+          existencia.value,
+        ),
+      );
+    }
+    if (consumoPromedioDiario.present) {
+      map['consumo_promedio_diario'] = Variable<String>(
+        $AlertasReabastecimientoTable.$converterconsumoPromedioDiario.toSql(
+          consumoPromedioDiario.value,
+        ),
+      );
+    }
+    if (diasCobertura.present) {
+      map['dias_cobertura'] = Variable<String>(
+        $AlertasReabastecimientoTable.$converterdiasCobertura.toSql(
+          diasCobertura.value,
+        ),
+      );
+    }
+    if (provisional.present) {
+      map['provisional'] = Variable<bool>(provisional.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AlertasReabastecimientoCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('itemId: $itemId, ')
+          ..write('fecha: $fecha, ')
+          ..write('existencia: $existencia, ')
+          ..write('consumoPromedioDiario: $consumoPromedioDiario, ')
+          ..write('diasCobertura: $diasCobertura, ')
+          ..write('provisional: $provisional, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VentasPerdidasTable extends VentasPerdidas
+    with TableInfo<$VentasPerdidasTable, FilaVentaPerdida> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VentasPerdidasTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productoIdMeta = const VerificationMeta(
+    'productoId',
+  );
+  @override
+  late final GeneratedColumn<String> productoId = GeneratedColumn<String>(
+    'producto_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES productos (id)',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fecha =
+      GeneratedColumn<DateTime>(
+        'fecha',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($VentasPerdidasTable.$converterfecha);
+  @override
+  List<GeneratedColumn> get $columns => [id, tiendaId, productoId, fecha];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ventas_perdidas';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaVentaPerdida> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('producto_id')) {
+      context.handle(
+        _productoIdMeta,
+        productoId.isAcceptableOrUnknown(data['producto_id']!, _productoIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productoIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaVentaPerdida map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaVentaPerdida(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      productoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}producto_id'],
+      )!,
+      fecha: $VentasPerdidasTable.$converterfecha.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $VentasPerdidasTable createAlias(String alias) {
+    return $VentasPerdidasTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterfecha =
+      const ConversorFechaUtc();
+}
+
+class FilaVentaPerdida extends DataClass
+    implements Insertable<FilaVentaPerdida> {
+  final String id;
+  final String tiendaId;
+  final String productoId;
+  final DateTime fecha;
+  const FilaVentaPerdida({
+    required this.id,
+    required this.tiendaId,
+    required this.productoId,
+    required this.fecha,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['producto_id'] = Variable<String>(productoId);
+    {
+      map['fecha'] = Variable<DateTime>(
+        $VentasPerdidasTable.$converterfecha.toSql(fecha),
+      );
+    }
+    return map;
+  }
+
+  VentasPerdidasCompanion toCompanion(bool nullToAbsent) {
+    return VentasPerdidasCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      productoId: Value(productoId),
+      fecha: Value(fecha),
+    );
+  }
+
+  factory FilaVentaPerdida.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaVentaPerdida(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      productoId: serializer.fromJson<String>(json['productoId']),
+      fecha: serializer.fromJson<DateTime>(json['fecha']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'productoId': serializer.toJson<String>(productoId),
+      'fecha': serializer.toJson<DateTime>(fecha),
+    };
+  }
+
+  FilaVentaPerdida copyWith({
+    String? id,
+    String? tiendaId,
+    String? productoId,
+    DateTime? fecha,
+  }) => FilaVentaPerdida(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    productoId: productoId ?? this.productoId,
+    fecha: fecha ?? this.fecha,
+  );
+  FilaVentaPerdida copyWithCompanion(VentasPerdidasCompanion data) {
+    return FilaVentaPerdida(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      productoId: data.productoId.present
+          ? data.productoId.value
+          : this.productoId,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaVentaPerdida(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('productoId: $productoId, ')
+          ..write('fecha: $fecha')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, tiendaId, productoId, fecha);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaVentaPerdida &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.productoId == this.productoId &&
+          other.fecha == this.fecha);
+}
+
+class VentasPerdidasCompanion extends UpdateCompanion<FilaVentaPerdida> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> productoId;
+  final Value<DateTime> fecha;
+  final Value<int> rowid;
+  const VentasPerdidasCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.productoId = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VentasPerdidasCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String productoId,
+    required DateTime fecha,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       productoId = Value(productoId),
+       fecha = Value(fecha);
+  static Insertable<FilaVentaPerdida> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? productoId,
+    Expression<DateTime>? fecha,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (productoId != null) 'producto_id': productoId,
+      if (fecha != null) 'fecha': fecha,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VentasPerdidasCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? productoId,
+    Value<DateTime>? fecha,
+    Value<int>? rowid,
+  }) {
+    return VentasPerdidasCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      productoId: productoId ?? this.productoId,
+      fecha: fecha ?? this.fecha,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (productoId.present) {
+      map['producto_id'] = Variable<String>(productoId.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(
+        $VentasPerdidasTable.$converterfecha.toSql(fecha.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VentasPerdidasCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('productoId: $productoId, ')
+          ..write('fecha: $fecha, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -3813,6 +4682,9 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     this,
   );
   late final $FormasPagoTable formasPago = $FormasPagoTable(this);
+  late final $AlertasReabastecimientoTable alertasReabastecimiento =
+      $AlertasReabastecimientoTable(this);
+  late final $VentasPerdidasTable ventasPerdidas = $VentasPerdidasTable(this);
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -3857,6 +4729,18 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'formas_pago_venta_idx',
     'CREATE INDEX formas_pago_venta_idx ON formas_pago (venta_id)',
   );
+  late final Index alertasReabastecimientoTiendaFechaIdx = Index(
+    'alertas_reabastecimiento_tienda_fecha_idx',
+    'CREATE INDEX alertas_reabastecimiento_tienda_fecha_idx ON alertas_reabastecimiento (tienda_id, fecha)',
+  );
+  late final Index ventasPerdidasTiendaFechaIdx = Index(
+    'ventas_perdidas_tienda_fecha_idx',
+    'CREATE INDEX ventas_perdidas_tienda_fecha_idx ON ventas_perdidas (tienda_id, fecha)',
+  );
+  late final Index ventasPerdidasProductoFechaIdx = Index(
+    'ventas_perdidas_producto_fecha_idx',
+    'CREATE INDEX ventas_perdidas_producto_fecha_idx ON ventas_perdidas (producto_id, fecha)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3870,6 +4754,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     cajas,
     movimientosCaja,
     formasPago,
+    alertasReabastecimiento,
+    ventasPerdidas,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -3881,6 +4767,9 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     ventasTiendaFechaIdx,
     formasPagoTiendaIdx,
     formasPagoVentaIdx,
+    alertasReabastecimientoTiendaFechaIdx,
+    ventasPerdidasTiendaFechaIdx,
+    ventasPerdidasProductoFechaIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -4188,6 +5077,25 @@ final class $$ProductosTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$VentasPerdidasTable, List<FilaVentaPerdida>>
+  _ventasPerdidasRefsTable(_$BaseLocalDrift db) =>
+      MultiTypedResultKey.fromTable(
+        db.ventasPerdidas,
+        aliasName: 'productos__id__ventas_perdidas__producto_id',
+      );
+
+  $$VentasPerdidasTableProcessedTableManager get ventasPerdidasRefs {
+    final manager = $$VentasPerdidasTableTableManager(
+      $_db,
+      $_db.ventasPerdidas,
+    ).filter((f) => f.productoId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_ventasPerdidasRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ProductosTableFilterComposer
@@ -4263,6 +5171,31 @@ class $$ProductosTableFilterComposer
           }) => $$ItemsInventarioTableFilterComposer(
             $db: $db,
             $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> ventasPerdidasRefs(
+    Expression<bool> Function($$VentasPerdidasTableFilterComposer f) f,
+  ) {
+    final $$VentasPerdidasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ventasPerdidas,
+      getReferencedColumn: (t) => t.productoId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasPerdidasTableFilterComposer(
+            $db: $db,
+            $table: $db.ventasPerdidas,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4401,6 +5334,31 @@ class $$ProductosTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> ventasPerdidasRefs<T extends Object>(
+    Expression<T> Function($$VentasPerdidasTableAnnotationComposer a) f,
+  ) {
+    final $$VentasPerdidasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.ventasPerdidas,
+      getReferencedColumn: (t) => t.productoId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasPerdidasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ventasPerdidas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProductosTableTableManager
@@ -4416,7 +5374,10 @@ class $$ProductosTableTableManager
           $$ProductosTableUpdateCompanionBuilder,
           (FilaProducto, $$ProductosTableReferences),
           FilaProducto,
-          PrefetchHooks Function({bool itemsInventarioRefs})
+          PrefetchHooks Function({
+            bool itemsInventarioRefs,
+            bool ventasPerdidasRefs,
+          })
         > {
   $$ProductosTableTableManager(_$BaseLocalDrift db, $ProductosTable table)
     : super(
@@ -4485,39 +5446,61 @@ class $$ProductosTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({itemsInventarioRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (itemsInventarioRefs) db.itemsInventario,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (itemsInventarioRefs)
-                    await $_getPrefetchedDataByColumns<
-                      FilaProducto,
-                      $ProductosTable,
-                      FilaItemInventario,
-                      $ItemsInventarioTable
-                    >(
-                      currentTable: table,
-                      referencedTable: $$ProductosTableReferences
-                          ._itemsInventarioRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$ProductosTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).itemsInventarioRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'producto_id',
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({itemsInventarioRefs = false, ventasPerdidasRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (itemsInventarioRefs) db.itemsInventario,
+                    if (ventasPerdidasRefs) db.ventasPerdidas,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (itemsInventarioRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaProducto,
+                          $ProductosTable,
+                          FilaItemInventario,
+                          $ItemsInventarioTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductosTableReferences
+                              ._itemsInventarioRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductosTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).itemsInventarioRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'producto_id',
+                          typedResults: items,
+                        ),
+                      if (ventasPerdidasRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaProducto,
+                          $ProductosTable,
+                          FilaVentaPerdida,
+                          $VentasPerdidasTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductosTableReferences
+                              ._ventasPerdidasRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductosTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).ventasPerdidasRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'producto_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -4534,7 +5517,10 @@ typedef $$ProductosTableProcessedTableManager =
       $$ProductosTableUpdateCompanionBuilder,
       (FilaProducto, $$ProductosTableReferences),
       FilaProducto,
-      PrefetchHooks Function({bool itemsInventarioRefs})
+      PrefetchHooks Function({
+        bool itemsInventarioRefs,
+        bool ventasPerdidasRefs,
+      })
     >;
 typedef $$ItemsInventarioTableCreateCompanionBuilder =
     ItemsInventarioCompanion Function({
@@ -4607,6 +5593,28 @@ final class $$ItemsInventarioTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$AlertasReabastecimientoTable, List<FilaAlerta>>
+  _alertasReabastecimientoRefsTable(_$BaseLocalDrift db) =>
+      MultiTypedResultKey.fromTable(
+        db.alertasReabastecimiento,
+        aliasName: 'items_inventario__id__alertas_reabastecimiento__item_id',
+      );
+
+  $$AlertasReabastecimientoTableProcessedTableManager
+  get alertasReabastecimientoRefs {
+    final manager = $$AlertasReabastecimientoTableTableManager(
+      $_db,
+      $_db.alertasReabastecimiento,
+    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _alertasReabastecimientoRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ItemsInventarioTableFilterComposer
@@ -4674,6 +5682,32 @@ class $$ItemsInventarioTableFilterComposer
               }) => $$MovimientosInventarioTableFilterComposer(
                 $db: $db,
                 $table: $db.movimientosInventario,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> alertasReabastecimientoRefs(
+    Expression<bool> Function($$AlertasReabastecimientoTableFilterComposer f) f,
+  ) {
+    final $$AlertasReabastecimientoTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.alertasReabastecimiento,
+          getReferencedColumn: (t) => t.itemId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$AlertasReabastecimientoTableFilterComposer(
+                $db: $db,
+                $table: $db.alertasReabastecimiento,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -4801,6 +5835,33 @@ class $$ItemsInventarioTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> alertasReabastecimientoRefs<T extends Object>(
+    Expression<T> Function($$AlertasReabastecimientoTableAnnotationComposer a)
+    f,
+  ) {
+    final $$AlertasReabastecimientoTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.alertasReabastecimiento,
+          getReferencedColumn: (t) => t.itemId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$AlertasReabastecimientoTableAnnotationComposer(
+                $db: $db,
+                $table: $db.alertasReabastecimiento,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ItemsInventarioTableTableManager
@@ -4819,6 +5880,7 @@ class $$ItemsInventarioTableTableManager
           PrefetchHooks Function({
             bool productoId,
             bool movimientosInventarioRefs,
+            bool alertasReabastecimientoRefs,
           })
         > {
   $$ItemsInventarioTableTableManager(
@@ -4871,11 +5933,16 @@ class $$ItemsInventarioTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({productoId = false, movimientosInventarioRefs = false}) {
+              ({
+                productoId = false,
+                movimientosInventarioRefs = false,
+                alertasReabastecimientoRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (movimientosInventarioRefs) db.movimientosInventario,
+                    if (alertasReabastecimientoRefs) db.alertasReabastecimiento,
                   ],
                   addJoins:
                       <
@@ -4929,6 +5996,26 @@ class $$ItemsInventarioTableTableManager
                           referencedColumn: 'item_id',
                           typedResults: items,
                         ),
+                      if (alertasReabastecimientoRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaItemInventario,
+                          $ItemsInventarioTable,
+                          FilaAlerta,
+                          $AlertasReabastecimientoTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ItemsInventarioTableReferences
+                              ._alertasReabastecimientoRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ItemsInventarioTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).alertasReabastecimientoRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'item_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4949,7 +6036,11 @@ typedef $$ItemsInventarioTableProcessedTableManager =
       $$ItemsInventarioTableUpdateCompanionBuilder,
       (FilaItemInventario, $$ItemsInventarioTableReferences),
       FilaItemInventario,
-      PrefetchHooks Function({bool productoId, bool movimientosInventarioRefs})
+      PrefetchHooks Function({
+        bool productoId,
+        bool movimientosInventarioRefs,
+        bool alertasReabastecimientoRefs,
+      })
     >;
 typedef $$VentasTableCreateCompanionBuilder = VentasCompanion Function({
   required String id,
@@ -6965,6 +8056,723 @@ typedef $$FormasPagoTableProcessedTableManager =
       FilaFormaPago,
       PrefetchHooks Function({bool ventaId})
     >;
+typedef $$AlertasReabastecimientoTableCreateCompanionBuilder =
+    AlertasReabastecimientoCompanion Function({
+      required String id,
+      required String tiendaId,
+      required String itemId,
+      required String fecha,
+      required Decimal existencia,
+      required Decimal consumoPromedioDiario,
+      required Decimal diasCobertura,
+      required bool provisional,
+      Value<int> rowid,
+    });
+typedef $$AlertasReabastecimientoTableUpdateCompanionBuilder =
+    AlertasReabastecimientoCompanion Function({
+      Value<String> id,
+      Value<String> tiendaId,
+      Value<String> itemId,
+      Value<String> fecha,
+      Value<Decimal> existencia,
+      Value<Decimal> consumoPromedioDiario,
+      Value<Decimal> diasCobertura,
+      Value<bool> provisional,
+      Value<int> rowid,
+    });
+
+final class $$AlertasReabastecimientoTableReferences
+    extends
+        BaseReferences<
+          _$BaseLocalDrift,
+          $AlertasReabastecimientoTable,
+          FilaAlerta
+        > {
+  $$AlertasReabastecimientoTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ItemsInventarioTable _itemIdTable(_$BaseLocalDrift db) => db
+      .itemsInventario
+      .createAlias('alertas_reabastecimiento__item_id__items_inventario__id');
+
+  $$ItemsInventarioTableProcessedTableManager get itemId {
+    final $_column = $_itemColumn<String>('item_id')!;
+
+    final manager = $$ItemsInventarioTableTableManager(
+      $_db,
+      $_db.itemsInventario,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$AlertasReabastecimientoTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $AlertasReabastecimientoTable> {
+  $$AlertasReabastecimientoTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get existencia =>
+      $composableBuilder(
+        column: $table.existencia,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String>
+  get consumoPromedioDiario => $composableBuilder(
+    column: $table.consumoPromedioDiario,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get diasCobertura =>
+      $composableBuilder(
+        column: $table.diasCobertura,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<bool> get provisional => $composableBuilder(
+    column: $table.provisional,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ItemsInventarioTableFilterComposer get itemId {
+    final $$ItemsInventarioTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.itemsInventario,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsInventarioTableFilterComposer(
+            $db: $db,
+            $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AlertasReabastecimientoTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $AlertasReabastecimientoTable> {
+  $$AlertasReabastecimientoTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get existencia => $composableBuilder(
+    column: $table.existencia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get consumoPromedioDiario => $composableBuilder(
+    column: $table.consumoPromedioDiario,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diasCobertura => $composableBuilder(
+    column: $table.diasCobertura,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get provisional => $composableBuilder(
+    column: $table.provisional,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ItemsInventarioTableOrderingComposer get itemId {
+    final $$ItemsInventarioTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.itemsInventario,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsInventarioTableOrderingComposer(
+            $db: $db,
+            $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AlertasReabastecimientoTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $AlertasReabastecimientoTable> {
+  $$AlertasReabastecimientoTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get existencia =>
+      $composableBuilder(
+        column: $table.existencia,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get consumoPromedioDiario =>
+      $composableBuilder(
+        column: $table.consumoPromedioDiario,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get diasCobertura =>
+      $composableBuilder(
+        column: $table.diasCobertura,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<bool> get provisional => $composableBuilder(
+    column: $table.provisional,
+    builder: (column) => column,
+  );
+
+  $$ItemsInventarioTableAnnotationComposer get itemId {
+    final $$ItemsInventarioTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.itemsInventario,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsInventarioTableAnnotationComposer(
+            $db: $db,
+            $table: $db.itemsInventario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AlertasReabastecimientoTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $AlertasReabastecimientoTable,
+          FilaAlerta,
+          $$AlertasReabastecimientoTableFilterComposer,
+          $$AlertasReabastecimientoTableOrderingComposer,
+          $$AlertasReabastecimientoTableAnnotationComposer,
+          $$AlertasReabastecimientoTableCreateCompanionBuilder,
+          $$AlertasReabastecimientoTableUpdateCompanionBuilder,
+          (FilaAlerta, $$AlertasReabastecimientoTableReferences),
+          FilaAlerta,
+          PrefetchHooks Function({bool itemId})
+        > {
+  $$AlertasReabastecimientoTableTableManager(
+    _$BaseLocalDrift db,
+    $AlertasReabastecimientoTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AlertasReabastecimientoTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$AlertasReabastecimientoTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AlertasReabastecimientoTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<String> fecha = const Value.absent(),
+                Value<Decimal> existencia = const Value.absent(),
+                Value<Decimal> consumoPromedioDiario = const Value.absent(),
+                Value<Decimal> diasCobertura = const Value.absent(),
+                Value<bool> provisional = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AlertasReabastecimientoCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                itemId: itemId,
+                fecha: fecha,
+                existencia: existencia,
+                consumoPromedioDiario: consumoPromedioDiario,
+                diasCobertura: diasCobertura,
+                provisional: provisional,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String itemId,
+                required String fecha,
+                required Decimal existencia,
+                required Decimal consumoPromedioDiario,
+                required Decimal diasCobertura,
+                required bool provisional,
+                Value<int> rowid = const Value.absent(),
+              }) => AlertasReabastecimientoCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                itemId: itemId,
+                fecha: fecha,
+                existencia: existencia,
+                consumoPromedioDiario: consumoPromedioDiario,
+                diasCobertura: diasCobertura,
+                provisional: provisional,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AlertasReabastecimientoTable, FilaAlerta>(table),
+                  $$AlertasReabastecimientoTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (itemId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.itemId,
+                        referencedTable:
+                            $$AlertasReabastecimientoTableReferences
+                                ._itemIdTable(db),
+                        referencedColumn:
+                            $$AlertasReabastecimientoTableReferences
+                                ._itemIdTable(db)
+                                .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$AlertasReabastecimientoTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $AlertasReabastecimientoTable,
+      FilaAlerta,
+      $$AlertasReabastecimientoTableFilterComposer,
+      $$AlertasReabastecimientoTableOrderingComposer,
+      $$AlertasReabastecimientoTableAnnotationComposer,
+      $$AlertasReabastecimientoTableCreateCompanionBuilder,
+      $$AlertasReabastecimientoTableUpdateCompanionBuilder,
+      (FilaAlerta, $$AlertasReabastecimientoTableReferences),
+      FilaAlerta,
+      PrefetchHooks Function({bool itemId})
+    >;
+typedef $$VentasPerdidasTableCreateCompanionBuilder =
+    VentasPerdidasCompanion Function({
+      required String id,
+      required String tiendaId,
+      required String productoId,
+      required DateTime fecha,
+      Value<int> rowid,
+    });
+typedef $$VentasPerdidasTableUpdateCompanionBuilder =
+    VentasPerdidasCompanion Function({
+      Value<String> id,
+      Value<String> tiendaId,
+      Value<String> productoId,
+      Value<DateTime> fecha,
+      Value<int> rowid,
+    });
+
+final class $$VentasPerdidasTableReferences
+    extends
+        BaseReferences<
+          _$BaseLocalDrift,
+          $VentasPerdidasTable,
+          FilaVentaPerdida
+        > {
+  $$VentasPerdidasTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProductosTable _productoIdTable(_$BaseLocalDrift db) =>
+      db.productos.createAlias('ventas_perdidas__producto_id__productos__id');
+
+  $$ProductosTableProcessedTableManager get productoId {
+    final $_column = $_itemColumn<String>('producto_id')!;
+
+    final manager = $$ProductosTableTableManager(
+      $_db,
+      $_db.productos,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productoIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$VentasPerdidasTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $VentasPerdidasTable> {
+  $$VentasPerdidasTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get fecha =>
+      $composableBuilder(
+        column: $table.fecha,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$ProductosTableFilterComposer get productoId {
+    final $$ProductosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productoId,
+      referencedTable: $db.productos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductosTableFilterComposer(
+            $db: $db,
+            $table: $db.productos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VentasPerdidasTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $VentasPerdidasTable> {
+  $$VentasPerdidasTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProductosTableOrderingComposer get productoId {
+    final $$ProductosTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productoId,
+      referencedTable: $db.productos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductosTableOrderingComposer(
+            $db: $db,
+            $table: $db.productos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VentasPerdidasTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $VentasPerdidasTable> {
+  $$VentasPerdidasTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  $$ProductosTableAnnotationComposer get productoId {
+    final $$ProductosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productoId,
+      referencedTable: $db.productos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.productos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$VentasPerdidasTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $VentasPerdidasTable,
+          FilaVentaPerdida,
+          $$VentasPerdidasTableFilterComposer,
+          $$VentasPerdidasTableOrderingComposer,
+          $$VentasPerdidasTableAnnotationComposer,
+          $$VentasPerdidasTableCreateCompanionBuilder,
+          $$VentasPerdidasTableUpdateCompanionBuilder,
+          (FilaVentaPerdida, $$VentasPerdidasTableReferences),
+          FilaVentaPerdida,
+          PrefetchHooks Function({bool productoId})
+        > {
+  $$VentasPerdidasTableTableManager(
+    _$BaseLocalDrift db,
+    $VentasPerdidasTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VentasPerdidasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VentasPerdidasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VentasPerdidasTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> productoId = const Value.absent(),
+                Value<DateTime> fecha = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VentasPerdidasCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                productoId: productoId,
+                fecha: fecha,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String productoId,
+                required DateTime fecha,
+                Value<int> rowid = const Value.absent(),
+              }) => VentasPerdidasCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                productoId: productoId,
+                fecha: fecha,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VentasPerdidasTable, FilaVentaPerdida>(table),
+                  $$VentasPerdidasTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({productoId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (productoId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.productoId,
+                        referencedTable: $$VentasPerdidasTableReferences
+                            ._productoIdTable(db),
+                        referencedColumn: $$VentasPerdidasTableReferences
+                            ._productoIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$VentasPerdidasTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $VentasPerdidasTable,
+      FilaVentaPerdida,
+      $$VentasPerdidasTableFilterComposer,
+      $$VentasPerdidasTableOrderingComposer,
+      $$VentasPerdidasTableAnnotationComposer,
+      $$VentasPerdidasTableCreateCompanionBuilder,
+      $$VentasPerdidasTableUpdateCompanionBuilder,
+      (FilaVentaPerdida, $$VentasPerdidasTableReferences),
+      FilaVentaPerdida,
+      PrefetchHooks Function({bool productoId})
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -6985,4 +8793,11 @@ class $BaseLocalDriftManager {
       $$MovimientosCajaTableTableManager(_db, _db.movimientosCaja);
   $$FormasPagoTableTableManager get formasPago =>
       $$FormasPagoTableTableManager(_db, _db.formasPago);
+  $$AlertasReabastecimientoTableTableManager get alertasReabastecimiento =>
+      $$AlertasReabastecimientoTableTableManager(
+        _db,
+        _db.alertasReabastecimiento,
+      );
+  $$VentasPerdidasTableTableManager get ventasPerdidas =>
+      $$VentasPerdidasTableTableManager(_db, _db.ventasPerdidas);
 }

@@ -78,10 +78,14 @@ ignora; lo que importa son los estilos y la estructura.
     contorno. En pestañas (web, encima de una tabla): grupo en `fondo` con radio 14 y la elegida en
     blanco con `sombraPestana`. No es una acción: no va en verde.
 14. **PildoraEstado**: estado de una fila (13 px, peso 700): verde (`primarioSuave`, "Cuadra"), gris
-    (`fondo`, "Se ajusta"), rojo (`errorFondo`, "Diferencia grande") o blanco con borde punteado
-    (`bordeFuerte`, "Sin contar").
+    (`fondo`, "Se ajusta"), rojo (`errorFondo`, "Diferencia grande"), blanco con borde punteado
+    (`bordeFuerte`, "Sin contar") o azul (`info` con `infoTexto`, "Provisional").
 15. **TarjetaAviso**: aviso en rojo: fondo `errorFondo`, borde `errorBorde`, caja blanca de 44 px con el
-    ícono en `error`, título y texto en `errorTexto`.
+    ícono en `error`, título y texto en `errorTexto`. El texto es opcional (solo el título, centrado con
+    el ícono).
+16. **NotaInfo**: nota que explica cómo leer un dato (mockups `Alertas` y `wAlertas`): fondo `info`,
+    ícono de información y texto 15 px en `infoTexto`, con una parte destacada en negrilla al comienzo
+    ("**Provisional =** lleva menos de 30 días…"). No es una acción ni un error.
 
 ## Pantallas
 
@@ -126,5 +130,17 @@ ignora; lo que importa son los estilos y la estructura.
 
   - Las advertencias van en rojo, no en amarillo. No hay "Volver a contar" ni "Pausar": el número se
     corrige en el mismo campo. Confirmar queda desactivado mientras una fila tenga error.
+- **Alertas de surtido** (mockups `Alertas` y `wAlertas`, CUS-05, DI-25): título con "Calculadas hoy. Son
+  sugerencias: usted decide qué comprar."; SelectorFiltro en pestañas "Por surtir · N" y "Ventas perdidas · N".
+  - **Web:** tabla en una TarjetaGip (encabezado en mayúsculas sobre `superficieSuave`): Producto (con la
+    PildoraEstado azul "Provisional"), Hay, Vende al día, Se fueron sin comprar y Alcanza para ("N días" en
+    `error`, Archivo 800). A la derecha (desde 1100 px; debajo si no cabe) la tarjeta "Cómo leerlas" con la
+    NotaInfo de Provisional.
+  - **Móvil:** una TarjetaGip (radio 18) por alerta: a la izquierda el bloque `errorFondo` de 84 px con el
+    número de días en `error`; a la derecha el nombre, "Provisional" y Hay · Vende/día · No hubo N veces.
+    La NotaInfo va debajo si hay alguna provisional.
+  - Las advertencias van en rojo, no en amarillo. Sin "Urgente"/"Pronto", hora del cálculo, "Datos de N
+    días", barra de "Alcanza para" ni "Armar lista de pedido". Sin alertas: "No hay productos por agotarse".
+    Al empleado: TarjetaAviso "Esta consulta es solo para el propietario".
 - **Producto, Buscar producto, Vender y Cobrar:** aplicar los mismos componentes (tarjetas, campos, botones,
   chips), sin cambiar su funcionamiento.

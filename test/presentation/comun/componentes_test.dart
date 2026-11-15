@@ -7,6 +7,7 @@ import 'package:gip/presentation/comun/chip_estado.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/logo_gip.dart';
+import 'package:gip/presentation/comun/nota_info.dart';
 import 'package:gip/presentation/comun/opcion_con_icono.dart';
 import 'package:gip/presentation/comun/pildora_estado.dart';
 import 'package:gip/presentation/comun/resumen_movimiento.dart';
@@ -473,6 +474,90 @@ void main() {
     expect(deco.color, ColoresGip.errorFondo);
     expect(deco.border, Border.all(color: ColoresGip.errorBorde));
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+  });
+
+  testWidgets('TarjetaAviso: sin texto muestra solo el título', (tester) async {
+    await montar(
+      tester,
+      const TarjetaAviso(
+        titulo: 'Esta consulta es solo para el propietario',
+        icono: Icons.lock_outline,
+      ),
+    );
+    expect(
+      find.text('Esta consulta es solo para el propietario'),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(TarjetaAviso),
+        matching: find.byType(Text),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('PildoraEstado informativa: azul de info', (tester) async {
+    await montar(
+      tester,
+      const PildoraEstado('Provisional', tono: TonoEstado.informativo),
+    );
+    expect(
+      tester.widget<Text>(find.text('Provisional')).style?.color,
+      ColoresGip.infoTexto,
+    );
+    final caja = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(PildoraEstado),
+        matching: find.byType(Container),
+      ),
+    );
+    expect((caja.decoration! as BoxDecoration).color, ColoresGip.info);
+  });
+
+  group('NotaInfo', () {
+    testWidgets('fondo info, ícono y texto destacado en negrilla', (
+      tester,
+    ) async {
+      await montar(
+        tester,
+        const NotaInfo(
+          destacado: 'Provisional =',
+          texto: 'lleva menos de 30 días de ventas; el cálculo puede cambiar.',
+        ),
+      );
+      final caja = tester.widget<Container>(
+        find.descendant(
+          of: find.byType(NotaInfo),
+          matching: find.byType(Container),
+        ),
+      );
+      expect((caja.decoration! as BoxDecoration).color, ColoresGip.info);
+      expect(find.byIcon(Icons.info_outline), findsOneWidget);
+      final rico = tester.widget<Text>(
+        find.descendant(of: find.byType(NotaInfo), matching: find.byType(Text)),
+      );
+      final destacado =
+          (rico.textSpan! as TextSpan).children!.first as TextSpan;
+      expect(destacado.text, 'Provisional = ');
+      expect(destacado.style?.fontWeight, FontWeight.w700);
+      expect(
+        rico.textSpan!.toPlainText(),
+        'Provisional = lleva menos de 30 días de ventas; el cálculo puede '
+        'cambiar.',
+      );
+    });
+
+    testWidgets('sin destacado y sin desbordes en 360 px', (tester) async {
+      await montar(
+        tester,
+        const NotaInfo(texto: 'Un texto largo que tiene que bajar de línea.'),
+        ancho: 360,
+      );
+      expect(tester.takeException(), isNull);
+    });
   });
 
   testWidgets('ChipEstado: Poco en alerta y Agotado en error', (tester) async {

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
+import 'package:gip/presentation/comun/tarjeta_accion.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/negocio/negocio_view.dart';
 import 'package:mocktail/mocktail.dart';
@@ -37,5 +38,25 @@ void main() {
     await tester.tap(find.text('Cerrar sesión'));
     await tester.pumpAndSettle();
     verify(coordinador.cerrarSesion).called(1);
+  });
+
+  testWidgets('tiene la acción Alertas de surtido de 44 px o más', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => IniciarSesionViewModel(IniciarSesionFalso()),
+        child: MaterialApp(theme: TemaGip.claro(), home: const NegocioView()),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(TarjetaAccion, 'Alertas de surtido'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('negocio_alertas'))).height,
+      greaterThanOrEqualTo(44),
+    );
   });
 }
