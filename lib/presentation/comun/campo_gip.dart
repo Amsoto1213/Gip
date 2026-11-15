@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gip/presentation/comun/tema/colores_gip.dart';
 import 'package:gip/presentation/comun/tema/forma_gip.dart';
 
 /// Campo del rediseño: etiqueta arriba (14 px, peso 600), caja de 52–54 px con
 /// radio 14, borde 1,5 px `bordeFuerte` e [icono] a la izquierda en
 /// `textoSecundario`. Con foco: borde `primario` y halo de 4 px. Con
 /// [contrasena] oculta el texto y agrega el botón de ojo. Con [resaltado] el
-/// borde va en `alerta` (un valor que hay que revisar, sin ser error) y
-/// [alineacion] permite cifras a la derecha (cantidades en una lista).
+/// borde va en `error` (un valor que hay que revisar o que no es válido, con
+/// el mensaje fuera del campo, como en una fila del conteo) y [alineacion]
+/// permite cifras a la derecha (cantidades en una lista).
 ///
 /// [campoKey] va en el `TextField` para que las pruebas lo encuentren. Con
 /// [focusNode], el foco lo maneja quien crea el campo (una lista que se
@@ -73,7 +73,7 @@ class CampoGip extends StatefulWidget {
   /// Alineación del texto escrito; a la derecha para cifras en columna.
   final TextAlign alineacion;
 
-  /// Borde en `alerta` para marcar un valor por revisar (no bloquea).
+  /// Borde en `error` para marcar un valor por revisar o no válido.
   final bool resaltado;
 
   @override
@@ -89,11 +89,10 @@ class _CampoGipState extends State<CampoGip> {
     final tema = Theme.of(context);
     final esquema = tema.colorScheme;
     final icono = widget.icono;
-    final extra = tema.extension<ColoresExtraGip>()!;
     final bordeResaltado = OutlineInputBorder(
       borderRadius: BorderRadius.circular(FormaGip.radioCampo),
       borderSide: BorderSide(
-        color: extra.alerta,
+        color: esquema.error,
         width: FormaGip.grosorBordeCampo,
       ),
     );

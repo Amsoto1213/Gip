@@ -22,6 +22,15 @@ abstract final class ColoresGip {
   static const error = Color(0xFFB3261E);
   static const errorFondo = Color(0xFFFCE8E6);
 
+  /// Fila de una lista con un valor por revisar o con error (conteo).
+  static const errorFondoSuave = Color(0xFFFFF5F4);
+
+  /// Borde de la tarjeta de aviso en rojo.
+  static const errorBorde = Color(0xFFF3C1BC);
+
+  /// Texto sobre `errorFondo` en la tarjeta de aviso.
+  static const errorTexto = Color(0xFF8C1D18);
+
   /// rgba(12, 21, 18, 0.55): fondo detrás de hojas modales.
   static const velo = Color(0x8C0C1512);
 
@@ -47,8 +56,9 @@ abstract final class ColoresGip {
 }
 
 /// Tokens sin lugar en `ColorScheme`: alerta de poca existencia, indicador
-/// "Sin internet" (RNF-09), separador y los del rediseño (menú lateral,
-/// botones de paso, panel del inicio de sesión). Se leen con
+/// "Sin internet" (RNF-09), separador, los tonos de error de una fila o un
+/// aviso y los del rediseño (menú lateral, botones de paso, panel del inicio
+/// de sesión). Se leen con
 /// `Theme.of(context).extension<ColoresExtraGip>()!`.
 @immutable
 class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
@@ -60,6 +70,9 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
     required this.alertaTexto,
     required this.info,
     required this.infoTexto,
+    required this.errorFondoSuave,
+    required this.errorBorde,
+    required this.errorTexto,
     required this.superficieSuave,
     required this.pasoFondo,
     required this.pasoFondoActivo,
@@ -78,6 +91,9 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
     alertaTexto: ColoresGip.alertaTexto,
     info: ColoresGip.info,
     infoTexto: ColoresGip.infoTexto,
+    errorFondoSuave: ColoresGip.errorFondoSuave,
+    errorBorde: ColoresGip.errorBorde,
+    errorTexto: ColoresGip.errorTexto,
     superficieSuave: ColoresGip.superficieSuave,
     pasoFondo: ColoresGip.pasoFondo,
     pasoFondoActivo: ColoresGip.pasoFondoActivo,
@@ -95,6 +111,9 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
   final Color alertaTexto;
   final Color info;
   final Color infoTexto;
+  final Color errorFondoSuave;
+  final Color errorBorde;
+  final Color errorTexto;
   final Color superficieSuave;
   final Color pasoFondo;
   final Color pasoFondoActivo;
@@ -113,6 +132,9 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
     Color? alertaTexto,
     Color? info,
     Color? infoTexto,
+    Color? errorFondoSuave,
+    Color? errorBorde,
+    Color? errorTexto,
     Color? superficieSuave,
     Color? pasoFondo,
     Color? pasoFondoActivo,
@@ -129,6 +151,9 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
     alertaTexto: alertaTexto ?? this.alertaTexto,
     info: info ?? this.info,
     infoTexto: infoTexto ?? this.infoTexto,
+    errorFondoSuave: errorFondoSuave ?? this.errorFondoSuave,
+    errorBorde: errorBorde ?? this.errorBorde,
+    errorTexto: errorTexto ?? this.errorTexto,
     superficieSuave: superficieSuave ?? this.superficieSuave,
     pasoFondo: pasoFondo ?? this.pasoFondo,
     pasoFondoActivo: pasoFondoActivo ?? this.pasoFondoActivo,
@@ -150,6 +175,9 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
       alertaTexto: Color.lerp(alertaTexto, other.alertaTexto, t)!,
       info: Color.lerp(info, other.info, t)!,
       infoTexto: Color.lerp(infoTexto, other.infoTexto, t)!,
+      errorFondoSuave: Color.lerp(errorFondoSuave, other.errorFondoSuave, t)!,
+      errorBorde: Color.lerp(errorBorde, other.errorBorde, t)!,
+      errorTexto: Color.lerp(errorTexto, other.errorTexto, t)!,
       superficieSuave: Color.lerp(superficieSuave, other.superficieSuave, t)!,
       pasoFondo: Color.lerp(pasoFondo, other.pasoFondo, t)!,
       pasoFondoActivo: Color.lerp(pasoFondoActivo, other.pasoFondoActivo, t)!,
