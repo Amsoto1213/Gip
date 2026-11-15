@@ -130,6 +130,7 @@ void main() {
         consultarCliente: pagos.consultarCliente,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
+        registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
         consultarMargen: ConsultarMargenFalso(),
         generarReporteDiario: GenerarReporteDiarioFalso(),
       ),

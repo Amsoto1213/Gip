@@ -11,6 +11,7 @@ import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/composition_root/registrar_alertas.dart';
 import 'package:gip/composition_root/registrar_caja.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/composition_root/registrar_pagos.dart';
@@ -119,6 +120,10 @@ void main() {
         consultarCliente: pagos.consultarCliente,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
+        registrarVentaPerdida: registrarAlertas(
+          base,
+          ServicioAcceso(autenticacion, sesionLocal),
+        ).registrarVentaPerdida,
         consultarMargen: ConsultarMargenFalso(),
         generarReporteDiario: GenerarReporteDiarioFalso(),
       ),
@@ -399,5 +404,29 @@ void main() {
     expect(await contar(tester, 'fiados'), 1);
     expect(await contar(tester, 'movimientos_caja'), 0);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sin existencia: "Anotar que se fue sin él" registra la venta '
+      'perdida (CUS-13)', (tester) async {
+    final queso = await crear(tester, 'QUE', 'Queso costeño', '9000', '0');
+    await abrir(tester);
+
+    await agregar(tester, 'queso', 'Queso costeño');
+    expect(
+      find.text('No hay suficiente existencia del producto'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('vender_anotar_perdida')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('vender_anotar_perdida')));
+    await esperarBase(tester);
+
+    expect(find.text('Venta perdida registrada'), findsOneWidget);
+    expect(find.byKey(const Key('vender_anotar_perdida')), findsNothing);
+    final filas = (await tester.runAsync(
+      () => base.select(base.ventasPerdidas).get(),
+    ))!;
+    expect(filas.single.productoId, queso.getId());
+    expect(filas.single.tiendaId, tienda.getId());
   });
 }

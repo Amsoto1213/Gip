@@ -8,6 +8,7 @@ import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coor
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
@@ -64,6 +65,7 @@ Future<void> main() async {
       consultarCliente: pagos.consultarCliente,
       generarAlertas: alertas.generarAlertas,
       consultarAlertas: alertas.consultarAlertas,
+      registrarVentaPerdida: alertas.registrarVentaPerdida,
       consultarMargen: reportes.consultarMargen,
       generarReporteDiario: reportes.generarReporteDiario,
     ),
@@ -85,6 +87,7 @@ class GipApp extends StatefulWidget {
     required this.consultarCliente,
     required this.generarAlertas,
     required this.consultarAlertas,
+    required this.registrarVentaPerdida,
     required this.consultarMargen,
     required this.generarReporteDiario,
   });
@@ -101,6 +104,7 @@ class GipApp extends StatefulWidget {
   final ConsultarClienteCoordinator consultarCliente;
   final GenerarAlertasDiariasCoordinator generarAlertas;
   final ConsultarAlertasCoordinator consultarAlertas;
+  final RegistrarVentaPerdidaCoordinator registrarVentaPerdida;
   final ConsultarMargenCoordinator consultarMargen;
   final GenerarReporteDiarioCoordinator generarReporteDiario;
 
@@ -146,6 +150,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarAbono),
         Provider.value(value: widget.consultarCliente),
         Provider.value(value: widget.consultarAlertas),
+        Provider.value(value: widget.registrarVentaPerdida),
         Provider.value(value: widget.consultarMargen),
         Provider.value(value: widget.generarReporteDiario),
       ],

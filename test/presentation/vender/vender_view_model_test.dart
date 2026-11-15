@@ -10,7 +10,11 @@ void main() {
 
   setUp(() async {
     prueba = await VentaDePrueba.crear();
-    vm = VenderViewModel(prueba.coordinador, tiendaPrueba);
+    vm = VenderViewModel(
+      prueba.coordinador,
+      prueba.coordinadorPerdida,
+      tiendaPrueba,
+    );
   });
   tearDown(() => vm.dispose());
 
@@ -83,5 +87,34 @@ void main() {
 
     expect(vm.lineas, isEmpty);
     expect(vm.aviso, 'Venta registrada');
+  });
+
+  test('sin existencia ofrece anotar la venta perdida (CUS-13)', () async {
+    await vm.agregar(prueba.queso);
+    expect(vm.productoSinExistencia, prueba.queso);
+
+    await vm.registrarVentaPerdida();
+
+    expect(vm.aviso, 'Venta perdida registrada');
+    expect(vm.error, isNull);
+    expect(vm.productoSinExistencia, isNull);
+    expect(vm.lineas, isEmpty);
+    final guardadas = prueba.perdidas.datos[tiendaPrueba.getId()]!;
+    expect(guardadas.single.getProducto(), prueba.queso);
+  });
+
+  test('otro error o un producto con existencia no ofrece anotarla', () async {
+    await vm.agregar(prueba.arroz);
+
+    expect(vm.productoSinExistencia, isNull);
+    await vm.registrarVentaPerdida();
+    expect(prueba.perdidas.datos, isEmpty);
+  });
+
+  test('seguir vendiendo quita el botón de venta perdida', () async {
+    await vm.agregar(prueba.queso);
+    await vm.agregar(prueba.arroz);
+
+    expect(vm.productoSinExistencia, isNull);
   });
 }

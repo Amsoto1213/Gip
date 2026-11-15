@@ -3,6 +3,7 @@ import 'package:gip/business/componentes/gestion_inventario/servicio_alertas.dar
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/alerta_repositorio_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/inventario_repositorio_drift.dart';
@@ -10,10 +11,12 @@ import 'package:gip/data/repositorios/gestion_inventario/movimiento_inventario_r
 import 'package:gip/data/repositorios/gestion_inventario/venta_perdida_repositorio_drift.dart';
 import 'package:gip/transversal/configuracion/configuracion_alertas.dart';
 
-/// Coordinadores de las alertas de reabastecimiento (CUS-24 y CUS-05).
+/// Coordinadores de las alertas de reabastecimiento (CUS-24 y CUS-05) y de las
+/// ventas perdidas (CUS-13).
 typedef CoordinadoresAlertas = ({
   GenerarAlertasDiariasCoordinator generarAlertas,
   ConsultarAlertasCoordinator consultarAlertas,
+  RegistrarVentaPerdidaCoordinator registrarVentaPerdida,
 });
 
 /// Arma [ServicioAlertas] con la estrategia [ConsumoPromedioSimple] y el
@@ -36,5 +39,6 @@ CoordinadoresAlertas registrarAlertas(
       servicioAlertas,
       servicioAcceso,
     ),
+    registrarVentaPerdida: RegistrarVentaPerdidaCoordinator(servicioAlertas),
   );
 }

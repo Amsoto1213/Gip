@@ -64,6 +64,16 @@ class VenderView extends StatelessWidget {
                 if (vm.error != null) ...[
                   const SizedBox(height: 12),
                   _Mensaje(texto: vm.error!, esError: true),
+                  if (vm.productoSinExistencia != null) ...[
+                    const SizedBox(height: 8),
+                    BotonSecundario(
+                      key: const Key('vender_anotar_perdida'),
+                      texto: 'Anotar que se fue sin él',
+                      icono: Icons.edit_note,
+                      expandido: true,
+                      onPressed: vm.registrarVentaPerdida,
+                    ),
+                  ],
                 ],
                 if (vm.aviso != null) ...[
                   const SizedBox(height: 12),

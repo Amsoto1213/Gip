@@ -5,6 +5,7 @@ import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
@@ -48,6 +49,7 @@ StatefulShellBranch ramaVender() => StatefulShellBranch(
       builder: (context, _) => ChangeNotifierProvider(
         create: (context) => VenderViewModel(
           context.read<RegistrarVentaCoordinator>(),
+          context.read<RegistrarVentaPerdidaCoordinator>(),
           context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
         ),
         child: const VenderView(),
