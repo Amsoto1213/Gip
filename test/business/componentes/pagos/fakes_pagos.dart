@@ -1,4 +1,5 @@
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
@@ -63,6 +64,10 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
   final Map<String, List<Fiado>> datos = {};
   Map<String, List<Fiado>> _copia = {};
 
+  /// Abonos guardados con registrarAbono, en orden de llegada.
+  final List<Abono> abonos = [];
+  List<Abono> _copiaAbonos = [];
+
   final List<bool> guardadosEnTransaccion = [];
   UnidadTrabajoFalsa? unidad;
   bool fallar = false;
@@ -70,13 +75,27 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
   List<Fiado> de(Tienda t) => datos.putIfAbsent(t.getId(), () => []);
 
   @override
-  void tomarCopia() =>
-      _copia = {for (final e in datos.entries) e.key: List.of(e.value)};
+  void tomarCopia() {
+    _copia = {for (final e in datos.entries) e.key: List.of(e.value)};
+    _copiaAbonos = List.of(abonos);
+  }
 
   @override
-  void restaurar() => datos
-    ..clear()
-    ..addAll(_copia);
+  void restaurar() {
+    datos
+      ..clear()
+      ..addAll(_copia);
+    abonos
+      ..clear()
+      ..addAll(_copiaAbonos);
+  }
+
+  @override
+  Future<void> registrarAbono(Tienda tienda, Fiado fiado, Abono abono) async {
+    if (fallar) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    abonos.add(abono);
+  }
 
   @override
   Future<void> crear(Tienda tienda, Fiado fiado) async {

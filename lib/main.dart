@@ -7,6 +7,8 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_merca
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
+import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/composition_root/registrar_acceso.dart';
@@ -54,6 +56,8 @@ Future<void> main() async {
       registrarConteo: inventario.registrarConteo,
       registrarVenta: pagos.registrarVenta,
       registrarFiado: pagos.registrarFiado,
+      registrarAbono: pagos.registrarAbono,
+      consultarCliente: pagos.consultarCliente,
       generarAlertas: alertas.generarAlertas,
       consultarAlertas: alertas.consultarAlertas,
     ),
@@ -71,6 +75,8 @@ class GipApp extends StatefulWidget {
     required this.registrarConteo,
     required this.registrarVenta,
     required this.registrarFiado,
+    required this.registrarAbono,
+    required this.consultarCliente,
     required this.generarAlertas,
     required this.consultarAlertas,
   });
@@ -83,6 +89,8 @@ class GipApp extends StatefulWidget {
   final RegistrarConteoCoordinator registrarConteo;
   final RegistrarVentaCoordinator registrarVenta;
   final RegistrarFiadoCoordinator registrarFiado;
+  final RegistrarAbonoCoordinator registrarAbono;
+  final ConsultarClienteCoordinator consultarCliente;
   final GenerarAlertasDiariasCoordinator generarAlertas;
   final ConsultarAlertasCoordinator consultarAlertas;
 
@@ -125,6 +133,8 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarConteo),
         Provider.value(value: widget.registrarVenta),
         Provider.value(value: widget.registrarFiado),
+        Provider.value(value: widget.registrarAbono),
+        Provider.value(value: widget.consultarCliente),
         Provider.value(value: widget.consultarAlertas),
       ],
       child: MaterialApp.router(

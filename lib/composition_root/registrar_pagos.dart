@@ -3,9 +3,12 @@ import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.
 import 'package:gip/business/componentes/pagos/procesador_fiado.dart';
 import 'package:gip/business/componentes/pagos/procesador_nequi.dart';
 import 'package:gip/business/componentes/pagos/procesador_pago_contado.dart';
+import 'package:gip/business/componentes/pagos/servicio_abonos.dart';
 import 'package:gip/business/componentes/pagos/servicio_clientes.dart';
 import 'package:gip/business/componentes/pagos/servicio_fiados.dart';
 import 'package:gip/business/componentes/pagos/servicio_ventas.dart';
+import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
+import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
@@ -18,6 +21,8 @@ import 'package:gip/data/repositorios/pagos/venta_repositorio_drift.dart';
 typedef CoordinadoresPagos = ({
   RegistrarVentaCoordinator registrarVenta,
   RegistrarFiadoCoordinator registrarFiado,
+  RegistrarAbonoCoordinator registrarAbono,
+  ConsultarClienteCoordinator consultarCliente,
 });
 
 /// Arma el módulo de pagos. Recibe los servicios de inventario y caja ya
@@ -29,7 +34,9 @@ CoordinadoresPagos registrarPagos(
   ServicioInventario servicioInventario,
   ServicioCaja servicioCaja,
 ) {
-  final servicioFiados = ServicioFiados(FiadoRepositorioDrift(base));
+  final fiados = FiadoRepositorioDrift(base);
+  final servicioFiados = ServicioFiados(fiados);
+  final servicioClientes = ServicioClientes(ClienteRepositorioDrift(base));
   final servicioVentas = ServicioVentas(
     servicioInventario,
     [
@@ -42,8 +49,12 @@ CoordinadoresPagos registrarPagos(
   );
   return (
     registrarVenta: RegistrarVentaCoordinator(servicioVentas),
-    registrarFiado: RegistrarFiadoCoordinator(
-      ServicioClientes(ClienteRepositorioDrift(base)),
+    registrarFiado: RegistrarFiadoCoordinator(servicioClientes, servicioFiados),
+    registrarAbono: RegistrarAbonoCoordinator(
+      ServicioAbonos(fiados, servicioCaja, unidadTrabajo),
+    ),
+    consultarCliente: ConsultarClienteCoordinator(
+      servicioClientes,
       servicioFiados,
     ),
   );

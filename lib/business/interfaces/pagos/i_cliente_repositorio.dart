@@ -8,7 +8,8 @@ import 'package:gip/business/entidades/pagos/cliente.dart';
 /// CUS-21 (DI-26).
 abstract interface class IClienteRepositorio {
   /// Clientes de la tienda cuyo nombre contiene [texto], sin distinguir
-  /// mayúsculas ni tildes (RD-08), cada uno con sus fiados.
+  /// mayúsculas ni tildes (RD-08), cada uno con sus fiados y los abonos de
+  /// cada fiado (CUS-08, CUS-19).
   Future<List<Cliente>> buscarPorNombre(Tienda tienda, String texto);
 
   /// Crea o actualiza el cliente (RNF-16).

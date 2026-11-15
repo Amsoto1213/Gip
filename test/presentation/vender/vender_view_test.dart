@@ -113,6 +113,8 @@ void main() {
         registrarConteo: inventario.registrarConteo,
         registrarVenta: pagos.registrarVenta,
         registrarFiado: pagos.registrarFiado,
+        registrarAbono: pagos.registrarAbono,
+        consultarCliente: pagos.consultarCliente,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
       ),

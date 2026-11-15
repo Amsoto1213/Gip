@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:gip/data/local/conversores/conversor_decimal.dart';
 import 'package:gip/data/local/conversores/conversor_fecha_utc.dart';
+import 'package:gip/data/local/tablas/abonos.dart';
 import 'package:gip/data/local/tablas/alertas_reabastecimiento.dart';
 import 'package:gip/data/local/tablas/cajas.dart';
 import 'package:gip/data/local/tablas/clientes.dart';
@@ -34,6 +35,7 @@ part 'base_local_drift.g.dart';
     VentasPerdidas,
     Clientes,
     Fiados,
+    Abonos,
   ],
 )
 class BaseLocalDrift extends _$BaseLocalDrift {
@@ -59,9 +61,9 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// de MERMA en movimientos_inventario (CUS-03). 6: columna
   /// `cantidad_contada` de AJUSTE_CONTEO en movimientos_inventario (CUS-04).
   /// 7: alertas_reabastecimiento y ventas_perdidas (CUS-24 y CUS-05).
-  /// 8: clientes y fiados (CUS-07).
+  /// 8: clientes y fiados (CUS-07). 9: abonos (CUS-08).
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -126,6 +128,11 @@ class BaseLocalDrift extends _$BaseLocalDrift {
         await m.createTable(fiados);
         await m.createIndex(fiadosTiendaIdx);
         await m.createIndex(fiadosClienteIdx);
+      }
+      if (desde < 9) {
+        await m.createTable(abonos);
+        await m.createIndex(abonosTiendaIdx);
+        await m.createIndex(abonosFiadoIdx);
       }
     },
   );

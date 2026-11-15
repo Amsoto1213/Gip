@@ -5561,6 +5561,523 @@ class FiadosCompanion extends UpdateCompanion<FilaFiado> {
   }
 }
 
+class $AbonosTable extends Abonos with TableInfo<$AbonosTable, FilaAbono> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AbonosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fiadoIdMeta = const VerificationMeta(
+    'fiadoId',
+  );
+  @override
+  late final GeneratedColumn<String> fiadoId = GeneratedColumn<String>(
+    'fiado_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES fiados (id)',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> monto =
+      GeneratedColumn<String>(
+        'monto',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<Decimal>($AbonosTable.$convertermonto);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fecha =
+      GeneratedColumn<DateTime>(
+        'fecha',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($AbonosTable.$converterfecha);
+  static const VerificationMeta _medioMeta = const VerificationMeta('medio');
+  @override
+  late final GeneratedColumn<String> medio = GeneratedColumn<String>(
+    'medio',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _referenciaMeta = const VerificationMeta(
+    'referencia',
+  );
+  @override
+  late final GeneratedColumn<String> referencia = GeneratedColumn<String>(
+    'referencia',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _anuladoMeta = const VerificationMeta(
+    'anulado',
+  );
+  @override
+  late final GeneratedColumn<bool> anulado = GeneratedColumn<bool>(
+    'anulado',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("anulado" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    fiadoId,
+    monto,
+    fecha,
+    medio,
+    referencia,
+    anulado,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'abonos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaAbono> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('fiado_id')) {
+      context.handle(
+        _fiadoIdMeta,
+        fiadoId.isAcceptableOrUnknown(data['fiado_id']!, _fiadoIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fiadoIdMeta);
+    }
+    if (data.containsKey('medio')) {
+      context.handle(
+        _medioMeta,
+        medio.isAcceptableOrUnknown(data['medio']!, _medioMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_medioMeta);
+    }
+    if (data.containsKey('referencia')) {
+      context.handle(
+        _referenciaMeta,
+        referencia.isAcceptableOrUnknown(data['referencia']!, _referenciaMeta),
+      );
+    }
+    if (data.containsKey('anulado')) {
+      context.handle(
+        _anuladoMeta,
+        anulado.isAcceptableOrUnknown(data['anulado']!, _anuladoMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaAbono map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaAbono(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      fiadoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiado_id'],
+      )!,
+      monto: $AbonosTable.$convertermonto.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}monto'],
+        )!,
+      ),
+      fecha: $AbonosTable.$converterfecha.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha'],
+        )!,
+      ),
+      medio: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}medio'],
+      )!,
+      referencia: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}referencia'],
+      ),
+      anulado: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}anulado'],
+      )!,
+    );
+  }
+
+  @override
+  $AbonosTable createAlias(String alias) {
+    return $AbonosTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Decimal, String> $convertermonto =
+      const ConversorDecimal();
+  static TypeConverter<DateTime, DateTime> $converterfecha =
+      const ConversorFechaUtc();
+}
+
+class FilaAbono extends DataClass implements Insertable<FilaAbono> {
+  final String id;
+  final String tiendaId;
+  final String fiadoId;
+  final Decimal monto;
+  final DateTime fecha;
+  final String medio;
+  final String? referencia;
+  final bool anulado;
+  const FilaAbono({
+    required this.id,
+    required this.tiendaId,
+    required this.fiadoId,
+    required this.monto,
+    required this.fecha,
+    required this.medio,
+    this.referencia,
+    required this.anulado,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['fiado_id'] = Variable<String>(fiadoId);
+    {
+      map['monto'] = Variable<String>(
+        $AbonosTable.$convertermonto.toSql(monto),
+      );
+    }
+    {
+      map['fecha'] = Variable<DateTime>(
+        $AbonosTable.$converterfecha.toSql(fecha),
+      );
+    }
+    map['medio'] = Variable<String>(medio);
+    if (!nullToAbsent || referencia != null) {
+      map['referencia'] = Variable<String>(referencia);
+    }
+    map['anulado'] = Variable<bool>(anulado);
+    return map;
+  }
+
+  AbonosCompanion toCompanion(bool nullToAbsent) {
+    return AbonosCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      fiadoId: Value(fiadoId),
+      monto: Value(monto),
+      fecha: Value(fecha),
+      medio: Value(medio),
+      referencia: referencia == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referencia),
+      anulado: Value(anulado),
+    );
+  }
+
+  factory FilaAbono.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaAbono(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      fiadoId: serializer.fromJson<String>(json['fiadoId']),
+      monto: serializer.fromJson<Decimal>(json['monto']),
+      fecha: serializer.fromJson<DateTime>(json['fecha']),
+      medio: serializer.fromJson<String>(json['medio']),
+      referencia: serializer.fromJson<String?>(json['referencia']),
+      anulado: serializer.fromJson<bool>(json['anulado']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'fiadoId': serializer.toJson<String>(fiadoId),
+      'monto': serializer.toJson<Decimal>(monto),
+      'fecha': serializer.toJson<DateTime>(fecha),
+      'medio': serializer.toJson<String>(medio),
+      'referencia': serializer.toJson<String?>(referencia),
+      'anulado': serializer.toJson<bool>(anulado),
+    };
+  }
+
+  FilaAbono copyWith({
+    String? id,
+    String? tiendaId,
+    String? fiadoId,
+    Decimal? monto,
+    DateTime? fecha,
+    String? medio,
+    Value<String?> referencia = const Value.absent(),
+    bool? anulado,
+  }) => FilaAbono(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    fiadoId: fiadoId ?? this.fiadoId,
+    monto: monto ?? this.monto,
+    fecha: fecha ?? this.fecha,
+    medio: medio ?? this.medio,
+    referencia: referencia.present ? referencia.value : this.referencia,
+    anulado: anulado ?? this.anulado,
+  );
+  FilaAbono copyWithCompanion(AbonosCompanion data) {
+    return FilaAbono(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      fiadoId: data.fiadoId.present ? data.fiadoId.value : this.fiadoId,
+      monto: data.monto.present ? data.monto.value : this.monto,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      medio: data.medio.present ? data.medio.value : this.medio,
+      referencia: data.referencia.present
+          ? data.referencia.value
+          : this.referencia,
+      anulado: data.anulado.present ? data.anulado.value : this.anulado,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaAbono(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('fiadoId: $fiadoId, ')
+          ..write('monto: $monto, ')
+          ..write('fecha: $fecha, ')
+          ..write('medio: $medio, ')
+          ..write('referencia: $referencia, ')
+          ..write('anulado: $anulado')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    fiadoId,
+    monto,
+    fecha,
+    medio,
+    referencia,
+    anulado,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaAbono &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.fiadoId == this.fiadoId &&
+          other.monto == this.monto &&
+          other.fecha == this.fecha &&
+          other.medio == this.medio &&
+          other.referencia == this.referencia &&
+          other.anulado == this.anulado);
+}
+
+class AbonosCompanion extends UpdateCompanion<FilaAbono> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> fiadoId;
+  final Value<Decimal> monto;
+  final Value<DateTime> fecha;
+  final Value<String> medio;
+  final Value<String?> referencia;
+  final Value<bool> anulado;
+  final Value<int> rowid;
+  const AbonosCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.fiadoId = const Value.absent(),
+    this.monto = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.medio = const Value.absent(),
+    this.referencia = const Value.absent(),
+    this.anulado = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AbonosCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String fiadoId,
+    required Decimal monto,
+    required DateTime fecha,
+    required String medio,
+    this.referencia = const Value.absent(),
+    this.anulado = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       fiadoId = Value(fiadoId),
+       monto = Value(monto),
+       fecha = Value(fecha),
+       medio = Value(medio);
+  static Insertable<FilaAbono> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? fiadoId,
+    Expression<String>? monto,
+    Expression<DateTime>? fecha,
+    Expression<String>? medio,
+    Expression<String>? referencia,
+    Expression<bool>? anulado,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (fiadoId != null) 'fiado_id': fiadoId,
+      if (monto != null) 'monto': monto,
+      if (fecha != null) 'fecha': fecha,
+      if (medio != null) 'medio': medio,
+      if (referencia != null) 'referencia': referencia,
+      if (anulado != null) 'anulado': anulado,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AbonosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? fiadoId,
+    Value<Decimal>? monto,
+    Value<DateTime>? fecha,
+    Value<String>? medio,
+    Value<String?>? referencia,
+    Value<bool>? anulado,
+    Value<int>? rowid,
+  }) {
+    return AbonosCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      fiadoId: fiadoId ?? this.fiadoId,
+      monto: monto ?? this.monto,
+      fecha: fecha ?? this.fecha,
+      medio: medio ?? this.medio,
+      referencia: referencia ?? this.referencia,
+      anulado: anulado ?? this.anulado,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (fiadoId.present) {
+      map['fiado_id'] = Variable<String>(fiadoId.value);
+    }
+    if (monto.present) {
+      map['monto'] = Variable<String>(
+        $AbonosTable.$convertermonto.toSql(monto.value),
+      );
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(
+        $AbonosTable.$converterfecha.toSql(fecha.value),
+      );
+    }
+    if (medio.present) {
+      map['medio'] = Variable<String>(medio.value);
+    }
+    if (referencia.present) {
+      map['referencia'] = Variable<String>(referencia.value);
+    }
+    if (anulado.present) {
+      map['anulado'] = Variable<bool>(anulado.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AbonosCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('fiadoId: $fiadoId, ')
+          ..write('monto: $monto, ')
+          ..write('fecha: $fecha, ')
+          ..write('medio: $medio, ')
+          ..write('referencia: $referencia, ')
+          ..write('anulado: $anulado, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -5582,6 +6099,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   late final $VentasPerdidasTable ventasPerdidas = $VentasPerdidasTable(this);
   late final $ClientesTable clientes = $ClientesTable(this);
   late final $FiadosTable fiados = $FiadosTable(this);
+  late final $AbonosTable abonos = $AbonosTable(this);
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -5650,6 +6168,14 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'fiados_cliente_idx',
     'CREATE INDEX fiados_cliente_idx ON fiados (cliente_id)',
   );
+  late final Index abonosTiendaIdx = Index(
+    'abonos_tienda_idx',
+    'CREATE INDEX abonos_tienda_idx ON abonos (tienda_id)',
+  );
+  late final Index abonosFiadoIdx = Index(
+    'abonos_fiado_idx',
+    'CREATE INDEX abonos_fiado_idx ON abonos (fiado_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5667,6 +6193,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     ventasPerdidas,
     clientes,
     fiados,
+    abonos,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -5684,6 +6211,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     clientesTiendaNombreIdx,
     fiadosTiendaIdx,
     fiadosClienteIdx,
+    abonosTiendaIdx,
+    abonosFiadoIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -10541,6 +11070,258 @@ typedef $$FiadosTableProcessedTableManager =
       FilaFiado,
       PrefetchHooks Function({bool id, bool clienteId})
     >;
+typedef $$AbonosTableCreateCompanionBuilder = AbonosCompanion Function({
+  required String id,
+  required String tiendaId,
+  required String fiadoId,
+  required Decimal monto,
+  required DateTime fecha,
+  required String medio,
+  Value<String?> referencia,
+  Value<bool> anulado,
+  Value<int> rowid,
+});
+typedef $$AbonosTableUpdateCompanionBuilder = AbonosCompanion Function({
+  Value<String> id,
+  Value<String> tiendaId,
+  Value<String> fiadoId,
+  Value<Decimal> monto,
+  Value<DateTime> fecha,
+  Value<String> medio,
+  Value<String?> referencia,
+  Value<bool> anulado,
+  Value<int> rowid,
+});
+
+class $$AbonosTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $AbonosTable> {
+  $$AbonosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get monto =>
+      $composableBuilder(
+        column: $table.monto,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get fecha =>
+      $composableBuilder(
+        column: $table.fecha,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get medio => $composableBuilder(
+    column: $table.medio,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referencia => $composableBuilder(
+    column: $table.referencia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get anulado => $composableBuilder(
+    column: $table.anulado,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AbonosTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $AbonosTable> {
+  $$AbonosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get monto => $composableBuilder(
+    column: $table.monto,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get medio => $composableBuilder(
+    column: $table.medio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referencia => $composableBuilder(
+    column: $table.referencia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get anulado => $composableBuilder(
+    column: $table.anulado,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AbonosTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $AbonosTable> {
+  $$AbonosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get monto =>
+      $composableBuilder(column: $table.monto, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumn<String> get medio =>
+      $composableBuilder(column: $table.medio, builder: (column) => column);
+
+  GeneratedColumn<String> get referencia => $composableBuilder(
+    column: $table.referencia,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get anulado =>
+      $composableBuilder(column: $table.anulado, builder: (column) => column);
+}
+
+class $$AbonosTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $AbonosTable,
+          FilaAbono,
+          $$AbonosTableFilterComposer,
+          $$AbonosTableOrderingComposer,
+          $$AbonosTableAnnotationComposer,
+          $$AbonosTableCreateCompanionBuilder,
+          $$AbonosTableUpdateCompanionBuilder,
+          (
+            FilaAbono,
+            BaseReferences<_$BaseLocalDrift, $AbonosTable, FilaAbono>,
+          ),
+          FilaAbono,
+          PrefetchHooks Function()
+        > {
+  $$AbonosTableTableManager(_$BaseLocalDrift db, $AbonosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AbonosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AbonosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AbonosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> fiadoId = const Value.absent(),
+                Value<Decimal> monto = const Value.absent(),
+                Value<DateTime> fecha = const Value.absent(),
+                Value<String> medio = const Value.absent(),
+                Value<String?> referencia = const Value.absent(),
+                Value<bool> anulado = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AbonosCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                fiadoId: fiadoId,
+                monto: monto,
+                fecha: fecha,
+                medio: medio,
+                referencia: referencia,
+                anulado: anulado,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String fiadoId,
+                required Decimal monto,
+                required DateTime fecha,
+                required String medio,
+                Value<String?> referencia = const Value.absent(),
+                Value<bool> anulado = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AbonosCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                fiadoId: fiadoId,
+                monto: monto,
+                fecha: fecha,
+                medio: medio,
+                referencia: referencia,
+                anulado: anulado,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AbonosTable, FilaAbono>(table),
+                  BaseReferences<_$BaseLocalDrift, $AbonosTable, FilaAbono>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AbonosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $AbonosTable,
+      FilaAbono,
+      $$AbonosTableFilterComposer,
+      $$AbonosTableOrderingComposer,
+      $$AbonosTableAnnotationComposer,
+      $$AbonosTableCreateCompanionBuilder,
+      $$AbonosTableUpdateCompanionBuilder,
+      (FilaAbono, BaseReferences<_$BaseLocalDrift, $AbonosTable, FilaAbono>),
+      FilaAbono,
+      PrefetchHooks Function()
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -10572,4 +11353,6 @@ class $BaseLocalDriftManager {
       $$ClientesTableTableManager(_db, _db.clientes);
   $$FiadosTableTableManager get fiados =>
       $$FiadosTableTableManager(_db, _db.fiados);
+  $$AbonosTableTableManager get abonos =>
+      $$AbonosTableTableManager(_db, _db.abonos);
 }

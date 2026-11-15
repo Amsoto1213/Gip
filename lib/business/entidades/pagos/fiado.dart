@@ -1,18 +1,21 @@
 import 'package:decimal/decimal.dart';
+import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/estado_fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
+import 'package:gip/transversal/errores/errores_pagos.dart';
 
 /// Venta a crédito con su saldo pendiente; es una forma de pago de la venta
 /// (DA-04, DA-20). Se crea en memoria con saldo = monto y estado PENDIENTE y se
 /// guarda al confirmar la venta (CUS-07).
 ///
-/// Los abonos (`registrarAbono`, `recalcularSaldo`) llegan con CUS-08 y
-/// `anular` con CUS-20 (DI-26).
+/// `registrarAbono` llega con CUS-08; `recalcularSaldo` y `anular`, con la
+/// conciliación y CUS-20 (DI-27).
 class Fiado extends FormaPago {
   Fiado(super.id, this._montoInicial, this._fechaInicio, this._cliente)
     : _saldoPendiente = _montoInicial,
-      _estado = EstadoFiado.pendiente;
+      _estado = EstadoFiado.pendiente,
+      _abonos = [];
 
   /// Fiado leído de la base, con el saldo y el estado guardados.
   Fiado.guardado(
@@ -21,14 +24,16 @@ class Fiado extends FormaPago {
     this._fechaInicio,
     this._cliente,
     this._saldoPendiente,
-    this._estado,
-  );
+    this._estado, [
+    List<Abono> abonos = const [],
+  ]) : _abonos = List.of(abonos);
 
   final Decimal _montoInicial;
   final DateTime _fechaInicio;
   final Cliente _cliente;
-  final Decimal _saldoPendiente;
-  final EstadoFiado _estado;
+  final List<Abono> _abonos;
+  Decimal _saldoPendiente;
+  EstadoFiado _estado;
 
   /// Cliente que debe el fiado.
   Cliente getCliente() => _cliente;
@@ -42,6 +47,26 @@ class Fiado extends FormaPago {
   EstadoFiado getEstado() => _estado;
 
   DateTime getFechaInicio() => _fechaInicio;
+
+  /// Abonos del fiado, del más antiguo al más reciente.
+  List<Abono> getAbonos() => List.unmodifiable(_abonos);
+
+  /// Information Expert: agrega el abono, baja el saldo y pasa a SALDADO si
+  /// llega a cero (RN-05). El servicio ya validó el monto (IE-06); aquí se
+  /// rechaza de nuevo un monto que no sea positivo o pase del saldo, para no
+  /// dejar el fiado en un estado imposible.
+  Abono registrarAbono(Abono abono) {
+    final monto = abono.getMonto();
+    if (_estado != EstadoFiado.pendiente ||
+        monto <= Decimal.zero ||
+        monto > _saldoPendiente) {
+      throw const ExcepcionMontoAbonoNoValido();
+    }
+    _abonos.add(abono);
+    _saldoPendiente -= monto;
+    if (_saldoPendiente == Decimal.zero) _estado = EstadoFiado.saldado;
+    return abono;
+  }
 
   /// Devuelve getMontoInicial(): lo que la venta quedó debiendo (DA-72).
   @override
