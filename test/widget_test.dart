@@ -24,6 +24,7 @@ import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'presentation/negocio/alertas_falsos.dart';
+import 'presentation/negocio/margen_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -87,6 +88,7 @@ void main() {
     consultarCliente: ConsultarClienteFalso(),
     generarAlertas: GenerarAlertasFalso(),
     consultarAlertas: ConsultarAlertasFalso(),
+    consultarMargen: ConsultarMargenFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).

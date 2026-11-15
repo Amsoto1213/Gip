@@ -21,6 +21,7 @@ import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../negocio/alertas_falsos.dart';
+import '../negocio/margen_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -117,6 +118,7 @@ void main() {
         consultarCliente: pagos.consultarCliente,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
+        consultarMargen: ConsultarMargenFalso(),
       ),
     );
     await tester.pumpAndSettle();

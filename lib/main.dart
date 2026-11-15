@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
@@ -16,6 +17,7 @@ import 'package:gip/composition_root/registrar_alertas.dart';
 import 'package:gip/composition_root/registrar_caja.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/composition_root/registrar_pagos.dart';
+import 'package:gip/composition_root/registrar_reportes.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/service_agents/cliente_supabase.dart';
@@ -46,6 +48,7 @@ Future<void> main() async {
   );
   final acceso = registrarAcceso(cliente);
   final alertas = registrarAlertas(base, acceso.servicioAcceso);
+  final reportes = registrarReportes(base, acceso.servicioAcceso);
   runApp(
     GipApp(
       iniciarSesion: acceso.iniciarSesion,
@@ -60,6 +63,7 @@ Future<void> main() async {
       consultarCliente: pagos.consultarCliente,
       generarAlertas: alertas.generarAlertas,
       consultarAlertas: alertas.consultarAlertas,
+      consultarMargen: reportes.consultarMargen,
     ),
   );
 }
@@ -79,6 +83,7 @@ class GipApp extends StatefulWidget {
     required this.consultarCliente,
     required this.generarAlertas,
     required this.consultarAlertas,
+    required this.consultarMargen,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -93,6 +98,7 @@ class GipApp extends StatefulWidget {
   final ConsultarClienteCoordinator consultarCliente;
   final GenerarAlertasDiariasCoordinator generarAlertas;
   final ConsultarAlertasCoordinator consultarAlertas;
+  final ConsultarMargenCoordinator consultarMargen;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -136,6 +142,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarAbono),
         Provider.value(value: widget.consultarCliente),
         Provider.value(value: widget.consultarAlertas),
+        Provider.value(value: widget.consultarMargen),
       ],
       child: MaterialApp.router(
         title: 'GIP',

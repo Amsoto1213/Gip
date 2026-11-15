@@ -59,4 +59,24 @@ void main() {
       greaterThanOrEqualTo(44),
     );
   });
+
+  testWidgets('tiene la acción Ganancia por producto de 44 px o más', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => IniciarSesionViewModel(IniciarSesionFalso()),
+        child: MaterialApp(theme: TemaGip.claro(), home: const NegocioView()),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(TarjetaAccion, 'Ganancia por producto'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('negocio_ganancia'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
 }

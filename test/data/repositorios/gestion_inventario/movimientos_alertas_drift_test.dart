@@ -136,6 +136,82 @@ void main() {
     });
   });
 
+  group('listarSalidasPorTienda (CUS-09)', () {
+    final desde = DateTime.utc(2026, 11, 1);
+    final hasta = DateTime.utc(2026, 11, 8);
+
+    test(
+      'trae las de todos los ítems de la tienda dentro del periodo',
+      () async {
+        await salida('s1', item, DateTime.utc(2026, 10, 31, 23));
+        await salida('s2', item, DateTime.utc(2026, 11, 1));
+        await salida(
+          's3',
+          otroItem,
+          DateTime.utc(2026, 11, 7, 20),
+          cantidad: '-3',
+        );
+        await salida('s4', item, hasta);
+
+        final salidas = await movimientos.listarSalidasPorTienda(
+          tienda,
+          desde,
+          hasta,
+        );
+
+        expect(salidas.map((s) => s.getId()), ['s2', 's3']);
+        expect(salidas[0].getItem().getProducto().getNombre(), 'Coco');
+        expect(salidas[1].getItem().getProducto().getNombre(), 'Panela');
+        expect(salidas[0].getPrecioUnitario(), d('3000'));
+        expect(salidas[0].getCostoUnitario(), isNull);
+        expect(salidas[1].calcularUnidades(), d('3'));
+      },
+    );
+
+    test('no trae las de otra tienda ni las que no están vigentes', () async {
+      await salida('s1', item, DateTime.utc(2026, 11, 2));
+      await salida('s2', item, DateTime.utc(2026, 11, 3));
+      await (base.update(
+        base.movimientosInventario,
+      )..where((m) => m.id.equals('s2'))).write(
+        const MovimientosInventarioCompanion(estado: Value('ANULADO')),
+      );
+
+      final otra = Tienda('t2', 'T002', 'Otra', 'Arjona');
+      expect(
+        (await movimientos.listarSalidasPorTienda(
+          tienda,
+          desde,
+          hasta,
+        )).map((s) => s.getId()),
+        ['s1'],
+      );
+      expect(
+        await movimientos.listarSalidasPorTienda(otra, desde, hasta),
+        isEmpty,
+      );
+    });
+
+    test('las salidas del mismo ítem comparten el producto', () async {
+      await salida('s1', item, DateTime.utc(2026, 11, 2));
+      await salida('s2', item, DateTime.utc(2026, 11, 3));
+
+      final salidas = await movimientos.listarSalidasPorTienda(
+        tienda,
+        desde,
+        hasta,
+      );
+
+      expect(
+        identical(
+          salidas[0].getItem().getProducto(),
+          salidas[1].getItem().getProducto(),
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('buscarFechaPrimerMovimiento', () {
     test('sin movimientos es null', () async {
       expect(await movimientos.buscarFechaPrimerMovimiento(item), isNull);
