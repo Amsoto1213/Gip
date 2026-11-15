@@ -14,6 +14,7 @@ import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dar
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
@@ -89,7 +90,9 @@ void main() {
   }
 
   Finder titulo(String texto) => find.descendant(
-    of: find.byType(PantallaSeccion),
+    of: find.byWidgetPredicate(
+      (w) => w is PantallaSeccion || w is EncabezadoPantalla,
+    ),
     matching: find.text(texto),
   );
 

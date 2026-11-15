@@ -148,3 +148,44 @@ class BotonSecundario extends StatelessWidget {
           );
   }
 }
+
+/// Botón principal cuadrado con solo un ícono (48 px, radio 16, sombra
+/// `botonPrimario`): la acción del encabezado en el móvil ("Producto nuevo").
+/// El [tooltip] es también su nombre para el lector de pantalla.
+class BotonIconoPrimario extends StatelessWidget {
+  const BotonIconoPrimario({
+    super.key,
+    required this.icono,
+    required this.tooltip,
+    required this.onPressed,
+    this.tamano = 48,
+  });
+
+  final IconData icono;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final double tamano;
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    final bordes = BorderRadius.circular(FormaGip.radioBotonPrimario);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: bordes,
+        boxShadow: onPressed == null ? null : FormaGip.sombraBotonPrimario,
+      ),
+      child: IconButton.filled(
+        onPressed: onPressed,
+        tooltip: tooltip,
+        style: IconButton.styleFrom(
+          fixedSize: Size.square(tamano),
+          shape: RoundedRectangleBorder(borderRadius: bordes),
+          backgroundColor: esquema.primary,
+          foregroundColor: esquema.onPrimary,
+        ),
+        icon: Icon(icono, size: 22),
+      ),
+    );
+  }
+}

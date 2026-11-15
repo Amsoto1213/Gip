@@ -184,6 +184,26 @@ void main() {
     );
   });
 
+  testWidgets('BotonIconoPrimario: cuadrado de 48 px con su tooltip', (
+    tester,
+  ) async {
+    var tocado = 0;
+    await montar(
+      tester,
+      Align(
+        alignment: Alignment.topLeft,
+        child: BotonIconoPrimario(
+          icono: Icons.add,
+          tooltip: 'Producto nuevo',
+          onPressed: () => tocado++,
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Producto nuevo'));
+    expect(tocado, 1);
+    expect(tester.getSize(find.byType(IconButton)), const Size.square(48));
+  });
+
   group('CampoGip', () {
     testWidgets('muestra la etiqueta, escribe y marca el foco con el halo', (
       tester,

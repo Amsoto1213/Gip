@@ -16,6 +16,7 @@ import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
 import 'package:gip/presentation/comun/marco_navegacion.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/perdida_view.dart';
@@ -74,7 +75,9 @@ void main() {
   }
 
   Finder titulo(String texto) => find.descendant(
-    of: find.byType(PantallaSeccion),
+    of: find.byWidgetPredicate(
+      (w) => w is PantallaSeccion || w is EncabezadoPantalla,
+    ),
     matching: find.text(texto),
   );
 
@@ -191,7 +194,7 @@ void main() {
 
     await tester.tap(find.text('Surtido').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Producto nuevo'));
+    await tester.tap(find.byTooltip('Producto nuevo'));
     await tester.pumpAndSettle();
     expect(find.byType(ProductoView), findsOneWidget);
 
@@ -206,7 +209,7 @@ void main() {
 
     await tester.tap(find.text('Surtido').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Buscar producto'));
+    await tester.tap(find.text('Buscar en el surtido…'));
     await tester.pumpAndSettle();
     expect(find.byType(BuscarProductoView), findsOneWidget);
 
