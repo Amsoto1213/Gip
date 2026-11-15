@@ -350,6 +350,107 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  Future<Map<String, Object?>> filaCliente(
+    WidgetTester tester,
+    String id,
+  ) async =>
+      (await filas(tester, "SELECT * FROM clientes WHERE id = '$id'")).single;
+
+  Future<String> idDe(WidgetTester tester, String nombre) async =>
+      (await filas(
+            tester,
+            "SELECT id FROM clientes WHERE nombre = '$nombre'",
+          )).single['id']!
+          as String;
+
+  testWidgets('móvil: Eliminar datos del cliente al día. Cancelar no hace '
+      'nada; confirmar lo anonimiza y vuelve a la lista (CUS-21)', (
+    tester,
+  ) async {
+    await sembrar(tester);
+    await abrir(tester, const Size(360, 640));
+    await irAFiados(tester, BarraInferior);
+    await tocar(tester, find.byKey(const Key('fiados_filtro_1')));
+    await tocar(tester, find.text('Luz Díaz'));
+    final id = await idDe(tester, 'Luz Díaz');
+
+    // Cancelar: el diálogo se cierra y no pasa nada.
+    await tocar(tester, find.byKey(const Key('cliente_eliminar')));
+    expect(
+      find.text('¿Confirma que desea eliminar los datos del cliente?'),
+      findsOneWidget,
+    );
+    await tocar(tester, find.byKey(const Key('confirmacion_cancelar')));
+    expect(find.byKey(const Key('dialogo_confirmacion')), findsNothing);
+    expect(find.byKey(const Key('cliente_eliminar')), findsOneWidget);
+    expect((await filaCliente(tester, id))['nombre'], 'Luz Díaz');
+    expect((await filaCliente(tester, id))['eliminado_en'], isNull);
+
+    // Confirmar.
+    await tocar(tester, find.byKey(const Key('cliente_eliminar')));
+    await tocar(tester, find.byKey(const Key('confirmacion_confirmar')));
+    await esperarBase(tester);
+
+    expect(find.text('Datos del cliente eliminados'), findsOneWidget);
+    expect(find.byKey(const Key('cliente_eliminar')), findsNothing);
+    expect(find.text('María Pérez'), findsOneWidget); // de vuelta en la lista
+    expect(find.text('Luz Díaz'), findsNothing);
+    final fila = await filaCliente(tester, id);
+    expect(fila['nombre'], 'Cliente eliminado');
+    expect(fila['telefono'], '');
+    expect(fila['nombre_normalizado'], '');
+    expect(fila['eliminado_en'], isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('móvil: cliente que aún debe: "No se pueden eliminar los '
+      'datos: el cliente aún debe" y no se elimina (CUS-21)', (tester) async {
+    await sembrar(tester);
+    await abrir(tester, const Size(360, 640));
+    await irAFiados(tester, BarraInferior);
+    await tocar(tester, find.text('María Pérez'));
+    final id = await idDe(tester, 'María Pérez');
+
+    // Con dos fiados el botón queda debajo de la pantalla: hay que bajar.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('cliente_eliminar')),
+      200,
+    );
+    await tocar(tester, find.byKey(const Key('cliente_eliminar')));
+    await tocar(tester, find.byKey(const Key('confirmacion_confirmar')));
+    await esperarBase(tester);
+
+    // En el aviso flotante y en la tarjeta de arriba.
+    expect(
+      find.text('No se pueden eliminar los datos: el cliente aún debe'),
+      findsWidgets,
+    );
+    expect(find.text('Datos del cliente eliminados'), findsNothing);
+    expect(find.byKey(const Key('cliente_aviso')), findsOneWidget);
+    final fila = await filaCliente(tester, id);
+    expect(fila['nombre'], 'María Pérez');
+    expect(fila['eliminado_en'], isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('web: eliminar los datos de un cliente al día deja la lista '
+      'sin él y sin cliente elegido (CUS-21)', (tester) async {
+    await sembrar(tester);
+    await abrir(tester, const Size(1280, 800));
+    await irAFiados(tester, MenuLateral);
+    await tocar(tester, find.byKey(const Key('fiados_filtro_1')));
+    await tocar(tester, find.text('Luz Díaz'));
+
+    await tocar(tester, find.byKey(const Key('cliente_eliminar')));
+    await tocar(tester, find.byKey(const Key('confirmacion_confirmar')));
+    await esperarBase(tester);
+
+    expect(find.text('Datos del cliente eliminados'), findsOneWidget);
+    expect(find.text('Luz Díaz'), findsNothing);
+    expect(find.byKey(const Key('fiados_elegir')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 /// "9 nov." de hoy, como lo muestra la lista.

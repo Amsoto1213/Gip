@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
+import 'package:gip/transversal/errores/excepcion_negocio.dart';
 
 /// Filtros de la lista de clientes (mockups `mClientes` y `wClientes`). El
 /// filtro "+30 días" llega con CUS-19 completo (DI-27).
@@ -19,6 +20,14 @@ class FiadosViewModel extends ChangeNotifier {
   /// Mensajes de la pantalla que no están en el diagrama (DI-27).
   static const mensajeErrorCargar =
       'No se pudieron cargar los clientes. Intente de nuevo';
+
+  /// Mensaje de CUS-21 al terminar (paso 14).
+  static const mensajeClienteEliminado = 'Datos del cliente eliminados';
+
+  /// Error de CUS-21 que no es de negocio (la base falló); no está en el
+  /// diagrama (DI-31).
+  static const mensajeErrorEliminar =
+      'No se pudieron eliminar los datos del cliente. Intente de nuevo';
 
   final ConsultarClienteCoordinator _coordinator;
   final Tienda _tienda;
@@ -139,6 +148,27 @@ class FiadosViewModel extends ChangeNotifier {
   void avisar(String mensaje) {
     _aviso = mensaje;
     notifyListeners();
+  }
+
+  /// CUS-21 (pasos 4 a 13): elimina los datos del cliente. La pantalla ya
+  /// pidió la confirmación (RNF-26). Si tiene fiados pendientes deja el
+  /// mensaje del caso de uso en [aviso]. Si sale bien, ya no hay cliente
+  /// elegido y la lista se lee de nuevo. Termina con verdadero si se
+  /// eliminó.
+  Future<bool> eliminarCliente(Cliente cliente) async {
+    try {
+      await _coordinator.eliminarCliente(_tienda, cliente);
+    } on ExcepcionNegocio catch (e) {
+      avisar(e.mensaje);
+      return false;
+    } catch (_) {
+      avisar(mensajeErrorEliminar);
+      return false;
+    }
+    _elegido = null;
+    _aviso = null;
+    await recargar();
+    return true;
   }
 
   /// Vuelve a leer la lista y el cliente elegido de la base. Tras un abono

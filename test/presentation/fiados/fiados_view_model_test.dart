@@ -17,7 +17,10 @@ void main() {
   late DatosFiados datos;
   late FiadosViewModel vm;
 
-  setUpAll(() => registerFallbackValue(_TiendaFalsa()));
+  setUpAll(() {
+    registerFallbackValue(_TiendaFalsa());
+    registerFallbackValue(Cliente('x', 'x', ''));
+  });
 
   setUp(() async {
     datos = await DatosFiados.crear();
@@ -102,5 +105,50 @@ void main() {
     await vm.recargar();
     expect(vm.elegido, isNull);
     expect(vm.deudores, 2);
+  });
+
+  group('eliminarCliente (CUS-21)', () {
+    Cliente? de(String id) =>
+        vm.clientes.where((c) => c.getId() == id).firstOrNull;
+
+    test('cliente sin deuda: se elimina, ya no hay cliente elegido y la '
+        'lista se lee de nuevo', () async {
+      await vm.cargar();
+      vm.filtrar(FiltroClientes.todos);
+      final luz = de('c3')!;
+      vm.elegir(luz);
+
+      expect(await vm.eliminarCliente(luz), isTrue);
+
+      expect(datos.clientes.eliminados, ['c3']);
+      expect(vm.elegido, isNull);
+      expect(vm.aviso, isNull);
+      expect(de('c3'), isNull);
+    });
+
+    test('cliente con deuda: se rechaza con el mensaje del caso de uso y no '
+        'se elimina', () async {
+      await vm.cargar();
+      final maria = de('c1')!;
+      vm.elegir(maria);
+
+      expect(await vm.eliminarCliente(maria), isFalse);
+
+      expect(vm.aviso, 'No se pueden eliminar los datos: el cliente aún debe');
+      expect(datos.clientes.eliminados, isEmpty);
+      expect(vm.elegido, maria);
+      expect(de('c1'), isNotNull);
+    });
+
+    test('si la base falla: mensaje genérico y el cliente sigue', () async {
+      final falso = ConsultarClienteFalso();
+      final vmFalso = FiadosViewModel(falso, tiendaFiados);
+      when(() => falso.eliminarCliente(any(), any()))
+          .thenThrow(StateError('x'));
+
+      expect(await vmFalso.eliminarCliente(datos.maria), isFalse);
+
+      expect(vmFalso.aviso, FiadosViewModel.mensajeErrorEliminar);
+    });
   });
 }

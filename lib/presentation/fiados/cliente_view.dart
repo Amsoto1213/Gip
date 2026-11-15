@@ -11,8 +11,8 @@ import 'package:provider/provider.dart';
 
 /// Pantalla del cliente (CUS-19 mínimo, mockup `Cliente`): teléfono, lo que
 /// debe en total, "Registrar abono" y sus fiados pendientes. El historial
-/// completo, "Cliente desde…" y "Eliminar datos del cliente" llegan con
-/// CUS-19 completo y CUS-21 (DI-27).
+/// completo y "Cliente desde…" llegan con CUS-19 completo (DI-27). Con
+/// "Eliminar datos del cliente" (CUS-21) se vuelve a la lista de Fiados.
 class ClienteView extends StatelessWidget {
   const ClienteView({super.key});
 
@@ -74,6 +74,12 @@ class ClienteView extends StatelessWidget {
                           onPressed: () => abrirAbono(context, vm),
                         )
                       : null,
+                ),
+                const SizedBox(height: 24),
+                BotonEliminarCliente(
+                  vm: vm,
+                  cliente: cliente,
+                  onEliminado: () => _volver(context),
                 ),
               ],
             ),

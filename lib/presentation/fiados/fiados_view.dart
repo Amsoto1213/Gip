@@ -280,6 +280,8 @@ class _ClienteYAbono extends StatelessWidget {
           fiadoElegido: fiado,
           onElegirFiado: abono.elegirFiado,
         ),
+        const SizedBox(height: 20),
+        BotonEliminarCliente(vm: vm, cliente: cliente),
         if (abono.fiados.isNotEmpty) ...[
           const SizedBox(height: 20),
           TarjetaGip(
