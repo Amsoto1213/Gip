@@ -136,6 +136,13 @@ void main() {
 
   String textoDe(WidgetTester tester, Finder f) => tester.widget<Text>(f).data!;
 
+  /// Color de fondo de la fila de [nombre].
+  Color? fondoFila(WidgetTester tester, String nombre) => tester
+      .widget<Container>(
+        find.byKey(Key('conteo_fila_${productos[nombre]!.getId()}')),
+      )
+      .color;
+
   /// Scrollable de la lista de la pantalla (los campos tienen el suyo).
   Finder lista() => find
       .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
@@ -175,9 +182,16 @@ void main() {
     expect(find.text('Conteo físico'), findsOneWidget);
     expect(find.text('0 de 4 contados'), findsOneWidget);
     expect(find.text('Según el sistema: 90'), findsOneWidget);
-    // Sin lector ni "Pausar" (DI-24).
+    expect(find.text('Según el sistema: 3 kg'), findsOneWidget);
+    // Filtros del prototipo móvil.
+    expect(find.text('Todos'), findsOneWidget);
+    expect(find.text('Sin contar · 4'), findsOneWidget);
+    expect(find.text('Diferencia · 0'), findsOneWidget);
+    // Sin lector, "Pausar" ni "Volver a contar" (DI-24).
     expect(find.byTooltip('Leer código con el lector'), findsNothing);
     expect(find.textContaining('Pausar'), findsNothing);
+    expect(find.text('Volver a contar'), findsNothing);
+    expect(find.textContaining('cada producto contado'), findsNothing);
 
     await contar(tester, 'Café molido 250 g', '23');
     expect(textoDe(tester, diferencia('Café molido 250 g')), '+2');
@@ -185,24 +199,31 @@ void main() {
 
     await contar(tester, 'Huevo AA', '78');
     expect(textoDe(tester, diferencia('Huevo AA')), '−12');
-    expect(find.text(ConteoViewModel.mensajeRevisar), findsWidgets);
+    // Diferencia grande en rojo con el mensaje del diagrama (no amarillo).
+    final revisar = find.text(ConteoViewModel.mensajeRevisar);
+    expect(revisar, findsOneWidget);
+    expect(tester.widget<Text>(revisar).style?.color, ColoresGip.error);
+    expect(
+      tester.widget<Text>(diferencia('Huevo AA')).style?.color,
+      ColoresGip.error,
+    );
+    expect(fondoFila(tester, 'Huevo AA'), ColoresGip.errorFondoSuave);
+    expect(fondoFila(tester, 'Café molido 250 g'), ColoresGip.superficie);
     await irArriba(tester);
-    expect(find.text('1 diferencia grande'), findsOneWidget);
+    final porRevisar = find.text('1 por revisar');
+    expect(porRevisar, findsOneWidget);
+    expect(tester.widget<Text>(porRevisar).style?.color, ColoresGip.error);
     expect(find.text('2 de 4 contados'), findsOneWidget);
-    expect(find.text('Confirmar ajuste de 2 productos'), findsOneWidget);
+    expect(find.text('Confirmar ajuste de 2'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    // Volver a contar borra la cantidad del huevo.
-    final volver = find.byKey(
-      Key('conteo_volver_${productos['Huevo AA']!.getId()}'),
-    );
-    await tester.ensureVisible(volver);
-    await tester.pumpAndSettle();
-    await tester.tap(volver);
-    await esperarBase(tester);
+    // El número se corrige en el mismo campo: al borrarlo queda sin contar.
+    await contar(tester, 'Huevo AA', '');
     expect(find.text(ConteoViewModel.mensajeRevisar), findsNothing);
+    expect(textoDe(tester, diferencia('Huevo AA')), '—');
     await irArriba(tester);
     expect(find.text('1 de 4 contados'), findsOneWidget);
+    expect(find.text('1 por revisar'), findsNothing);
 
     await confirmar(tester);
     expect(find.text('Ajuste registrado. Nuevo stock: 23'), findsOneWidget);
@@ -256,7 +277,8 @@ void main() {
       final mensaje = find.text('La cantidad contada no puede ser negativa');
       expect(mensaje, findsOneWidget);
       expect(tester.widget<Text>(mensaje).style?.color, ColoresGip.error);
-      expect(textoDe(tester, diferencia('Huevo AA')), '');
+      expect(textoDe(tester, diferencia('Huevo AA')), '—');
+      expect(fondoFila(tester, 'Huevo AA'), ColoresGip.errorFondoSuave);
       expect(find.text(ConteoViewModel.mensajeRevisar), findsNothing);
       await irArriba(tester);
       expect(find.byKey(const Key('conteo_aviso_revisar')), findsNothing);
@@ -278,25 +300,54 @@ void main() {
     await abrir(tester, const Size(1280, 800));
 
     for (final columna in [
-      'Producto',
-      'Código',
-      'Según el sistema',
-      'Contado',
-      'Diferencia',
-      'Estado',
+      'PRODUCTO',
+      'SEGÚN EL SISTEMA',
+      'CONTADO',
+      'DIFERENCIA',
+      'ESTADO',
     ]) {
       expect(find.text(columna), findsOneWidget);
     }
-    expect(find.text('HUE-1'), findsOneWidget);
+    expect(find.text('Avance del conteo'), findsOneWidget);
+    expect(find.text('0 de 4 contados'), findsOneWidget);
+    expect(find.text('Kilogramo'), findsOneWidget);
+    expect(find.text('Sin contar'), findsNWidgets(4));
+    expect(find.text('Todos · 4'), findsOneWidget);
+    expect(find.text('Contados · 0'), findsOneWidget);
+    expect(find.text('Sin contar · 4'), findsOneWidget);
+    expect(find.text('Con diferencia · 0'), findsOneWidget);
+    expect(find.text('Volver a contar'), findsNothing);
+    expect(find.textContaining('Pausar'), findsNothing);
+    expect(find.byKey(const Key('conteo_aviso_revisar')), findsNothing);
 
     await contar(tester, 'Arroz 500 g', '46');
     expect(find.text('Cuadra'), findsOneWidget);
     await contar(tester, 'Café molido 250 g', '20');
     expect(find.text('Se ajusta'), findsOneWidget);
     await contar(tester, 'Huevo AA', '78');
-    expect(find.text('Volver a contar'), findsOneWidget);
+    expect(find.text('Diferencia grande'), findsOneWidget);
+    expect(fondoFila(tester, 'Huevo AA'), ColoresGip.errorFondoSuave);
+    expect(find.text('Sin contar'), findsOneWidget);
     await irArriba(tester);
-    expect(find.text('1 diferencia grande'), findsOneWidget);
+    // Tarjeta roja, sin el número del umbral.
+    final aviso = find.byKey(const Key('conteo_aviso_revisar'));
+    expect(
+      find.descendant(of: aviso, matching: find.text('1 diferencia grande')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: aviso,
+        matching: find.text(ConteoViewModel.mensajeRevisar),
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('5 unidades'), findsNothing);
+    expect(
+      tester.widget<Text>(find.text('1 diferencia grande')).style?.color,
+      ColoresGip.errorTexto,
+    );
+    expect(find.text('3 de 4 contados'), findsOneWidget);
 
     // Filtro por nombre sin tilde (como Buscar producto).
     await tester.enterText(find.byKey(const Key('conteo_buscar')), 'cafe');
@@ -311,9 +362,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Arroz 500 g'), findsNothing);
     expect(find.text('Huevo AA'), findsOneWidget);
-    await tester.tap(find.text('Todos'));
+    await tester.tap(find.text('Todos · 4'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+
+    // Abajo, solo el botón.
+    await botonConfirmar(tester);
+    expect(find.text('Confirmar ajuste de 3 productos'), findsOneWidget);
+    expect(find.textContaining('cada producto contado'), findsNothing);
 
     // El aviso no bloquea: se confirman los tres, incluido el que cuadra.
     await confirmar(tester);
@@ -393,11 +449,21 @@ void main() {
     expect(campo('Café molido 250 g'), findsNothing);
   });
 
-  for (final tamano in const [Size(320, 568), Size(800, 700)]) {
+  for (final tamano in const [
+    Size(320, 568),
+    Size(360, 640),
+    Size(800, 700),
+    Size(1024, 768),
+    Size(1280, 800),
+  ]) {
     testWidgets('sin desbordes en ${tamano.width.toInt()}×'
-        '${tamano.height.toInt()} con una diferencia grande', (tester) async {
+        '${tamano.height.toInt()} con todos los estados', (tester) async {
       await abrir(tester, tamano);
+      await contar(tester, 'Arroz 500 g', '46');
+      await contar(tester, 'Café molido 250 g', '-1');
       await contar(tester, 'Huevo AA', '78');
+      await contar(tester, 'Queso costeño', '2,5');
+      expect(tester.takeException(), isNull);
       await irArriba(tester);
       expect(tester.takeException(), isNull);
     });

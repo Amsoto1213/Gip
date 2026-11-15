@@ -182,12 +182,38 @@ void main() {
       expect(fila(cafe).diferencia, d('2'));
     });
 
-    test('volver a contar borra la cantidad', () async {
+    test(
+      'se corrige en el mismo campo: borrar deja la fila sin contar',
+      () async {
+        await vm.cambiarCantidad(huevo, '78');
+        await vm.cambiarCantidad(huevo, '');
+        expect(fila(huevo).contado, isFalse);
+        expect(fila(huevo).revisar, isFalse);
+        expect(fila(huevo).estado, EstadoFilaConteo.sinContar);
+      },
+    );
+
+    test('estado de cada fila', () async {
+      expect(fila(arroz).estado, EstadoFilaConteo.sinContar);
+      await vm.cambiarCantidad(arroz, '46');
+      expect(fila(arroz).estado, EstadoFilaConteo.cuadra);
+      await vm.cambiarCantidad(cafe, '20');
+      expect(fila(cafe).estado, EstadoFilaConteo.seAjusta);
       await vm.cambiarCantidad(huevo, '78');
-      vm.volverAContar(huevo);
-      expect(fila(huevo).contado, isFalse);
-      expect(fila(huevo).revisar, isFalse);
-      expect(fila(huevo).texto, '');
+      expect(fila(huevo).estado, EstadoFilaConteo.diferenciaGrande);
+      await vm.cambiarCantidad(queso, '-1');
+      expect(fila(queso).estado, EstadoFilaConteo.error);
+    });
+
+    test('calculando mientras llega la diferencia', () async {
+      final lenta = Completer<Decimal>();
+      when(() => coordinador.calcularDiferencia(tienda, cafe, d('22')))
+          .thenAnswer((_) => lenta.future);
+      final pendiente = vm.cambiarCantidad(cafe, '22');
+      expect(fila(cafe).estado, EstadoFilaConteo.calculando);
+      lenta.complete(d('1'));
+      await pendiente;
+      expect(fila(cafe).estado, EstadoFilaConteo.seAjusta);
     });
   });
 

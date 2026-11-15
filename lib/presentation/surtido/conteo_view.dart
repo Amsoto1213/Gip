@@ -4,7 +4,10 @@ import 'package:gip/presentation/comun/barra_busqueda.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
+import 'package:gip/presentation/comun/icono_paquete.dart';
+import 'package:gip/presentation/comun/pildora_estado.dart';
 import 'package:gip/presentation/comun/selector_filtro.dart';
+import 'package:gip/presentation/comun/tarjeta_aviso.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/conteo_view_model.dart';
@@ -13,15 +16,17 @@ import 'package:gip/presentation/surtido/widgets_movimiento.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// Pantalla Conteo físico (CUS-04), según los mockups `mConteo` y `Conteo`:
-/// avance, búsqueda por nombre, filtros y la lista de productos con lo que
-/// dice el sistema, el campo de lo contado y la diferencia. Una diferencia que
-/// supera el umbral se marca en amarillo con el aviso del diagrama y "Volver a
-/// contar"; no bloquea.
+/// Pantalla Conteo físico (CUS-04), según `docs/ui/rediseno/conteo-web.html`
+/// y `conteo-movil.html`: avance "N de M contados", tarjeta roja con las
+/// diferencias grandes, búsqueda, filtros y la lista con lo que dice el
+/// sistema, el campo de lo contado, la diferencia y el estado de cada fila
+/// (Cuadra, Se ajusta, Diferencia grande, error o Sin contar). Abajo, una
+/// barra blanca solo con "Confirmar ajuste".
 ///
-/// No se muestran el lector, "se guarda mientras avanza", "Pausar y seguir
-/// después", quién empezó el conteo, "Imprimir etiquetas QR" ni "Cambiar el
-/// límite": el caso de uso no los entrega (DI-24).
+/// El número se corrige en el mismo campo: no hay "Volver a contar" ni
+/// "Pausar". Tampoco el lector, "se guarda mientras avanza", quién empezó el
+/// conteo, "Imprimir etiquetas QR" ni "Cambiar el límite": el caso de uso no
+/// los entrega (DI-24).
 class ConteoView extends StatefulWidget {
   const ConteoView({super.key});
 
@@ -83,25 +88,29 @@ class _ConteoViewState extends State<ConteoView> {
       miga: 'Conteo físico',
       seccion: 'Surtido',
       contexto: web
-          ? 'Escriba lo que contó de cada producto. Al confirmar, la '
-                'existencia queda igual a lo contado.'
+          ? 'Escriba cuánto hay en el estante. Al confirmar, la existencia '
+                'queda igual a lo contado.'
           : null,
       onVolver: _volver,
     );
     final boton = BotonPrimario(
       key: const Key('conteo_confirmar'),
-      texto: vm.contados == 1
+      texto: !web
+          ? 'Confirmar ajuste de ${vm.contados}'
+          : vm.contados == 1
           ? 'Confirmar ajuste de 1 producto'
           : 'Confirmar ajuste de ${vm.contados} productos',
       icono: Icons.check,
       cargando: vm.registrando,
       onPressed: vm.puedeConfirmar ? _confirmar : null,
     );
-    final nota = vm.sinContar == 1
-        ? 'Al confirmar, la existencia de cada producto contado queda igual a '
-              'lo que usted contó. El que falta por contar no cambia.'
-        : 'Al confirmar, la existencia de cada producto contado queda igual a '
-              'lo que usted contó. Los ${vm.sinContar} sin contar no cambian.';
+    final mensajes = MensajesMovimiento(error: vm.error, aviso: vm.aviso);
+    final busqueda = BarraBusqueda(
+      pista: web ? 'Buscar producto por nombre' : 'Buscar producto',
+      controlador: _busqueda,
+      campoKey: const Key('conteo_buscar'),
+      onChanged: vm.buscar,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -114,27 +123,33 @@ class _ConteoViewState extends State<ConteoView> {
                     padding: const EdgeInsets.fromLTRB(44, 32, 44, 48),
                     children: [
                       encabezado,
-                      const SizedBox(height: 24),
-                      _AvanceYAviso(vm: vm, web: true),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 22),
+                      _AvanceWeb(vm: vm),
+                      const SizedBox(height: 22),
                       TarjetaGip(
-                        padding: const EdgeInsets.all(24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _BusquedaYFiltros(
-                              vm: vm,
-                              controlador: _busqueda,
-                              web: true,
-                            ),
-                            const SizedBox(height: 16),
+                            _BusquedaYPestanas(vm: vm, busqueda: busqueda),
                             _Lista(vm: vm, campos: _campos, web: true),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      MensajesMovimiento(error: vm.error, aviso: vm.aviso),
-                      _BarraConfirmarWeb(nota: nota, boton: boton),
+                      const SizedBox(height: 22),
+                      mensajes,
+                      TarjetaGip(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 380),
+                            child: boton,
+                          ),
+                        ),
+                      ),
                     ],
                   )
                 : Column(
@@ -145,30 +160,20 @@ class _ConteoViewState extends State<ConteoView> {
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                           children: [
                             encabezado,
-                            const SizedBox(height: 16),
-                            _AvanceYAviso(vm: vm, web: false),
-                            const SizedBox(height: 16),
-                            _BusquedaYFiltros(
-                              vm: vm,
-                              controlador: _busqueda,
-                              web: false,
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 14),
+                            _AvanceMovil(vm: vm),
+                            const SizedBox(height: 14),
+                            busqueda,
+                            const SizedBox(height: 14),
+                            _FiltrosMovil(vm: vm),
+                            const SizedBox(height: 14),
                             _Lista(vm: vm, campos: _campos, web: false),
                           ],
                         ),
                       ),
                       BarraInferiorMovimiento(
                         margen: 16,
-                        hijos: [
-                          MensajesMovimiento(error: vm.error, aviso: vm.aviso),
-                          Text(
-                            nota,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 12),
-                          boton,
-                        ],
+                        hijos: [const SizedBox(height: 4), mensajes, boton],
                       ),
                     ],
                   ),
@@ -222,10 +227,17 @@ String mostrarDiferencia(Decimal diferencia) {
   return '$signo${mostrarCantidad(diferencia.abs())}';
 }
 
-/// "42 de 128 contados" con su barra y, si hay diferencias grandes, el aviso
-/// (en la web, a la derecha).
-class _AvanceYAviso extends StatelessWidget {
-  const _AvanceYAviso({required this.vm, required this.web});
+/// La fila va en rojo: diferencia grande o error.
+bool _enRojo(FilaConteo fila) =>
+    fila.estado == EstadoFilaConteo.diferenciaGrande ||
+    fila.estado == EstadoFilaConteo.error;
+
+String _diferenciasGrandes(int n) =>
+    n == 1 ? '1 diferencia grande' : '$n diferencias grandes';
+
+/// "N de M contados" con el número grande en Archivo 800.
+class _Avance extends StatelessWidget {
+  const _Avance({required this.vm, required this.web});
 
   final ConteoViewModel vm;
   final bool web;
@@ -233,164 +245,225 @@ class _AvanceYAviso extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final fraccion = vm.total == 0 ? 0.0 : vm.contados / vm.total;
-    final avance = Column(
-      key: const Key('conteo_avance'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          '${vm.contados} de ${vm.total} contados',
-          style: tema.textTheme.titleMedium?.cifrasTabulares,
-        ),
-        const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(FormaGip.radioChip),
-          child: LinearProgressIndicator(
-            value: fraccion,
-            minHeight: 10,
-            color: tema.colorScheme.primary,
-            backgroundColor: tema.colorScheme.outlineVariant,
-          ),
-        ),
-      ],
-    );
-    final aviso = vm.porRevisar == 0 ? null : _AvisoRevisar(vm.porRevisar);
-    if (!web) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    final numero = web
+        ? tema.textTheme.headlineLarge
+        : tema.textTheme.headlineSmall;
+    final resto = web ? tema.textTheme.bodyLarge : tema.textTheme.bodyMedium;
+    return Text.rich(
+      TextSpan(
         children: [
-          avance,
-          if (aviso != null) ...[const SizedBox(height: 12), aviso],
-        ],
-      );
-    }
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 3,
-            child: TarjetaGip(
-              padding: const EdgeInsets.all(24),
-              child: Center(child: avance),
-            ),
-          ),
-          if (aviso != null) ...[
-            const SizedBox(width: 24),
-            Expanded(flex: 2, child: aviso),
-          ],
+          TextSpan(text: '${vm.contados}', style: numero?.cifrasTabulares),
+          TextSpan(text: ' de ${vm.total} contados'),
         ],
       ),
+      key: const Key('conteo_avance'),
+      style: resto?.copyWith(color: tema.colorScheme.onSurfaceVariant),
     );
   }
 }
 
-/// Recuadro amarillo con cuántos productos superan el umbral.
-class _AvisoRevisar extends StatelessWidget {
-  const _AvisoRevisar(this.cantidad);
+/// Barra de avance del conteo.
+class _BarraAvance extends StatelessWidget {
+  const _BarraAvance({required this.vm, required this.alto});
 
-  final int cantidad;
+  final ConteoViewModel vm;
+  final double alto;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final extra = tema.extension<ColoresExtraGip>()!;
-    return Semantics(
-      liveRegion: true,
-      child: Container(
-        key: const Key('conteo_aviso_revisar'),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: extra.alertaFondo,
-          borderRadius: BorderRadius.circular(FormaGip.radioTarjeta),
-          border: Border.all(color: extra.alertaBorde),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.warning_amber_rounded, color: extra.alertaTexto),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    cantidad == 1
-                        ? '1 diferencia grande'
-                        : '$cantidad diferencias grandes',
-                    style: tema.textTheme.titleSmall?.copyWith(
-                      color: extra.alertaTexto,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    ConteoViewModel.mensajeRevisar,
-                    style: tema.textTheme.bodyMedium?.copyWith(
-                      color: extra.alertaTexto,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(FormaGip.radioChip),
+      child: LinearProgressIndicator(
+        value: vm.total == 0 ? 0 : vm.contados / vm.total,
+        minHeight: alto,
+        color: tema.colorScheme.primary,
+        backgroundColor: extra.separador,
       ),
     );
   }
 }
 
-/// Búsqueda por nombre y filtros. En la web, lado a lado si caben.
-class _BusquedaYFiltros extends StatelessWidget {
-  const _BusquedaYFiltros({
-    required this.vm,
-    required this.controlador,
-    required this.web,
-  });
+/// Web: tarjeta "Avance del conteo" y, si hay diferencias grandes, la
+/// tarjeta roja a la derecha (debajo si no cabe).
+class _AvanceWeb extends StatelessWidget {
+  const _AvanceWeb({required this.vm});
 
   final ConteoViewModel vm;
-  final TextEditingController controlador;
-  final bool web;
 
   @override
   Widget build(BuildContext context) {
-    final busqueda = BarraBusqueda(
-      pista: 'Buscar producto por nombre…',
-      controlador: controlador,
-      campoKey: const Key('conteo_buscar'),
-      onChanged: vm.buscar,
+    final tema = Theme.of(context);
+    final avance = TarjetaGip(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              Text('Avance del conteo', style: tema.textTheme.titleLarge),
+              _Avance(vm: vm, web: true),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _BarraAvance(vm: vm, alto: 10),
+          const SizedBox(height: 14),
+          Text(
+            'Los productos sin contar no cambian.',
+            style: tema.textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              color: tema.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
-    final filtros = SelectorFiltro<FiltroConteo>(
+    if (vm.porRevisar == 0) return avance;
+    final aviso = TarjetaAviso(
+      key: const Key('conteo_aviso_revisar'),
+      titulo: _diferenciasGrandes(vm.porRevisar),
+      texto: ConteoViewModel.mensajeRevisar,
+    );
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        if (restricciones.maxWidth < 760) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [avance, const SizedBox(height: 18), aviso],
+          );
+        }
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 3, child: avance),
+              const SizedBox(width: 18),
+              Expanded(flex: 2, child: aviso),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Móvil: avance con la píldora "N por revisar" y la barra.
+class _AvanceMovil extends StatelessWidget {
+  const _AvanceMovil({required this.vm});
+
+  final ConteoViewModel vm;
+
+  @override
+  Widget build(BuildContext context) => TarjetaGip(
+    radio: FormaGip.radioTarjetaMovil,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _Avance(vm: vm, web: false)),
+            if (vm.porRevisar > 0)
+              PildoraEstado(
+                key: const Key('conteo_aviso_revisar'),
+                '${vm.porRevisar} por revisar',
+                tono: TonoEstado.error,
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _BarraAvance(vm: vm, alto: 8),
+      ],
+    ),
+  );
+}
+
+/// Web: búsqueda y filtros en pestañas, encima de la tabla.
+class _BusquedaYPestanas extends StatelessWidget {
+  const _BusquedaYPestanas({required this.vm, required this.busqueda});
+
+  final ConteoViewModel vm;
+  final Widget busqueda;
+
+  @override
+  Widget build(BuildContext context) {
+    final extra = Theme.of(context).extension<ColoresExtraGip>()!;
+    final pestanas = SelectorFiltro<FiltroConteo>(
       prefijoClave: 'conteo_filtro',
+      estilo: EstiloFiltro.pestanas,
       elegido: vm.filtro,
       onElegir: vm.elegirFiltro,
       opciones: [
-        (valor: FiltroConteo.todos, etiqueta: 'Todos'),
-        (valor: FiltroConteo.contados, etiqueta: 'Contados'),
-        (valor: FiltroConteo.sinContar, etiqueta: 'Sin contar'),
+        (valor: FiltroConteo.todos, etiqueta: 'Todos · ${vm.total}'),
+        (valor: FiltroConteo.contados, etiqueta: 'Contados · ${vm.contados}'),
+        (
+          valor: FiltroConteo.sinContar,
+          etiqueta: 'Sin contar · ${vm.sinContar}',
+        ),
         (
           valor: FiltroConteo.conDiferencia,
           etiqueta: 'Con diferencia · ${vm.conDiferencia}',
         ),
       ],
     );
-    return LayoutBuilder(
-      builder: (context, restricciones) {
-        if (web && restricciones.maxWidth >= 960) {
-          return Row(
-            children: [
-              Expanded(child: busqueda),
-              const SizedBox(width: 16),
-              filtros,
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [busqueda, const SizedBox(height: 12), filtros],
-        );
-      },
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: extra.separador)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+        child: LayoutBuilder(
+          builder: (context, restricciones) {
+            if (restricciones.maxWidth >= 980) {
+              return Row(
+                children: [
+                  Expanded(child: busqueda),
+                  const SizedBox(width: 12),
+                  pestanas,
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                busqueda,
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerLeft, child: pestanas),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
+}
+
+/// Móvil: Todos, Sin contar · N y Diferencia · N en píldoras.
+class _FiltrosMovil extends StatelessWidget {
+  const _FiltrosMovil({required this.vm});
+
+  final ConteoViewModel vm;
+
+  @override
+  Widget build(BuildContext context) => SelectorFiltro<FiltroConteo>(
+    prefijoClave: 'conteo_filtro',
+    elegido: vm.filtro,
+    onElegir: vm.elegirFiltro,
+    opciones: [
+      (valor: FiltroConteo.todos, etiqueta: 'Todos'),
+      (valor: FiltroConteo.sinContar, etiqueta: 'Sin contar · ${vm.sinContar}'),
+      (
+        valor: FiltroConteo.conDiferencia,
+        etiqueta: 'Diferencia · ${vm.conDiferencia}',
+      ),
+    ],
+  );
 }
 
 /// Lista de productos: tabla en la web, tarjeta con filas en el móvil.
@@ -404,6 +477,7 @@ class _Lista extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final extra = tema.extension<ColoresExtraGip>()!;
     if (vm.cargando) {
       return const Padding(
         padding: EdgeInsets.all(32),
@@ -412,7 +486,7 @@ class _Lista extends StatelessWidget {
     }
     final filas = vm.filas;
     if (filas.isEmpty) {
-      return Padding(
+      final vacio = Padding(
         padding: const EdgeInsets.all(24),
         child: Text(
           vm.total == 0
@@ -423,10 +497,11 @@ class _Lista extends StatelessWidget {
           style: tema.textTheme.bodyMedium,
         ),
       );
+      return web ? vacio : TarjetaGip(child: vacio);
     }
     final hijos = [
       for (final (i, fila) in filas.indexed) ...[
-        if (i > 0) Divider(height: 1, color: tema.colorScheme.outlineVariant),
+        if (i > 0) Divider(height: 1, color: extra.separador),
         web
             ? _FilaWeb(
                 key: ValueKey('fila_${fila.producto.getId()}'),
@@ -442,26 +517,43 @@ class _Lista extends StatelessWidget {
               ),
       ],
     ];
-    if (web) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [const _EncabezadoTabla(), ...hijos],
+    if (!web) {
+      return TarjetaGip(
+        radio: FormaGip.radioTarjetaMovil,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: hijos,
+        ),
       );
     }
-    return TarjetaGip(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: hijos,
-      ),
+    final tabla = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [const _EncabezadoTabla(), ...hijos],
+    );
+    // Como el prototipo: por debajo de 780 px la tabla se desplaza de lado.
+    return LayoutBuilder(
+      builder: (context, restricciones) {
+        if (restricciones.maxWidth >= _Columnas.anchoMinimo) return tabla;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(width: _Columnas.anchoMinimo, child: tabla),
+        );
+      },
     );
   }
 }
 
-/// Anchos de las columnas de la tabla web.
+/// Columnas de la tabla web: 2,2 · 1 · 1,2 · 1 · 1,6 con 16 px entre ellas.
 abstract final class _Columnas {
-  static const contado = 120.0;
-  static const estado = 170.0;
+  static const producto = 22;
+  static const sistema = 10;
+  static const contado = 12;
+  static const diferencia = 10;
+  static const estado = 16;
   static const espacio = 16.0;
+  static const anchoCampo = 120.0;
+  static const anchoMinimo = 780.0;
+  static const relleno = EdgeInsets.symmetric(horizontal: 22, vertical: 12);
 }
 
 class _EncabezadoTabla extends StatelessWidget {
@@ -470,28 +562,40 @@ class _EncabezadoTabla extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final extra = tema.extension<ColoresExtraGip>()!;
     final estilo = tema.textTheme.labelMedium?.copyWith(
+      fontSize: 13,
+      letterSpacing: 0.5,
       color: tema.colorScheme.onSurfaceVariant,
     );
     Text t(String texto, [TextAlign alineacion = TextAlign.start]) =>
-        Text(texto, style: estilo, textAlign: alineacion);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(flex: 3, child: t('Producto')),
-          Expanded(flex: 2, child: t('Código')),
-          Expanded(flex: 2, child: t('Según el sistema', TextAlign.end)),
-          const SizedBox(width: _Columnas.espacio),
-          SizedBox(
-            width: _Columnas.contado,
-            child: t('Contado', TextAlign.end),
-          ),
-          const SizedBox(width: _Columnas.espacio),
-          Expanded(child: t('Diferencia', TextAlign.end)),
-          const SizedBox(width: _Columnas.espacio),
-          SizedBox(width: _Columnas.estado, child: t('Estado')),
-        ],
+        Text(texto.toUpperCase(), style: estilo, textAlign: alineacion);
+    return ColoredBox(
+      color: extra.superficieSuave,
+      child: Padding(
+        padding: _Columnas.relleno,
+        child: Row(
+          children: [
+            Expanded(flex: _Columnas.producto, child: t('Producto')),
+            const SizedBox(width: _Columnas.espacio),
+            Expanded(
+              flex: _Columnas.sistema,
+              child: t('Según el sistema', TextAlign.end),
+            ),
+            const SizedBox(width: _Columnas.espacio),
+            Expanded(
+              flex: _Columnas.contado,
+              child: t('Contado', TextAlign.end),
+            ),
+            const SizedBox(width: _Columnas.espacio),
+            Expanded(
+              flex: _Columnas.diferencia,
+              child: t('Diferencia', TextAlign.end),
+            ),
+            const SizedBox(width: _Columnas.espacio),
+            Expanded(flex: _Columnas.estado, child: t('Estado')),
+          ],
+        ),
       ),
     );
   }
@@ -512,45 +616,80 @@ class _FilaWeb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final extra = tema.extension<ColoresExtraGip>()!;
+    final esquema = tema.colorScheme;
     final producto = fila.producto;
-    final cifras = tema.textTheme.bodyLarge?.cifrasTabulares;
     return Container(
       key: Key('conteo_fila_${producto.getId()}'),
-      color: fila.revisar ? extra.alertaFondo : tema.colorScheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      // Siempre con color: si pasara de null a un color, el Container
+      // insertaría un ColoredBox y el campo perdería el foco.
+      color: _fondoFila(context, fila),
+      padding: _Columnas.relleno,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(
-                  producto.getNombre(),
-                  style: tema.textTheme.titleSmall,
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  producto.getCodigo(),
-                  style: tema.textTheme.bodyMedium?.copyWith(
-                    color: tema.colorScheme.onSurfaceVariant,
+          Expanded(
+            flex: _Columnas.producto,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: tema.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(
+                      FormaGip.radioCajaIconoTabla,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: IconoPaquete(
+                    tamano: 20,
+                    color: esquema.onSurfaceVariant,
                   ),
                 ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  mostrarCantidad(fila.item.getStockActual()),
-                  textAlign: TextAlign.end,
-                  style: cifras,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        producto.getNombre(),
+                        style: tema.textTheme.titleSmall?.copyWith(
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        nombreUnidad(producto.getUnidadMedida()),
+                        style: tema.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                          color: esquema.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(width: _Columnas.espacio),
+          Expanded(
+            flex: _Columnas.sistema,
+            child: Text(
+              mostrarCantidad(fila.item.getStockActual()),
+              textAlign: TextAlign.end,
+              style: tema.textTheme.titleMedium?.cifrasTabulares.copyWith(
+                fontWeight: FontWeight.w400,
+                color: esquema.onSurfaceVariant,
               ),
-              const SizedBox(width: _Columnas.espacio),
-              SizedBox(
-                width: _Columnas.contado,
+            ),
+          ),
+          const SizedBox(width: _Columnas.espacio),
+          Expanded(
+            flex: _Columnas.contado,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: _Columnas.anchoCampo,
+                ),
                 child: _CampoContado(
                   key: ValueKey('contado_${producto.getId()}'),
                   fila: fila,
@@ -559,22 +698,21 @@ class _FilaWeb extends StatelessWidget {
                   foco: campos.foco(fila),
                 ),
               ),
-              const SizedBox(width: _Columnas.espacio),
-              Expanded(child: _Diferencia(fila: fila)),
-              const SizedBox(width: _Columnas.espacio),
-              SizedBox(
-                width: _Columnas.estado,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: _Estado(fila: fila, vm: vm),
-                ),
-              ),
-            ],
+            ),
           ),
-          if (fila.error != null) ...[
-            const SizedBox(height: 6),
-            _ErrorFila(fila.error!),
-          ],
+          const SizedBox(width: _Columnas.espacio),
+          Expanded(
+            flex: _Columnas.diferencia,
+            child: _Diferencia(fila: fila),
+          ),
+          const SizedBox(width: _Columnas.espacio),
+          Expanded(
+            flex: _Columnas.estado,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _EstadoWeb(fila: fila),
+            ),
+          ),
         ],
       ),
     );
@@ -596,12 +734,21 @@ class _FilaMovil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final extra = tema.extension<ColoresExtraGip>()!;
     final producto = fila.producto;
+    final mensaje = switch (fila.estado) {
+      EstadoFilaConteo.error => fila.error,
+      EstadoFilaConteo.diferenciaGrande => ConteoViewModel.mensajeRevisar,
+      _ => null,
+    };
+    final sistema = mostrarCantidad(fila.item.getStockActual());
+    final unidad = fila.admiteDecimales
+        ? ' ${unidadCorta(producto.getUnidadMedida())}'
+        : '';
     return Container(
       key: Key('conteo_fila_${producto.getId()}'),
-      color: fila.revisar ? extra.alertaFondo : tema.colorScheme.surface,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      // Siempre con color (ver _FilaWeb).
+      color: _fondoFila(context, fila),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -613,13 +760,18 @@ class _FilaMovil extends StatelessWidget {
                   children: [
                     Text(
                       producto.getNombre(),
-                      style: tema.textTheme.titleSmall,
+                      style: tema.textTheme.titleSmall?.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Según el sistema: '
-                      '${mostrarCantidad(fila.item.getStockActual())}',
-                      style: tema.textTheme.bodySmall?.cifrasTabulares,
+                      'Según el sistema: $sistema$unidad',
+                      style: tema.textTheme.bodySmall?.cifrasTabulares.copyWith(
+                        fontSize: 13,
+                        color: tema.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -636,34 +788,24 @@ class _FilaMovil extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              SizedBox(width: 56, child: _Diferencia(fila: fila)),
+              SizedBox(width: 52, child: _Diferencia(fila: fila)),
             ],
           ),
-          if (fila.revisar) ...[
+          if (mensaje != null) ...[
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    ConteoViewModel.mensajeRevisar,
-                    style: tema.textTheme.bodySmall?.copyWith(
-                      color: extra.alertaTexto,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                _BotonVolverAContar(fila: fila, vm: vm),
-              ],
-            ),
-          ],
-          if (fila.error != null) ...[
-            const SizedBox(height: 8),
-            _ErrorFila(fila.error!),
+            _MensajeFila(mensaje),
           ],
         ],
       ),
     );
   }
+}
+
+Color _fondoFila(BuildContext context, FilaConteo fila) {
+  final tema = Theme.of(context);
+  return _enRojo(fila)
+      ? tema.extension<ColoresExtraGip>()!.errorFondoSuave
+      : tema.colorScheme.surface;
 }
 
 /// Campo de la cantidad contada. El controlador y el foco son los de
@@ -684,16 +826,21 @@ class _CampoContado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tema = Theme.of(context);
     return Semantics(
-      label: 'Cantidad contada de ${fila.producto.getNombre()}',
+      label: 'Contado de ${fila.producto.getNombre()}',
       child: CampoGip(
         etiqueta: '',
         controlador: controlador,
         focusNode: foco,
         campoKey: Key('conteo_contado_${fila.producto.getId()}'),
-        alto: 48,
+        alto: 50,
+        pista: '—',
         alineacion: TextAlign.end,
-        resaltado: fila.revisar,
+        resaltado: _enRojo(fila),
+        estiloTexto: tema.textTheme.headlineSmall?.cifrasTabulares.copyWith(
+          fontSize: 20,
+        ),
         habilitado: !vm.registrando,
         tipoTeclado: TextInputType.numberWithOptions(
           decimal: fila.admiteDecimales,
@@ -705,6 +852,8 @@ class _CampoContado extends StatelessWidget {
   }
 }
 
+/// Diferencia en Archivo 800: verde si cuadra, roja si es grande o hay error,
+/// "—" si no se conoce.
 class _Diferencia extends StatelessWidget {
   const _Diferencia({required this.fila});
 
@@ -713,119 +862,86 @@ class _Diferencia extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    final extra = tema.extension<ColoresExtraGip>()!;
+    final esquema = tema.colorScheme;
     final diferencia = fila.diferencia;
-    final color = diferencia == null
-        ? tema.colorScheme.onSurfaceVariant
-        : fila.revisar
-        ? extra.alertaTexto
-        : diferencia == Decimal.zero
-        ? tema.colorScheme.primary
-        : tema.colorScheme.onSurface;
+    final estado = fila.estado;
+    final color = switch (estado) {
+      EstadoFilaConteo.cuadra => esquema.primary,
+      EstadoFilaConteo.seAjusta => esquema.onSurface,
+      EstadoFilaConteo.diferenciaGrande ||
+      EstadoFilaConteo.error => esquema.error,
+      EstadoFilaConteo.sinContar ||
+      EstadoFilaConteo.calculando => esquema.onSurfaceVariant,
+    };
+    final conocida = diferencia != null && estado != EstadoFilaConteo.error;
     return Text(
-      diferencia == null ? '' : mostrarDiferencia(diferencia),
+      conocida ? mostrarDiferencia(diferencia) : '—',
       key: Key('conteo_diferencia_${fila.producto.getId()}'),
       textAlign: TextAlign.end,
-      style: tema.textTheme.titleMedium?.cifrasTabulares.copyWith(
+      semanticsLabel: conocida ? null : 'Sin diferencia',
+      style: tema.textTheme.titleLarge?.cifrasTabulares.copyWith(
+        fontSize: 18,
         color: color,
-        fontWeight: FontWeight.w700,
       ),
     );
   }
 }
 
-/// Columna Estado de la web: "Cuadra", "Se ajusta" o "Volver a contar".
-class _Estado extends StatelessWidget {
-  const _Estado({required this.fila, required this.vm});
+/// Columna Estado de la web: píldora Cuadra, Se ajusta, Diferencia grande o
+/// Sin contar; con error, el mensaje en rojo.
+class _EstadoWeb extends StatelessWidget {
+  const _EstadoWeb({required this.fila});
 
   final FilaConteo fila;
-  final ConteoViewModel vm;
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final diferencia = fila.diferencia;
-    if (diferencia == null) return const SizedBox.shrink();
-    if (fila.revisar) return _BotonVolverAContar(fila: fila, vm: vm);
-    final cuadra = diferencia == Decimal.zero;
-    return Text(
-      cuadra ? 'Cuadra' : 'Se ajusta',
-      style: tema.textTheme.labelLarge?.copyWith(
-        color: cuadra ? tema.colorScheme.primary : tema.colorScheme.onSurface,
+    final clave = Key('conteo_estado_${fila.producto.getId()}');
+    return switch (fila.estado) {
+      EstadoFilaConteo.error => _MensajeFila(fila.error!, key: clave),
+      EstadoFilaConteo.cuadra => PildoraEstado(
+        'Cuadra',
+        key: clave,
+        tono: TonoEstado.bien,
       ),
-    );
+      EstadoFilaConteo.seAjusta => PildoraEstado(
+        'Se ajusta',
+        key: clave,
+        tono: TonoEstado.neutro,
+      ),
+      EstadoFilaConteo.diferenciaGrande => Semantics(
+        key: clave,
+        hint: ConteoViewModel.mensajeRevisar,
+        child: const PildoraEstado('Diferencia grande', tono: TonoEstado.error),
+      ),
+      EstadoFilaConteo.sinContar => PildoraEstado(
+        'Sin contar',
+        key: clave,
+        tono: TonoEstado.pendiente,
+      ),
+      EstadoFilaConteo.calculando => SizedBox.shrink(key: clave),
+    };
   }
 }
 
-class _BotonVolverAContar extends StatelessWidget {
-  const _BotonVolverAContar({required this.fila, required this.vm});
-
-  final FilaConteo fila;
-  final ConteoViewModel vm;
-
-  @override
-  Widget build(BuildContext context) => BotonSecundario(
-    key: Key('conteo_volver_${fila.producto.getId()}'),
-    texto: 'Volver a contar',
-    alto: 44,
-    onPressed: vm.registrando ? null : () => vm.volverAContar(fila.producto),
-  );
-}
-
-class _ErrorFila extends StatelessWidget {
-  const _ErrorFila(this.texto);
+/// Mensaje de una fila en rojo (13 px, 600).
+class _MensajeFila extends StatelessWidget {
+  const _MensajeFila(this.texto, {super.key});
 
   final String texto;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    return Text(
-      texto,
-      style: tema.textTheme.bodySmall?.copyWith(color: tema.colorScheme.error),
-    );
-  }
-}
-
-/// Franja oscura de la web con la nota y el botón de confirmar.
-class _BarraConfirmarWeb extends StatelessWidget {
-  const _BarraConfirmarWeb({required this.nota, required this.boton});
-
-  final String nota;
-  final Widget boton;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final extra = tema.extension<ColoresExtraGip>()!;
-    final texto = Text(
-      nota,
-      style: tema.textTheme.bodyMedium?.copyWith(
-        color: tema.colorScheme.onPrimary,
-      ),
-    );
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: extra.navFondo,
-        borderRadius: BorderRadius.circular(FormaGip.radioTarjeta),
-      ),
-      child: LayoutBuilder(
-        builder: (context, restricciones) {
-          if (restricciones.maxWidth < 760) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [texto, const SizedBox(height: 16), boton],
-            );
-          }
-          return Row(
-            children: [
-              Expanded(child: texto),
-              const SizedBox(width: 24),
-              SizedBox(width: 340, child: boton),
-            ],
-          );
-        },
+    return Semantics(
+      liveRegion: true,
+      child: Text(
+        texto,
+        style: tema.textTheme.bodySmall?.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: tema.colorScheme.error,
+        ),
       ),
     );
   }

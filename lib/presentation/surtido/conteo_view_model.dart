@@ -14,6 +14,27 @@ import 'package:gip/transversal/texto/normalizar_texto.dart';
 /// Qué filas muestra la lista del conteo.
 enum FiltroConteo { todos, contados, sinContar, conDiferencia }
 
+/// Cómo está una fila del conteo; la vista elige su color y su texto.
+enum EstadoFilaConteo {
+  /// No tiene una cantidad válida escrita ni error.
+  sinContar,
+
+  /// Contada; la diferencia todavía no llega del coordinador.
+  calculando,
+
+  /// Lo contado es igual a lo del sistema.
+  cuadra,
+
+  /// Hay diferencia y no supera el umbral.
+  seAjusta,
+
+  /// La diferencia supera el umbral (paso 24); no bloquea.
+  diferenciaGrande,
+
+  /// La fila tiene un mensaje de error ([FilaConteo.error]).
+  error,
+}
+
 /// Un producto de la lista del conteo con lo que el tendero lleva escrito.
 @immutable
 class FilaConteo {
@@ -48,6 +69,16 @@ class FilaConteo {
   Producto get producto => item.getProducto();
 
   bool get contado => contada != null;
+
+  EstadoFilaConteo get estado {
+    final diferencia = this.diferencia;
+    if (error != null) return EstadoFilaConteo.error;
+    if (!contado) return EstadoFilaConteo.sinContar;
+    if (diferencia == null) return EstadoFilaConteo.calculando;
+    if (revisar) return EstadoFilaConteo.diferenciaGrande;
+    if (diferencia == Decimal.zero) return EstadoFilaConteo.cuadra;
+    return EstadoFilaConteo.seAjusta;
+  }
 
   /// Kilos y libras admiten decimales; la unidad, no (IE-01 b).
   bool get admiteDecimales => producto.getUnidadMedida() != UnidadMedida.unidad;
@@ -237,10 +268,6 @@ class ConteoViewModel extends ChangeNotifier {
     }
     await _consultarDiferencia(producto, contada);
   }
-
-  /// "Volver a contar": borra la cantidad de [producto] para escribirla de
-  /// nuevo.
-  void volverAContar(Producto producto) => cambiarCantidad(producto, '');
 
   /// confirmarAjuste por cada producto contado (pasos 25 a 39). Los que se
   /// guardan quedan con su nuevo stock y sin cantidad; los que fallan siguen
