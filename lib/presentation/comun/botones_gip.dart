@@ -214,3 +214,43 @@ class BotonIconoPrimario extends StatelessWidget {
     );
   }
 }
+
+/// Botón secundario cuadrado con solo un ícono (48 px, contorno `outline`,
+/// fondo blanco): "día anterior" y "día siguiente" del Reporte del día. El
+/// [tooltip] es también su nombre para el lector de pantalla.
+class BotonIconoSecundario extends StatelessWidget {
+  const BotonIconoSecundario({
+    super.key,
+    required this.icono,
+    required this.tooltip,
+    required this.onPressed,
+    this.tamano = 48,
+  });
+
+  final IconData icono;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final double tamano;
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    return IconButton.outlined(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      style: IconButton.styleFrom(
+        fixedSize: Size.square(tamano),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+        ),
+        backgroundColor: esquema.surface,
+        foregroundColor: esquema.primary,
+        side: BorderSide(
+          color: onPressed == null ? esquema.outlineVariant : esquema.outline,
+          width: FormaGip.grosorBordeCampo,
+        ),
+      ),
+      icon: Icon(icono, size: 22),
+    );
+  }
+}

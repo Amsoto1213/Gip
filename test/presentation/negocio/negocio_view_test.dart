@@ -60,6 +60,24 @@ void main() {
     );
   });
 
+  testWidgets('tiene la acción Reporte del día de 44 px o más', (tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => IniciarSesionViewModel(IniciarSesionFalso()),
+        child: MaterialApp(theme: TemaGip.claro(), home: const NegocioView()),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(TarjetaAccion, 'Reporte del día'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('negocio_reporte'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
   testWidgets('tiene la acción Ganancia por producto de 44 px o más', (
     tester,
   ) async {
