@@ -15,10 +15,10 @@ class ClienteRepositorioDrift implements IClienteRepositorio {
 
   static const _tabla = 'clientes';
 
-  /// Clientes (sin los eliminados, CUS-21) cuyo `nombre_normalizado` contiene el texto normalizado (sin
-  /// mayúsculas ni tildes, RD-08), por nombre, cada uno con sus fiados del más
-  /// reciente al más antiguo, y los abonos de cada fiado, del más antiguo al
-  /// más reciente (CUS-08).
+  /// Clientes (sin los eliminados, CUS-21) cuyo `nombre_normalizado` contiene
+  /// el texto normalizado (sin mayúsculas ni tildes, RD-08), por nombre, cada
+  /// uno con sus fiados del más reciente al más antiguo, y los abonos de cada
+  /// fiado, del más antiguo al más reciente (CUS-08).
   @override
   Future<List<Cliente>> buscarPorNombre(Tienda tienda, String texto) async {
     final patron = '%${_escaparLike(normalizarTexto(texto))}%';
