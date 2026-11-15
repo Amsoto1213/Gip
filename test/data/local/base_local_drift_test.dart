@@ -71,6 +71,11 @@ void main() {
             .toList();
 
     /// Quita lo que agregó la versión 8 (CUS-07).
+    /// Quita lo que agregó la versión 9 (CUS-08).
+    Future<void> bajarDeLaVersion9(BaseLocalDrift base) async {
+      await base.customStatement('DROP TABLE abonos');
+    }
+
     Future<void> bajarDeLaVersion8(BaseLocalDrift base) async {
       for (final t in ['fiados', 'clientes']) {
         await base.customStatement('DROP TABLE $t');
@@ -96,6 +101,7 @@ void main() {
 
       // Deja la base como estaba en la versión 2 (CUS-18).
       final v2 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion9(v2);
       await bajarDeLaVersion8(v2);
       await bajarDeLaVersion4(v2);
       await v2.customStatement('DROP TABLE movimientos_inventario');
@@ -105,7 +111,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 8);
+      expect(actual.schemaVersion, 9);
       expect(
         await tablas(actual),
         containsAll([
@@ -119,12 +125,13 @@ void main() {
           'ventas_perdidas',
           'clientes',
           'fiados',
+          'abonos',
         ]),
       );
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 8);
+      expect(version.read<int>('user_version'), 9);
       await actual.close();
     });
 
@@ -134,6 +141,7 @@ void main() {
 
       // Deja la base como estaba en la versión 3 (CUS-01).
       final v3 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion9(v3);
       await bajarDeLaVersion8(v3);
       await bajarDeLaVersion4(v3);
       await v3.customStatement('DROP TABLE movimientos_inventario');
@@ -199,6 +207,7 @@ void main() {
           "cantidad, fecha, estado, costo_unitario) VALUES ('e1', 't1', 'i1', "
           "'ENTRADA', '24', '2026-11-14T10:00:00.000Z', 'VIGENTE', '8600')",
         );
+        await bajarDeLaVersion9(v4);
         await bajarDeLaVersion8(v4);
         await bajarDeLaVersion7(v4);
         await v4.customStatement('PRAGMA user_version = 4');
@@ -234,6 +243,7 @@ void main() {
         "cantidad, fecha, estado, costo_unitario) VALUES ('e1', 't1', 'i1', "
         "'ENTRADA', '24', '2026-11-14T10:00:00.000Z', 'VIGENTE', '8600')",
       );
+      await bajarDeLaVersion9(v5);
       await bajarDeLaVersion8(v5);
       await bajarDeLaVersion7(v5);
       await v5.customStatement('PRAGMA user_version = 5');
@@ -255,6 +265,7 @@ void main() {
       final archivo = File('${carpeta.path}/gip.sqlite');
 
       final v6 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion9(v6);
       await bajarDeLaVersion8(v6);
       await bajarDeLaVersion7(v6);
       await v6.customStatement('PRAGMA user_version = 6');
@@ -279,6 +290,7 @@ void main() {
       final archivo = File('${carpeta.path}/gip.sqlite');
 
       final v7 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion9(v7);
       await bajarDeLaVersion8(v7);
       await v7.customStatement('PRAGMA user_version = 7');
       expect(await tablas(v7), isNot(contains('fiados')));
@@ -296,6 +308,23 @@ void main() {
         ]),
       );
       await v8.close();
+    });
+
+    test('de la versión 8 a la 9 crea abonos', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v8 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion9(v8);
+      await v8.customStatement('PRAGMA user_version = 8');
+      expect(await tablas(v8), isNot(contains('abonos')));
+      await v8.close();
+
+      final v9 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(
+        await tablas(v9),
+        containsAll(['abonos', 'abonos_tienda_idx', 'abonos_fiado_idx']),
+      );
+      await v9.close();
     });
   });
 }

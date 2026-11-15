@@ -17,7 +17,8 @@ class ClienteRepositorioDrift implements IClienteRepositorio {
 
   /// Clientes cuyo `nombre_normalizado` contiene el texto normalizado (sin
   /// mayúsculas ni tildes, RD-08), por nombre, cada uno con sus fiados del más
-  /// reciente al más antiguo. Los abonos llegan con CUS-08.
+  /// reciente al más antiguo, y los abonos de cada fiado, del más antiguo al
+  /// más reciente (CUS-08).
   @override
   Future<List<Cliente>> buscarPorNombre(Tienda tienda, String texto) async {
     final patron = '%${_escaparLike(normalizarTexto(texto))}%';
@@ -44,9 +45,25 @@ class ClienteRepositorioDrift implements IClienteRepositorio {
               )
               ..orderBy([(f) => OrderingTerm.desc(f.fechaInicio)]))
             .get();
+    final abonos = fiados.isEmpty
+        ? <FilaAbono>[]
+        : await (_base.select(_base.abonos)
+                ..where(
+                  (a) =>
+                      a.tiendaId.equals(tienda.getId()) &
+                      a.fiadoId.isIn(fiados.map((f) => f.id)),
+                )
+                ..orderBy([(a) => OrderingTerm.asc(a.fecha)]))
+              .get();
     for (final fila in fiados) {
       final cliente = clientes[fila.clienteId]!;
-      cliente.agregarFiado(MapeoFiado.aEntidad(fila, cliente));
+      cliente.agregarFiado(
+        MapeoFiado.aEntidad(
+          fila,
+          cliente,
+          abonos.where((a) => a.fiadoId == fila.id).toList(),
+        ),
+      );
     }
     return clientes.values.toList();
   }
