@@ -109,7 +109,8 @@ void main() {
     await abrir(tester, tamano: tamano);
     await tester.tap(find.byKey(const Key('surtido_registrar_entrada')));
     await tester.pumpAndSettle();
-    expect(find.text('Buscar producto'), findsOneWidget);
+    // En la web también sale en la miga.
+    expect(find.text('Buscar producto'), findsWidgets);
 
     await tester.enterText(find.byKey(const Key('buscar_texto')), 'aceite');
     await esperarBase(tester);
@@ -233,7 +234,8 @@ void main() {
   ) async {
     await crearAceite(tester);
     await abrir(tester, inicio: rutaEntradaMercancia);
-    expect(find.text('Buscar producto'), findsOneWidget);
+    // En la web también sale en la miga.
+    expect(find.text('Buscar producto'), findsWidgets);
 
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();

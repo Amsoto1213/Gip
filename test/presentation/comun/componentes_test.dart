@@ -247,6 +247,24 @@ void main() {
       );
     });
 
+    testWidgets('muestra la ayuda debajo del campo', (tester) async {
+      final controlador = TextEditingController();
+      addTearDown(controlador.dispose);
+      await montar(
+        tester,
+        CampoGip(
+          etiqueta: 'Código interno',
+          controlador: controlador,
+          campoKey: const Key('codigo'),
+          ayuda: 'El código interno no se cambia',
+        ),
+      );
+      expect(
+        tester.getTopLeft(find.text('El código interno no se cambia')).dy,
+        greaterThan(tester.getBottomLeft(find.byKey(const Key('codigo'))).dy),
+      );
+    });
+
     testWidgets('contraseña: el ojo muestra y oculta el texto', (tester) async {
       final controlador = TextEditingController(text: 'secreta');
       addTearDown(controlador.dispose);

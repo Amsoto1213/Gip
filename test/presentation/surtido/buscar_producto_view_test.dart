@@ -53,6 +53,7 @@ void main() {
   Future<void> abrir(
     WidgetTester tester, {
     Size tamano = const Size(390, 844),
+    String seccion = 'Surtido',
   }) async {
     tester.view.physicalSize = tamano;
     tester.view.devicePixelRatio = 1;
@@ -69,7 +70,7 @@ void main() {
               builder: (_, _) => ChangeNotifierProvider(
                 create: (_) =>
                     BuscarProductoViewModel(inventario.buscarProducto, tienda),
-                child: const BuscarProductoView(),
+                child: BuscarProductoView(seccion: seccion),
               ),
             ),
             GoRoute(
@@ -135,14 +136,26 @@ void main() {
         find.byKey(const Key('producto_nombre')),
         'Coco grande',
       );
-      await tester.ensureVisible(find.text('Guardar producto'));
+      // El botón va al final de la lista: baja hasta él y vuelve a subir.
+      final lista = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('Guardar producto'),
+        200,
+        scrollable: lista,
+      );
       await tester.tap(find.text('Guardar producto'));
       await esperarBase(tester);
       expect(find.text('Producto actualizado'), findsOneWidget);
 
+      await tester.scrollUntilVisible(
+        find.byTooltip('Volver'),
+        -200,
+        scrollable: lista,
+      );
       await tester.tap(find.byTooltip('Volver'));
       await esperarBase(tester);
-      expect(find.text('Buscar producto'), findsOneWidget);
+      // En la web también sale en la miga.
+      expect(find.text('Buscar producto'), findsWidgets);
       expect(find.text('Coco grande'), findsOneWidget);
     },
   );
@@ -181,4 +194,14 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('en la web la miga lleva a la sección que la abrió', (
+    tester,
+  ) async {
+    await abrir(tester, tamano: const Size(1280, 800), seccion: 'Vender');
+    expect(find.byTooltip('Volver a Vender'), findsOneWidget);
+    expect(find.text('Vender'), findsOneWidget);
+    expect(find.text('¿No lo encuentra?'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

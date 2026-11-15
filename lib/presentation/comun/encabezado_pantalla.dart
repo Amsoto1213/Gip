@@ -77,7 +77,7 @@ class EncabezadoPantalla extends StatelessWidget {
         ],
       );
     } else if (interna) {
-      bloque = Row(
+      final fila = Row(
         children: [
           IconButton(
             onPressed: onVolver,
@@ -105,6 +105,12 @@ class EncabezadoPantalla extends StatelessWidget {
           ),
         ],
       );
+      bloque = textoContexto == null
+          ? fila
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [fila, const SizedBox(height: 8), textoContexto],
+            );
     } else {
       // Móvil: la línea de contexto va encima del título (surtido-movil).
       bloque = Column(

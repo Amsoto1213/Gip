@@ -16,6 +16,7 @@ class CampoGip extends StatefulWidget {
     this.campoKey,
     this.icono,
     this.pista,
+    this.ayuda,
     this.prefijo,
     this.contrasena = false,
     this.habilitado = true,
@@ -37,6 +38,9 @@ class CampoGip extends StatefulWidget {
 
   /// Texto gris dentro del campo vacío ("nombre@tienda.com").
   final String? pista;
+
+  /// Línea gris debajo del campo ("El código interno no se cambia").
+  final String? ayuda;
 
   /// Texto fijo antes del valor ("$ ").
   final String? prefijo;
@@ -131,7 +135,8 @@ class _CampoGipState extends State<CampoGip> {
         ),
       ),
     );
-    if (widget.etiqueta.isEmpty) return campo;
+    final ayuda = widget.ayuda;
+    if (widget.etiqueta.isEmpty && ayuda == null) return campo;
     // La etiqueta se lee justo antes del campo. No se usa MergeSemantics: con
     // prefijo de pesos o el botón de ojo, fundir los nodos rompe el árbol de
     // semántica.
@@ -139,9 +144,15 @@ class _CampoGipState extends State<CampoGip> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(widget.etiqueta, style: tema.textTheme.labelMedium),
-        const SizedBox(height: 8),
+        if (widget.etiqueta.isNotEmpty) ...[
+          Text(widget.etiqueta, style: tema.textTheme.labelMedium),
+          const SizedBox(height: 8),
+        ],
         campo,
+        if (ayuda != null) ...[
+          const SizedBox(height: 6),
+          Text(ayuda, style: tema.textTheme.bodySmall?.copyWith(fontSize: 13)),
+        ],
       ],
     );
   }

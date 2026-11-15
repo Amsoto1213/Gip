@@ -155,7 +155,7 @@ void main() {
     // Pérdida abre sola la búsqueda del producto; al volver queda Pérdida
     // con su subsección marcada.
     expect(find.byType(BuscarProductoView), findsOneWidget);
-    await tester.tap(find.byTooltip('Volver').last);
+    await tester.tap(find.byTooltip('Volver a Surtido'));
     await tester.pumpAndSettle();
     expect(find.byType(PerdidaView), findsOneWidget);
     final subseccion = tester.getSemantics(

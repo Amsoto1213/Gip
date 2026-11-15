@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
+import 'package:gip/presentation/comun/barra_busqueda.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
-import 'package:gip/presentation/comun/tema/colores_gip.dart';
+import 'package:gip/presentation/comun/icono_paquete.dart';
+import 'package:gip/presentation/comun/tarjeta_gip.dart';
+import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
@@ -24,9 +29,16 @@ enum ModoBusqueda {
 /// Las existencias, "Agregar", "Anotar que se fue sin él" y el botón del
 /// lector llegan con CUS-25, CUS-02, CUS-13 y CUS-17 (DI-19).
 class BuscarProductoView extends StatefulWidget {
-  const BuscarProductoView({super.key, this.modo = ModoBusqueda.editar});
+  const BuscarProductoView({
+    super.key,
+    this.modo = ModoBusqueda.editar,
+    this.seccion = 'Surtido',
+  });
 
   final ModoBusqueda modo;
+
+  /// Sección desde la que se abrió, para la miga y el botón de volver.
+  final String seccion;
 
   @override
   State<BuscarProductoView> createState() => _BuscarProductoViewState();
@@ -73,32 +85,41 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<BuscarProductoViewModel>();
-    final ancho = MediaQuery.sizeOf(context).width >= 720;
-    final margen = ancho ? 32.0 : 20.0;
+    final web = FormaGip.esWeb(context);
+    final margen = web ? 44.0 : 16.0;
 
     return Scaffold(
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 880),
+            constraints: const BoxConstraints(maxWidth: 968),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(margen, 16, margen, 0),
+                  padding: EdgeInsets.fromLTRB(
+                    margen,
+                    web ? 32 : 16,
+                    margen,
+                    0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _Encabezado(onVolver: _volver),
-                      const SizedBox(height: 16),
+                      EncabezadoPantalla(
+                        titulo: 'Buscar producto',
+                        seccion: widget.seccion,
+                        onVolver: _volver,
+                      ),
+                      SizedBox(height: web ? 24 : 16),
                       _campoBusqueda(),
                     ],
                   ),
                 ),
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.fromLTRB(margen, 12, margen, 16),
+                    padding: EdgeInsets.fromLTRB(margen, 16, margen, 16),
                     children: _contenido(vm),
                   ),
                 ),
@@ -116,24 +137,20 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
 
   Widget _campoBusqueda() => ValueListenableBuilder(
     valueListenable: _texto,
-    builder: (context, valor, _) => TextField(
-      key: const Key('buscar_texto'),
-      controller: _texto,
+    builder: (context, valor, _) => BarraBusqueda(
+      pista: 'Nombre del producto',
+      controlador: _texto,
+      campoKey: const Key('buscar_texto'),
       autofocus: true,
-      textInputAction: TextInputAction.search,
       onChanged: context.read<BuscarProductoViewModel>().buscar,
-      decoration: InputDecoration(
-        hintText: 'Nombre del producto',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: valor.text.isEmpty
-            ? null
-            : IconButton(
-                tooltip: 'Borrar',
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                onPressed: _borrar,
-                icon: const Icon(Icons.close),
-              ),
-      ),
+      sufijo: valor.text.isEmpty
+          ? null
+          : IconButton(
+              tooltip: 'Borrar',
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              onPressed: _borrar,
+              icon: const Icon(Icons.close),
+            ),
     ),
   );
 
@@ -167,11 +184,12 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
           _Aviso(
             texto: BuscarProductoViewModel.mensajeSinCoincidencias,
             esError: false,
-            accion: FilledButton.icon(
+            accion: BotonPrimario(
               key: const Key('buscar_crear_sin_coincidencias'),
+              texto: 'Crear producto',
+              icono: Icons.add,
+              compacto: true,
               onPressed: _crear,
-              icon: const Icon(Icons.add),
-              label: const Text('Crear producto'),
             ),
           ),
         ];
@@ -197,50 +215,6 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
   }
 }
 
-class _Encabezado extends StatelessWidget {
-  const _Encabezado({required this.onVolver});
-
-  final VoidCallback onVolver;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    return Row(
-      children: [
-        IconButton(
-          onPressed: onVolver,
-          tooltip: 'Volver',
-          iconSize: 28,
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          icon: const Icon(Icons.arrow_back),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'SURTIDO',
-                style: tema.textTheme.labelMedium?.copyWith(
-                  color: tema.colorScheme.onSurfaceVariant,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              Semantics(
-                header: true,
-                child: Text(
-                  'Buscar producto',
-                  style: tema.textTheme.headlineLarge,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _ListaResultados extends StatelessWidget {
   const _ListaResultados({
     required this.productos,
@@ -256,15 +230,11 @@ class _ListaResultados extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final extra = tema.extension<ColoresExtraGip>()!;
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
+    return TarjetaGip(
       child: Column(
         children: [
           for (var i = 0; i < productos.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: extra.separador),
+            if (i > 0) const Divider(),
             _FilaProducto(
               producto: productos[i],
               accion: accion,
@@ -297,36 +267,55 @@ class _FilaProducto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final extra = tema.extension<ColoresExtraGip>()!;
+    final esquema = tema.colorScheme;
     return InkWell(
       onTap: onTap,
+      hoverColor: extra.superficieSuave,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 64),
+        constraints: const BoxConstraints(minHeight: 68),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
+              Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: tema.scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconoPaquete(
+                  tamano: 20,
+                  color: esquema.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       producto.getNombre(),
-                      style: tema.textTheme.titleMedium,
+                      style: tema.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '\$ ${mostrarPrecio(producto.getPrecioVenta())}'
                       '${_porUnidad(producto.getUnidadMedida())}',
-                      style: tema.textTheme.bodyMedium?.copyWith(
-                        color: tema.colorScheme.onSurfaceVariant,
-                      ),
+                      style: tema.textTheme.bodySmall
+                          ?.copyWith(fontSize: 13)
+                          .cifrasTabulares,
                     ),
                   ],
                 ),
               ),
               Icon(
                 Icons.chevron_right,
-                color: tema.colorScheme.onSurfaceVariant,
+                color: esquema.onSurfaceVariant,
                 semanticLabel: accion,
               ),
             ],
@@ -399,7 +388,12 @@ class _NoLoEncuentra extends StatelessWidget {
     final textos = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('¿No lo encuentra?', style: tema.textTheme.titleSmall),
+        Text(
+          '¿No lo encuentra?',
+          style: tema.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         Text(
           'Créelo y quedará en el catálogo.',
           style: tema.textTheme.bodyMedium?.copyWith(
@@ -408,19 +402,15 @@ class _NoLoEncuentra extends StatelessWidget {
         ),
       ],
     );
-    final boton = OutlinedButton.icon(
+    final boton = BotonSecundario(
       key: const Key('buscar_crear_producto'),
+      texto: 'Crear producto',
+      icono: Icons.add,
       onPressed: onCrear,
-      style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-      icon: const Icon(Icons.add),
-      label: const Text('Crear producto'),
     );
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: tema.colorScheme.outline),
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return TarjetaGip(
+      radio: FormaGip.radioTarjetaAccion,
+      padding: const EdgeInsets.all(18),
       // En pantallas angostas (5") el botón va debajo del texto.
       child: LayoutBuilder(
         builder: (context, limites) => limites.maxWidth >= 480

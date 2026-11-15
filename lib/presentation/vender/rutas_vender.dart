@@ -50,7 +50,10 @@ StatefulShellBranch ramaVender() => StatefulShellBranch(
               context.read<BuscarProductoCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
             ),
-            child: const BuscarProductoView(modo: ModoBusqueda.seleccionar),
+            child: const BuscarProductoView(
+              modo: ModoBusqueda.seleccionar,
+              seccion: 'Vender',
+            ),
           ),
         ),
         GoRoute(

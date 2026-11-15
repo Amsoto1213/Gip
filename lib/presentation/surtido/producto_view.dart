@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
+import 'package:gip/presentation/comun/campo_gip.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
+import 'package:gip/presentation/comun/seccion_numerada.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// Pantalla Producto (CUS-18, mockups `mProducto` y `wProducto`): el mismo
+/// Pantalla Producto (CUS-18, mockups `mProducto` y `wProducto`, con los
+/// componentes del rediseño): el mismo
 /// formulario crea y edita. Lleva el campo "Código interno", que no está en el
 /// mockup (DI-14). Las secciones de códigos y etiquetas llegan con CUS-17 y la
 /// iteración 4.
@@ -72,16 +78,14 @@ class _ProductoViewState extends State<ProductoView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProductoViewModel>();
-    final ancho = MediaQuery.sizeOf(context).width >= 720;
-    final botonGuardar = FilledButton.icon(
-      onPressed: vm.guardando ? null : _guardar,
-      icon: vm.guardando
-          ? const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            )
-          : const Icon(Icons.check),
-      label: const Text('Guardar producto'),
+    final web = FormaGip.esWeb(context);
+    final titulo = vm.esNuevo ? 'Producto nuevo' : 'Editar producto';
+    final botonGuardar = BotonPrimario(
+      key: const Key('producto_guardar'),
+      texto: 'Guardar producto',
+      icono: Icons.check,
+      cargando: vm.guardando,
+      onPressed: _guardar,
     );
 
     return Scaffold(
@@ -89,25 +93,24 @@ class _ProductoViewState extends State<ProductoView> {
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 880),
+            constraints: const BoxConstraints(maxWidth: 968),
             child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                ancho ? 32 : 20,
-                16,
-                ancho ? 32 : 20,
-                24,
-              ),
+              padding: web
+                  ? const EdgeInsets.fromLTRB(44, 32, 44, 48)
+                  : const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
-                _Encabezado(esNuevo: vm.esNuevo, onVolver: _volver),
-                const SizedBox(height: 8),
-                Text(
-                  'El mismo formulario sirve para editar un producto.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                EncabezadoPantalla(
+                  titulo: titulo,
+                  miga: titulo,
+                  seccion: 'Surtido',
+                  contexto:
+                      'El mismo formulario sirve para editar un producto.',
+                  onVolver: _volver,
                 ),
-                const SizedBox(height: 20),
-                _formulario(vm, ancho),
+                SizedBox(height: web ? 24 : 16),
+                _seccionDatos(vm, web),
+                const SizedBox(height: 18),
+                _seccionPrecios(vm, web),
                 if (vm.error != null) ...[
                   const SizedBox(height: 16),
                   _Mensaje(texto: vm.error!, esError: true),
@@ -117,19 +120,21 @@ class _ProductoViewState extends State<ProductoView> {
                   _Mensaje(texto: vm.aviso!, esError: false),
                 ],
                 const SizedBox(height: 24),
-                if (ancho)
+                if (web)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      OutlinedButton(
-                        onPressed: _volver,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(120, 56),
+                      SizedBox(
+                        width: 160,
+                        child: BotonSecundario(
+                          texto: 'Cancelar',
+                          alto: 58,
+                          expandido: true,
+                          onPressed: vm.guardando ? null : _volver,
                         ),
-                        child: const Text('Cancelar'),
                       ),
                       const SizedBox(width: 12),
-                      SizedBox(width: 260, child: botonGuardar),
+                      SizedBox(width: 280, child: botonGuardar),
                     ],
                   )
                 else
@@ -142,133 +147,105 @@ class _ProductoViewState extends State<ProductoView> {
     );
   }
 
-  Widget _formulario(ProductoViewModel vm, bool ancho) {
+  Widget _seccionDatos(ProductoViewModel vm, bool web) {
     final habilitado = !vm.guardando;
     final tema = Theme.of(context);
-    final precios = [
-      TextField(
-        key: const Key('producto_precio_venta'),
-        controller: _precioVenta,
-        enabled: habilitado,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: const InputDecoration(
-          labelText: 'Precio de venta',
-          prefixText: r'$ ',
-        ),
-      ),
-      TextField(
-        key: const Key('producto_precio_compra'),
-        controller: _precioCompra,
-        enabled: habilitado,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: const InputDecoration(
-          labelText: 'Costo (opcional)',
-          prefixText: r'$ ',
-          helperText: 'Sin costo, la ganancia sale incompleta.',
-        ),
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          key: const Key('producto_codigo'),
-          controller: _codigo,
-          // El código interno no se edita (DA-48, DA-50, DI-14).
-          enabled: habilitado && vm.esNuevo,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: 'Código interno',
-            helperText: vm.esNuevo ? null : 'El código interno no se cambia',
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          key: const Key('producto_nombre'),
-          controller: _nombre,
-          enabled: habilitado,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(labelText: 'Nombre'),
-        ),
-        const SizedBox(height: 20),
-        Text('Se vende por', style: tema.textTheme.titleSmall),
-        const SizedBox(height: 8),
-        SegmentedButton<UnidadMedida>(
-          showSelectedIcon: false,
-          style: SegmentedButton.styleFrom(minimumSize: const Size(0, 48)),
-          segments: const [
-            ButtonSegment(value: UnidadMedida.unidad, label: Text('Unidad')),
-            ButtonSegment(value: UnidadMedida.kilogramo, label: Text('Kilo')),
-            ButtonSegment(value: UnidadMedida.libra, label: Text('Libra')),
+    final codigo = CampoGip(
+      etiqueta: 'Código interno',
+      controlador: _codigo,
+      campoKey: const Key('producto_codigo'),
+      icono: Icons.tag,
+      // El código interno no se edita (DA-48, DA-50, DI-14).
+      habilitado: habilitado && vm.esNuevo,
+      ayuda: vm.esNuevo ? null : 'El código interno no se cambia',
+      accionTeclado: TextInputAction.next,
+    );
+    final nombre = CampoGip(
+      etiqueta: 'Nombre',
+      controlador: _nombre,
+      campoKey: const Key('producto_nombre'),
+      icono: Icons.label_outline,
+      habilitado: habilitado,
+      mayusculas: TextCapitalization.sentences,
+      accionTeclado: TextInputAction.next,
+    );
+    return SeccionNumerada(
+      numero: 1,
+      titulo: 'Datos del producto',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (web)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: codigo),
+                const SizedBox(width: 16),
+                Expanded(flex: 3, child: nombre),
+              ],
+            )
+          else ...[
+            codigo,
+            const SizedBox(height: 16),
+            nombre,
           ],
-          selected: {_unidad},
-          onSelectionChanged: habilitado
-              ? (seleccion) => setState(() => _unidad = seleccion.single)
-              : null,
-        ),
-        const SizedBox(height: 20),
-        if (ancho)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: precios[0]),
-              const SizedBox(width: 16),
-              Expanded(child: precios[1]),
+          const SizedBox(height: 20),
+          Text('Se vende por', style: tema.textTheme.labelMedium),
+          const SizedBox(height: 8),
+          SegmentedButton<UnidadMedida>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: UnidadMedida.unidad, label: Text('Unidad')),
+              ButtonSegment(value: UnidadMedida.kilogramo, label: Text('Kilo')),
+              ButtonSegment(value: UnidadMedida.libra, label: Text('Libra')),
             ],
-          )
-        else ...[
-          precios[0],
-          const SizedBox(height: 16),
-          precios[1],
+            selected: {_unidad},
+            onSelectionChanged: habilitado
+                ? (seleccion) => setState(() => _unidad = seleccion.single)
+                : null,
+          ),
         ],
-      ],
+      ),
     );
   }
-}
 
-class _Encabezado extends StatelessWidget {
-  const _Encabezado({required this.esNuevo, required this.onVolver});
-
-  final bool esNuevo;
-  final VoidCallback onVolver;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    return Row(
-      children: [
-        IconButton(
-          onPressed: onVolver,
-          tooltip: 'Volver',
-          iconSize: 28,
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          icon: const Icon(Icons.arrow_back),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'SURTIDO',
-                style: tema.textTheme.labelMedium?.copyWith(
-                  color: tema.colorScheme.onSurfaceVariant,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              Semantics(
-                header: true,
-                child: Text(
-                  esNuevo ? 'Producto nuevo' : 'Editar producto',
-                  style: tema.textTheme.headlineLarge,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+  Widget _seccionPrecios(ProductoViewModel vm, bool web) {
+    final habilitado = !vm.guardando;
+    final venta = CampoGip(
+      etiqueta: 'Precio de venta',
+      controlador: _precioVenta,
+      campoKey: const Key('producto_precio_venta'),
+      icono: Icons.sell_outlined,
+      prefijo: r'$ ',
+      habilitado: habilitado,
+      tipoTeclado: const TextInputType.numberWithOptions(decimal: true),
+    );
+    final costo = CampoGip(
+      etiqueta: 'Costo (opcional)',
+      controlador: _precioCompra,
+      campoKey: const Key('producto_precio_compra'),
+      icono: Icons.payments_outlined,
+      prefijo: r'$ ',
+      ayuda: 'Sin costo, la ganancia sale incompleta.',
+      habilitado: habilitado,
+      tipoTeclado: const TextInputType.numberWithOptions(decimal: true),
+    );
+    return SeccionNumerada(
+      numero: 2,
+      titulo: 'Precios',
+      child: web
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: venta),
+                const SizedBox(width: 16),
+                Expanded(child: costo),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [venta, const SizedBox(height: 16), costo],
+            ),
     );
   }
 }

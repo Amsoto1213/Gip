@@ -114,7 +114,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('surtido_registrar_perdida')));
     await tester.pumpAndSettle();
-    expect(find.text('Buscar producto'), findsOneWidget);
+    // En la web también sale en la miga.
+    expect(find.text('Buscar producto'), findsWidgets);
     await tester.enterText(find.byKey(const Key('buscar_texto')), buscar);
     await esperarBase(tester);
     await tester.tap(find.text(nombre));

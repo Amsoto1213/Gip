@@ -106,6 +106,37 @@ abstract final class TemaGip {
               ),
             ),
       ),
+      // Opción única ("Se vende por"): 52 px, radio 14, la elegida en verde
+      // suave con texto verde (las acciones van solo en verde, rediseño).
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(0, 52)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+            ),
+          ),
+          side: const WidgetStatePropertyAll(
+            BorderSide(
+              color: ColoresGip.bordeFuerte,
+              width: FormaGip.grosorBordeCampo,
+            ),
+          ),
+          textStyle: WidgetStatePropertyAll(
+            textos.labelLarge!.copyWith(fontWeight: FontWeight.w700),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? ColoresGip.primarioSuave
+                : ColoresGip.superficie,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? ColoresGip.primario
+                : ColoresGip.texto,
+          ),
+        ),
+      ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(44, 44),
