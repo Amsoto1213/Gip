@@ -16,8 +16,8 @@ import 'package:gip/data/local/tablas/ventas.dart';
 /// `costo_unitario` y `numero_factura`; SALIDA_VENTA, `venta_id`,
 /// `precio_unitario` y `costo_unitario` (el precio de compra del momento,
 /// nulo si no se conocía; DA-61, DI-21); MERMA, `motivo` (VENCIDO, DANADO,
-/// DEVUELTO_PROVEEDOR u OTRO; DI-22). Las de AJUSTE_CONTEO las agrega su caso
-/// de uso (DI-20).
+/// DEVUELTO_PROVEEDOR u OTRO; DI-22); AJUSTE_CONTEO, `cantidad_contada` (lo
+/// que se contó; `cantidad` es la diferencia con el stock, DI-24).
 @DataClassName('FilaMovimientoInventario')
 @TableIndex(name: 'movimientos_inventario_tienda_idx', columns: {#tiendaId})
 @TableIndex(
@@ -39,6 +39,8 @@ class MovimientosInventario extends Table {
   TextColumn get precioUnitario =>
       text().map(const ConversorDecimal()).nullable()();
   TextColumn get motivo => text().nullable()();
+  TextColumn get cantidadContada =>
+      text().map(const ConversorDecimal()).nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

@@ -1807,6 +1807,18 @@ class $MovimientosInventarioTable extends MovimientosInventario
     requiredDuringInsert: false,
   );
   @override
+  late final GeneratedColumnWithTypeConverter<Decimal?, String>
+  cantidadContada =
+      GeneratedColumn<String>(
+        'cantidad_contada',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<Decimal?>(
+        $MovimientosInventarioTable.$convertercantidadContadan,
+      );
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     tiendaId,
@@ -1820,6 +1832,7 @@ class $MovimientosInventarioTable extends MovimientosInventario
     ventaId,
     precioUnitario,
     motivo,
+    cantidadContada,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1961,6 +1974,13 @@ class $MovimientosInventarioTable extends MovimientosInventario
         DriftSqlType.string,
         data['${effectivePrefix}motivo'],
       ),
+      cantidadContada: $MovimientosInventarioTable.$convertercantidadContadan
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}cantidad_contada'],
+            ),
+          ),
     );
   }
 
@@ -1981,6 +2001,10 @@ class $MovimientosInventarioTable extends MovimientosInventario
       const ConversorDecimal();
   static TypeConverter<Decimal?, String?> $converterprecioUnitarion =
       NullAwareTypeConverter.wrap($converterprecioUnitario);
+  static TypeConverter<Decimal, String> $convertercantidadContada =
+      const ConversorDecimal();
+  static TypeConverter<Decimal?, String?> $convertercantidadContadan =
+      NullAwareTypeConverter.wrap($convertercantidadContada);
 }
 
 class FilaMovimientoInventario extends DataClass
@@ -1997,6 +2021,7 @@ class FilaMovimientoInventario extends DataClass
   final String? ventaId;
   final Decimal? precioUnitario;
   final String? motivo;
+  final Decimal? cantidadContada;
   const FilaMovimientoInventario({
     required this.id,
     required this.tiendaId,
@@ -2010,6 +2035,7 @@ class FilaMovimientoInventario extends DataClass
     this.ventaId,
     this.precioUnitario,
     this.motivo,
+    this.cantidadContada,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2052,6 +2078,13 @@ class FilaMovimientoInventario extends DataClass
     if (!nullToAbsent || motivo != null) {
       map['motivo'] = Variable<String>(motivo);
     }
+    if (!nullToAbsent || cantidadContada != null) {
+      map['cantidad_contada'] = Variable<String>(
+        $MovimientosInventarioTable.$convertercantidadContadan.toSql(
+          cantidadContada,
+        ),
+      );
+    }
     return map;
   }
 
@@ -2079,6 +2112,9 @@ class FilaMovimientoInventario extends DataClass
       motivo: motivo == null && nullToAbsent
           ? const Value.absent()
           : Value(motivo),
+      cantidadContada: cantidadContada == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cantidadContada),
     );
   }
 
@@ -2100,6 +2136,7 @@ class FilaMovimientoInventario extends DataClass
       ventaId: serializer.fromJson<String?>(json['ventaId']),
       precioUnitario: serializer.fromJson<Decimal?>(json['precioUnitario']),
       motivo: serializer.fromJson<String?>(json['motivo']),
+      cantidadContada: serializer.fromJson<Decimal?>(json['cantidadContada']),
     );
   }
   @override
@@ -2118,6 +2155,7 @@ class FilaMovimientoInventario extends DataClass
       'ventaId': serializer.toJson<String?>(ventaId),
       'precioUnitario': serializer.toJson<Decimal?>(precioUnitario),
       'motivo': serializer.toJson<String?>(motivo),
+      'cantidadContada': serializer.toJson<Decimal?>(cantidadContada),
     };
   }
 
@@ -2134,6 +2172,7 @@ class FilaMovimientoInventario extends DataClass
     Value<String?> ventaId = const Value.absent(),
     Value<Decimal?> precioUnitario = const Value.absent(),
     Value<String?> motivo = const Value.absent(),
+    Value<Decimal?> cantidadContada = const Value.absent(),
   }) => FilaMovimientoInventario(
     id: id ?? this.id,
     tiendaId: tiendaId ?? this.tiendaId,
@@ -2153,6 +2192,9 @@ class FilaMovimientoInventario extends DataClass
         ? precioUnitario.value
         : this.precioUnitario,
     motivo: motivo.present ? motivo.value : this.motivo,
+    cantidadContada: cantidadContada.present
+        ? cantidadContada.value
+        : this.cantidadContada,
   );
   FilaMovimientoInventario copyWithCompanion(
     MovimientosInventarioCompanion data,
@@ -2176,6 +2218,9 @@ class FilaMovimientoInventario extends DataClass
           ? data.precioUnitario.value
           : this.precioUnitario,
       motivo: data.motivo.present ? data.motivo.value : this.motivo,
+      cantidadContada: data.cantidadContada.present
+          ? data.cantidadContada.value
+          : this.cantidadContada,
     );
   }
 
@@ -2193,7 +2238,8 @@ class FilaMovimientoInventario extends DataClass
           ..write('numeroFactura: $numeroFactura, ')
           ..write('ventaId: $ventaId, ')
           ..write('precioUnitario: $precioUnitario, ')
-          ..write('motivo: $motivo')
+          ..write('motivo: $motivo, ')
+          ..write('cantidadContada: $cantidadContada')
           ..write(')'))
         .toString();
   }
@@ -2212,6 +2258,7 @@ class FilaMovimientoInventario extends DataClass
     ventaId,
     precioUnitario,
     motivo,
+    cantidadContada,
   );
   @override
   bool operator ==(Object other) =>
@@ -2228,7 +2275,8 @@ class FilaMovimientoInventario extends DataClass
           other.numeroFactura == this.numeroFactura &&
           other.ventaId == this.ventaId &&
           other.precioUnitario == this.precioUnitario &&
-          other.motivo == this.motivo);
+          other.motivo == this.motivo &&
+          other.cantidadContada == this.cantidadContada);
 }
 
 class MovimientosInventarioCompanion
@@ -2245,6 +2293,7 @@ class MovimientosInventarioCompanion
   final Value<String?> ventaId;
   final Value<Decimal?> precioUnitario;
   final Value<String?> motivo;
+  final Value<Decimal?> cantidadContada;
   final Value<int> rowid;
   const MovimientosInventarioCompanion({
     this.id = const Value.absent(),
@@ -2259,6 +2308,7 @@ class MovimientosInventarioCompanion
     this.ventaId = const Value.absent(),
     this.precioUnitario = const Value.absent(),
     this.motivo = const Value.absent(),
+    this.cantidadContada = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MovimientosInventarioCompanion.insert({
@@ -2274,6 +2324,7 @@ class MovimientosInventarioCompanion
     this.ventaId = const Value.absent(),
     this.precioUnitario = const Value.absent(),
     this.motivo = const Value.absent(),
+    this.cantidadContada = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tiendaId = Value(tiendaId),
@@ -2295,6 +2346,7 @@ class MovimientosInventarioCompanion
     Expression<String>? ventaId,
     Expression<String>? precioUnitario,
     Expression<String>? motivo,
+    Expression<String>? cantidadContada,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2310,6 +2362,7 @@ class MovimientosInventarioCompanion
       if (ventaId != null) 'venta_id': ventaId,
       if (precioUnitario != null) 'precio_unitario': precioUnitario,
       if (motivo != null) 'motivo': motivo,
+      if (cantidadContada != null) 'cantidad_contada': cantidadContada,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2327,6 +2380,7 @@ class MovimientosInventarioCompanion
     Value<String?>? ventaId,
     Value<Decimal?>? precioUnitario,
     Value<String?>? motivo,
+    Value<Decimal?>? cantidadContada,
     Value<int>? rowid,
   }) {
     return MovimientosInventarioCompanion(
@@ -2342,6 +2396,7 @@ class MovimientosInventarioCompanion
       ventaId: ventaId ?? this.ventaId,
       precioUnitario: precioUnitario ?? this.precioUnitario,
       motivo: motivo ?? this.motivo,
+      cantidadContada: cantidadContada ?? this.cantidadContada,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2397,6 +2452,13 @@ class MovimientosInventarioCompanion
     if (motivo.present) {
       map['motivo'] = Variable<String>(motivo.value);
     }
+    if (cantidadContada.present) {
+      map['cantidad_contada'] = Variable<String>(
+        $MovimientosInventarioTable.$convertercantidadContadan.toSql(
+          cantidadContada.value,
+        ),
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2418,6 +2480,7 @@ class MovimientosInventarioCompanion
           ..write('ventaId: $ventaId, ')
           ..write('precioUnitario: $precioUnitario, ')
           ..write('motivo: $motivo, ')
+          ..write('cantidadContada: $cantidadContada, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5292,6 +5355,7 @@ typedef $$MovimientosInventarioTableCreateCompanionBuilder =
       Value<String?> ventaId,
       Value<Decimal?> precioUnitario,
       Value<String?> motivo,
+      Value<Decimal?> cantidadContada,
       Value<int> rowid,
     });
 typedef $$MovimientosInventarioTableUpdateCompanionBuilder =
@@ -5308,6 +5372,7 @@ typedef $$MovimientosInventarioTableUpdateCompanionBuilder =
       Value<String?> ventaId,
       Value<Decimal?> precioUnitario,
       Value<String?> motivo,
+      Value<Decimal?> cantidadContada,
       Value<int> rowid,
     });
 
@@ -5423,6 +5488,12 @@ class $$MovimientosInventarioTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<Decimal?, Decimal, String>
+  get cantidadContada => $composableBuilder(
+    column: $table.cantidadContada,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   $$ItemsInventarioTableFilterComposer get itemId {
     final $$ItemsInventarioTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -5529,6 +5600,11 @@ class $$MovimientosInventarioTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cantidadContada => $composableBuilder(
+    column: $table.cantidadContada,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ItemsInventarioTableOrderingComposer get itemId {
     final $$ItemsInventarioTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5622,6 +5698,12 @@ class $$MovimientosInventarioTableAnnotationComposer
 
   GeneratedColumn<String> get motivo =>
       $composableBuilder(column: $table.motivo, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal?, String> get cantidadContada =>
+      $composableBuilder(
+        column: $table.cantidadContada,
+        builder: (column) => column,
+      );
 
   $$ItemsInventarioTableAnnotationComposer get itemId {
     final $$ItemsInventarioTableAnnotationComposer composer = $composerBuilder(
@@ -5721,6 +5803,7 @@ class $$MovimientosInventarioTableTableManager
                 Value<String?> ventaId = const Value.absent(),
                 Value<Decimal?> precioUnitario = const Value.absent(),
                 Value<String?> motivo = const Value.absent(),
+                Value<Decimal?> cantidadContada = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MovimientosInventarioCompanion(
                 id: id,
@@ -5735,6 +5818,7 @@ class $$MovimientosInventarioTableTableManager
                 ventaId: ventaId,
                 precioUnitario: precioUnitario,
                 motivo: motivo,
+                cantidadContada: cantidadContada,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5751,6 +5835,7 @@ class $$MovimientosInventarioTableTableManager
                 Value<String?> ventaId = const Value.absent(),
                 Value<Decimal?> precioUnitario = const Value.absent(),
                 Value<String?> motivo = const Value.absent(),
+                Value<Decimal?> cantidadContada = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MovimientosInventarioCompanion.insert(
                 id: id,
@@ -5765,6 +5850,7 @@ class $$MovimientosInventarioTableTableManager
                 ventaId: ventaId,
                 precioUnitario: precioUnitario,
                 motivo: motivo,
+                cantidadContada: cantidadContada,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

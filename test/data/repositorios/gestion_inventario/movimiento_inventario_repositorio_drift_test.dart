@@ -2,6 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/ajuste_conteo.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
@@ -357,6 +358,90 @@ void main() {
 
         await expectLater(
           servicio.registrarEntrada(tienda, aceite, d('24'), d('9400'), null),
+          throwsStateError,
+        );
+
+        expect(await filas(), isEmpty);
+        expect(await cola(), isEmpty);
+        expect(
+          (await items.buscarItem(tienda, aceite))!.getStockActual(),
+          d('8'),
+        );
+      },
+    );
+  });
+  group('conteo físico (CUS-04)', () {
+    ServicioInventario servicioCon(IInventarioRepositorio repositorio) =>
+        ServicioInventario(
+          repositorio,
+          movimientos,
+          d('5'),
+          UnidadTrabajoDrift(base),
+        );
+
+    test('guarda AJUSTE_CONTEO con la diferencia y lo contado', () async {
+      await movimientos.guardar(
+        tienda,
+        AjusteConteo(
+          'a1',
+          item,
+          d('-2.5'),
+          DateTime.utc(2026, 11, 14),
+          d('5.5'),
+        ),
+      );
+
+      final fila = (await filas()).single;
+      expect(
+        (fila.tipo, fila.cantidad, fila.cantidadContada, fila.estado),
+        ('AJUSTE_CONTEO', d('-2.5'), d('5.5'), 'VIGENTE'),
+      );
+      expect(fila.motivo, isNull);
+      expect((await cola()).single.registroId, 'a1');
+    });
+
+    for (final (contada, diferencia) in [
+      ('11', '3'),
+      ('2', '-6'),
+      ('8', '0'),
+    ]) {
+      test('contada $contada: stock igual a lo contado, ajuste $diferencia y '
+          'cola en la misma transacción', () async {
+        final ajuste = await servicioCon(items)
+            .registrarConteo(tienda, aceite, d(contada));
+
+        expect(
+          (await items.buscarItem(tienda, aceite))!.getStockActual(),
+          d(contada),
+        );
+        final fila = (await filas()).single;
+        expect(fila.id, ajuste.getId());
+        expect(
+          (fila.cantidad, fila.cantidadContada),
+          (d(diferencia), d(contada)),
+        );
+        expect((await cola()).map((c) => (c.tabla, c.operacion)), [
+          ('movimientos_inventario', 'INSERTAR'),
+          ('items_inventario', 'ACTUALIZAR'),
+        ]);
+      });
+    }
+
+    test('cantidad negativa no guarda nada', () async {
+      await expectLater(
+        servicioCon(items).registrarConteo(tienda, aceite, d('-1')),
+        throwsA(isA<ExcepcionCantidadContadaNegativa>()),
+      );
+      expect(await filas(), isEmpty);
+      expect(await cola(), isEmpty);
+    });
+
+    test(
+      'si falla el guardado del ítem no queda nada (rollback real)',
+      () async {
+        await expectLater(
+          servicioCon(InventarioQueFallaAlGuardar(items))
+              .registrarConteo(tienda, aceite, d('20')),
           throwsStateError,
         );
 
