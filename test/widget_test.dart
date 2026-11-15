@@ -12,6 +12,7 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_merca
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
@@ -40,6 +41,8 @@ class RegistrarPerdidaFalso extends Mock
 class RegistrarConteoFalso extends Mock implements RegistrarConteoCoordinator {}
 
 class RegistrarVentaFalso extends Mock implements RegistrarVentaCoordinator {}
+
+class RegistrarFiadoFalso extends Mock implements RegistrarFiadoCoordinator {}
 
 const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
 
@@ -72,6 +75,7 @@ void main() {
     registrarPerdida: RegistrarPerdidaFalso(),
     registrarConteo: RegistrarConteoFalso(),
     registrarVenta: RegistrarVentaFalso(),
+    registrarFiado: RegistrarFiadoFalso(),
     generarAlertas: GenerarAlertasFalso(),
     consultarAlertas: ConsultarAlertasFalso(),
   );

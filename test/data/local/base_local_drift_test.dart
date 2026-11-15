@@ -70,6 +70,13 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
+    /// Quita lo que agregó la versión 8 (CUS-07).
+    Future<void> bajarDeLaVersion8(BaseLocalDrift base) async {
+      for (final t in ['fiados', 'clientes']) {
+        await base.customStatement('DROP TABLE $t');
+      }
+    }
+
     /// Quita lo que agregó la versión 7 (CUS-24 y CUS-05).
     Future<void> bajarDeLaVersion7(BaseLocalDrift base) async {
       for (final t in ['alertas_reabastecimiento', 'ventas_perdidas']) {
@@ -89,6 +96,7 @@ void main() {
 
       // Deja la base como estaba en la versión 2 (CUS-18).
       final v2 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion8(v2);
       await bajarDeLaVersion4(v2);
       await v2.customStatement('DROP TABLE movimientos_inventario');
       await bajarDeLaVersion7(v2);
@@ -97,7 +105,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 7);
+      expect(actual.schemaVersion, 8);
       expect(
         await tablas(actual),
         containsAll([
@@ -109,12 +117,14 @@ void main() {
           'ventas',
           'alertas_reabastecimiento',
           'ventas_perdidas',
+          'clientes',
+          'fiados',
         ]),
       );
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 7);
+      expect(version.read<int>('user_version'), 8);
       await actual.close();
     });
 
@@ -124,6 +134,7 @@ void main() {
 
       // Deja la base como estaba en la versión 3 (CUS-01).
       final v3 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion8(v3);
       await bajarDeLaVersion4(v3);
       await v3.customStatement('DROP TABLE movimientos_inventario');
       await v3.customStatement(
@@ -188,6 +199,7 @@ void main() {
           "cantidad, fecha, estado, costo_unitario) VALUES ('e1', 't1', 'i1', "
           "'ENTRADA', '24', '2026-11-14T10:00:00.000Z', 'VIGENTE', '8600')",
         );
+        await bajarDeLaVersion8(v4);
         await bajarDeLaVersion7(v4);
         await v4.customStatement('PRAGMA user_version = 4');
         await v4.close();
@@ -222,6 +234,7 @@ void main() {
         "cantidad, fecha, estado, costo_unitario) VALUES ('e1', 't1', 'i1', "
         "'ENTRADA', '24', '2026-11-14T10:00:00.000Z', 'VIGENTE', '8600')",
       );
+      await bajarDeLaVersion8(v5);
       await bajarDeLaVersion7(v5);
       await v5.customStatement('PRAGMA user_version = 5');
       await v5.close();
@@ -242,6 +255,7 @@ void main() {
       final archivo = File('${carpeta.path}/gip.sqlite');
 
       final v6 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion8(v6);
       await bajarDeLaVersion7(v6);
       await v6.customStatement('PRAGMA user_version = 6');
       expect(await tablas(v6), isNot(contains('alertas_reabastecimiento')));
@@ -259,6 +273,29 @@ void main() {
         ]),
       );
       await v7.close();
+    });
+
+    test('de la versión 7 a la 8 crea clientes y fiados', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v7 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion8(v7);
+      await v7.customStatement('PRAGMA user_version = 7');
+      expect(await tablas(v7), isNot(contains('fiados')));
+      await v7.close();
+
+      final v8 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(
+        await tablas(v8),
+        containsAll([
+          'clientes',
+          'clientes_tienda_nombre_idx',
+          'fiados',
+          'fiados_tienda_idx',
+          'fiados_cliente_idx',
+        ]),
+      );
+      await v8.close();
     });
   });
 }

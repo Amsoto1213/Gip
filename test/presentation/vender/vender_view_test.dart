@@ -112,6 +112,7 @@ void main() {
         registrarPerdida: inventario.registrarPerdida,
         registrarConteo: inventario.registrarConteo,
         registrarVenta: pagos.registrarVenta,
+        registrarFiado: pagos.registrarFiado,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
       ),
