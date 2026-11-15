@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/gestion_inventario/ajuste_conteo.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
@@ -8,6 +9,7 @@ import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
@@ -139,5 +141,80 @@ class MovimientoInventarioRepositorioDrift
       fila.costoUnitario!,
       fila.numeroFactura,
     )..setEstado(EstadoMovimiento.vigente);
+  }
+
+  /// Salidas VIGENTES por venta del ítem con fecha en `[desde, hasta)` (DI-25).
+  /// La tienda sale del ítem, como en [buscarUltimaEntrada]. La venta de cada
+  /// salida trae solo id, fecha y total, sin formas de pago: el consumo no las
+  /// necesita. Hasta CUS-20 no hay ventas anuladas que descartar.
+  @override
+  Future<List<SalidaVenta>> listarSalidas(
+    ItemInventario item,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final v = _base.ventas;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+              useColumns: false,
+            ),
+            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
+          ])
+          ..where(
+            m.itemId.equals(item.getId()) &
+                m.tipo.equals(_tipoSalidaVenta) &
+                m.estado.equals(_estados[EstadoMovimiento.vigente]!) &
+                m.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                m.fecha.isSmallerThanValue(hasta.toUtc()),
+          )
+          ..orderBy([OrderingTerm.desc(m.fecha)]);
+    final resultado = await consulta.get();
+    return [
+      for (final r in resultado)
+        _salida(r.readTable(m), r.readTableOrNull(v), item),
+    ];
+  }
+
+  SalidaVenta _salida(
+    FilaMovimientoInventario fila,
+    FilaVenta? venta,
+    ItemInventario item,
+  ) => SalidaVenta(
+    fila.id,
+    item,
+    fila.cantidad,
+    fila.fecha,
+    Venta(
+      fila.ventaId ?? '',
+      const [],
+      venta?.total ?? Decimal.zero,
+      venta?.fecha ?? fila.fecha,
+    ),
+    fila.precioUnitario ?? Decimal.zero,
+    fila.costoUnitario,
+  );
+
+  /// Fecha del primer movimiento del ítem, de cualquier tipo y estado (DI-25).
+  @override
+  Future<DateTime?> buscarFechaPrimerMovimiento(ItemInventario item) async {
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+              useColumns: false,
+            ),
+          ])
+          ..where(m.itemId.equals(item.getId()))
+          ..orderBy([OrderingTerm.asc(m.fecha)])
+          ..limit(1);
+    return (await consulta.getSingleOrNull())?.readTable(m).fecha;
   }
 }

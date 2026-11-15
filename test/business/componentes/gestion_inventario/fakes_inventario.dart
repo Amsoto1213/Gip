@@ -2,6 +2,7 @@ import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 
@@ -49,5 +50,31 @@ class MovimientoRepositorioFalso
             .toList()
           ..sort((a, b) => b.getFecha().compareTo(a.getFecha()));
     return entradas.firstOrNull;
+  }
+
+  Iterable<MovimientoInventario> _delItem(ItemInventario item) => datos.values
+      .expand((l) => l)
+      .where((m) => m.getItem().getId() == item.getId());
+
+  /// VIGENTES del ítem con fecha en `[desde, hasta)` (DI-25).
+  @override
+  Future<List<SalidaVenta>> listarSalidas(
+    ItemInventario item,
+    DateTime desde,
+    DateTime hasta,
+  ) async => _delItem(item)
+      .whereType<SalidaVenta>()
+      .where(
+        (s) =>
+            s.getEstado() == EstadoMovimiento.vigente &&
+            !s.getFecha().isBefore(desde) &&
+            s.getFecha().isBefore(hasta),
+      )
+      .toList();
+
+  @override
+  Future<DateTime?> buscarFechaPrimerMovimiento(ItemInventario item) async {
+    final fechas = _delItem(item).map((m) => m.getFecha()).toList()..sort();
+    return fechas.firstOrNull;
   }
 }
