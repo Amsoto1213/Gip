@@ -18,6 +18,7 @@ class ResumenMovimiento extends StatelessWidget {
     this.etiquetaAntes = 'Hay ahora',
     this.etiquetaDespues = 'Quedará en',
     this.fraccionQueda,
+    this.conFlecha = true,
     this.detalles = const [],
     this.pie = const [],
   });
@@ -35,6 +36,10 @@ class ResumenMovimiento extends StatelessWidget {
   /// Parte de la existencia que queda (0 a 1). Nula: sin barra (en una
   /// entrada el surtido sube y no se quita nada).
   final double? fraccionQueda;
+
+  /// Flecha entre los dos números. Sin ella, son dos datos sueltos (en una
+  /// entrada: "Llegan" y "Total de la compra", DI-23).
+  final bool conFlecha;
   final List<FilaDetalle> detalles;
   final List<Widget> pie;
 
@@ -76,31 +81,49 @@ class ResumenMovimiento extends StatelessWidget {
                   children: [
                     Text(etiquetaAntes, style: etiqueta),
                     const SizedBox(height: 2),
-                    Text(antes, key: const Key('resumen_antes'), style: numero),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        antes,
+                        key: const Key('resumen_antes'),
+                        style: numero,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward,
-                size: 28,
-                color: extra.navTextoSecundario,
-              ),
+              if (conFlecha)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(
+                    Icons.arrow_forward,
+                    size: 28,
+                    color: extra.navTextoSecundario,
+                  ),
+                )
+              else
+                const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(etiquetaDespues, style: etiqueta),
                     const SizedBox(height: 2),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: esquema.primary,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Text(
-                        despues,
-                        key: const Key('resumen_despues'),
-                        style: numero.copyWith(fontSize: 34, height: 50 / 34),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: esquema.primary,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          despues,
+                          key: const Key('resumen_despues'),
+                          style: numero.copyWith(fontSize: 34, height: 50 / 34),
+                        ),
                       ),
                     ),
                   ],

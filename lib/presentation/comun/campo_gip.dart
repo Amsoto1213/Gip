@@ -132,7 +132,10 @@ class _CampoGipState extends State<CampoGip> {
       ),
     );
     if (widget.etiqueta.isEmpty) return campo;
-    final columna = Column(
+    // La etiqueta se lee justo antes del campo. No se usa MergeSemantics: con
+    // prefijo de pesos o el botón de ojo, fundir los nodos rompe el árbol de
+    // semántica.
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -141,8 +144,5 @@ class _CampoGipState extends State<CampoGip> {
         campo,
       ],
     );
-    // La etiqueta y el campo se leen juntos en el lector de pantalla. Con
-    // contraseña no se juntan, para que el botón de ojo siga siendo un botón.
-    return widget.contrasena ? columna : MergeSemantics(child: columna);
   }
 }

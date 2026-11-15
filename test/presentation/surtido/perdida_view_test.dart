@@ -8,6 +8,7 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
@@ -136,8 +137,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  FilledButton boton(WidgetTester tester) =>
-      tester.widget<FilledButton>(find.byKey(const Key('perdida_registrar')));
+  BotonPrimario boton(WidgetTester tester) =>
+      tester.widget<BotonPrimario>(find.byKey(const Key('perdida_registrar')));
 
   Future<void> registrar(WidgetTester tester) async {
     await tester.ensureVisible(find.byKey(const Key('perdida_registrar')));
@@ -164,14 +165,14 @@ void main() {
     await abrirConProducto(tester, 'leche', 'Leche bolsa 1 L');
 
     expect(find.text('Pérdida o devolución'), findsOneWidget);
-    expect(find.text('Hay 14 · Unidad'), findsOneWidget);
-    expect(find.text('Cambiar'), findsOneWidget);
-    expect(find.text('¿Cuántas salen del surtido?'), findsOneWidget);
-    expect(find.text('Motivo (obligatorio)'), findsOneWidget);
-    expect(
-      find.textContaining('No se puede guardar sin motivo.'),
-      findsOneWidget,
-    );
+    expect(find.text('Hay 14'), findsOneWidget);
+    expect(find.textContaining('· Unidad'), findsOneWidget);
+    expect(find.text('Cambiar producto'), findsOneWidget);
+    expect(find.text('¿CUÁNTAS SALEN DEL SURTIDO?'), findsOneWidget);
+    expect(find.text('Producto y cantidad'), findsOneWidget);
+    expect(find.text('Motivo'), findsOneWidget);
+    expect(find.text('Obligatorio'), findsOneWidget);
+    expect(find.text('Pasó la fecha de vencimiento'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('perdida_cantidad_mas')));
     await tester.tap(find.byKey(const Key('perdida_cantidad_mas')));
@@ -182,11 +183,13 @@ void main() {
     expect(boton(tester).onPressed, isNull);
     await elegirMotivo(tester, 'vencido');
     expect(boton(tester).onPressed, isNotNull);
+    // La nota va bajo los motivos (en el teléfono, al final de la lista).
+    expect(find.textContaining('El motivo queda guardado'), findsOneWidget);
 
     await registrar(tester);
 
     expect(find.text('Pérdida registrada. Nuevo stock: 12'), findsOneWidget);
-    expect(find.text('Hay 12 · Unidad'), findsOneWidget);
+    expect(find.text('Hay 12'), findsOneWidget);
     expect(await stockGuardado(tester), Decimal.parse('12'));
     final fila = (await mermas(tester)).single;
     expect(fila.cantidad, Decimal.parse('-2'));
@@ -238,7 +241,8 @@ void main() {
   testWidgets('por kilo acepta decimales', (tester) async {
     await crear(tester, 'Queso costeño', UnidadMedida.kilogramo, '3');
     await abrirConProducto(tester, 'queso', 'Queso costeño');
-    expect(find.text('Hay 3 · Kilogramo'), findsOneWidget);
+    expect(find.text('Hay 3'), findsOneWidget);
+    expect(find.textContaining('· Kilogramo'), findsOneWidget);
 
     await escribirCantidad(tester, '1,5');
     expect(find.text('1,5 kg'), findsOneWidget);
@@ -249,6 +253,31 @@ void main() {
     final fila = (await mermas(tester)).single;
     expect(fila.cantidad, Decimal.parse('-1.5'));
     expect(fila.motivo, 'DEVUELTO_PROVEEDOR');
+  });
+
+  testWidgets('"Todas (N)" saca toda la existencia', (tester) async {
+    await crear(tester, 'Leche bolsa 1 L', UnidadMedida.unidad, '14');
+    await abrirConProducto(tester, 'leche', 'Leche bolsa 1 L');
+
+    await tester.ensureVisible(find.byKey(const Key('perdida_todas')));
+    await tester.pumpAndSettle();
+    expect(find.text('Todas (14)'), findsOneWidget);
+    await tester.tap(find.text('Todas (14)'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('perdida_cantidad')))
+          .controller!
+          .text,
+      '14',
+    );
+    expect(find.text('0 unidades'), findsOneWidget);
+
+    await elegirMotivo(tester, 'vencido');
+    await registrar(tester);
+    expect(find.text('Pérdida registrada. Nuevo stock: 0'), findsOneWidget);
+    // Sin existencia ya no hay atajo.
+    expect(find.byKey(const Key('perdida_todas')), findsNothing);
   });
 
   for (final tamano in const [Size(360, 640), Size(1280, 800)]) {
@@ -262,15 +291,20 @@ void main() {
         tamano: tamano,
       );
       if (tamano.width >= 720) {
-        expect(find.text('Pérdida o devolución al proveedor'), findsOneWidget);
+        expect(find.text('Registrar pérdida o devolución'), findsOneWidget);
         expect(find.text('Resumen'), findsOneWidget);
-        expect(find.text('Existencia actual'), findsOneWidget);
+        expect(find.text('Hay ahora'), findsOneWidget);
+        expect(find.text('Cancelar'), findsOneWidget);
       }
 
       await escribirCantidad(tester, '2');
       await elegirMotivo(tester, 'devueltoProveedor');
       if (tamano.width >= 720) {
-        expect(find.text('12 und'), findsOneWidget);
+        expect(
+          tester.widget<Text>(find.byKey(const Key('resumen_despues'))).data,
+          '12',
+        );
+        expect(find.byKey(const Key('resumen_barra')), findsOneWidget);
         expect(find.text('− 2 und'), findsOneWidget);
       }
       await registrar(tester);

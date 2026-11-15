@@ -1,18 +1,27 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
+import 'package:gip/presentation/comun/campo_gip.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
+import 'package:gip/presentation/comun/resumen_movimiento.dart';
+import 'package:gip/presentation/comun/seccion_numerada.dart';
 import 'package:gip/presentation/comun/tema/colores_gip.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:gip/presentation/surtido/widgets_movimiento.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// Pantalla Entrada de mercancía (CUS-01, mockups `Entrada` y `wEntrada`).
+/// Pantalla Entrada de mercancía (CUS-01), con el patrón de Pérdida
+/// (`docs/ui/rediseno/README.md`): sección 1 "Producto y cantidad", sección 2
+/// "Costo y factura" y, en la web, el resumen a la derecha.
 ///
 /// El producto se elige en Buscar producto (CUS-06) en modo seleccionar; si la
 /// pantalla abre sin producto, la búsqueda se abre sola. Sin "Hay N · último
-/// costo" ni "Quedará en": el diseño no los entrega (DI-20).
+/// costo" ni "Quedará en": el diseño no los entrega (DI-20); el resumen muestra
+/// lo que llega y el total de la compra (DI-23).
 class EntradaMercanciaView extends StatefulWidget {
   const EntradaMercanciaView({super.key});
 
@@ -79,54 +88,51 @@ class _EntradaMercanciaViewState extends State<EntradaMercanciaView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<EntradaMercanciaViewModel>();
-    final ancho = MediaQuery.sizeOf(context).width >= 720;
-    final margen = ancho ? 32.0 : 20.0;
-    final boton = BotonRegistrarMovimiento(
-      prefijoClave: 'entrada',
+    final web = FormaGip.esWeb(context);
+    final boton = BotonPrimario(
+      key: const Key('entrada_registrar'),
       texto: 'Registrar entrada',
-      registrando: vm.registrando,
+      icono: Icons.check,
+      cargando: vm.registrando,
       onPressed: _registrar,
     );
+    final encabezado = EncabezadoPantalla(
+      titulo: web ? 'Registrar entrada de mercancía' : 'Entrada de mercancía',
+      miga: 'Entrada de mercancía',
+      seccion: 'Surtido',
+      contexto: web
+          ? 'Sume al surtido la mercancía que llegó del proveedor.'
+          : null,
+      onVolver: _volver,
+    );
+    final secciones = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _seccionProducto(vm),
+        const SizedBox(height: 18),
+        _seccionCosto(vm),
+      ],
+    );
 
-    final formulario = _formulario(vm, ancho);
     return Scaffold(
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: ancho ? 1180 : 880),
-            child: ancho
+            constraints: BoxConstraints(maxWidth: web ? 1240 : 880),
+            child: web
                 ? ListView(
-                    padding: EdgeInsets.fromLTRB(margen, 16, margen, 24),
+                    padding: const EdgeInsets.fromLTRB(44, 32, 44, 48),
                     children: [
-                      EncabezadoSurtido(
-                        titulo: 'Entrada de mercancía',
-                        onVolver: _volver,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Card(
-                              margin: EdgeInsets.zero,
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [formulario],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            flex: 2,
-                            child: _Resumen(vm: vm, boton: boton),
-                          ),
-                        ],
+                      encabezado,
+                      const SizedBox(height: 24),
+                      ColumnasMovimiento(
+                        formulario: secciones,
+                        resumen: _Resumen(
+                          vm: vm,
+                          boton: boton,
+                          onCancelar: _volver,
+                        ),
                       ),
                     ],
                   )
@@ -135,19 +141,16 @@ class _EntradaMercanciaViewState extends State<EntradaMercanciaView> {
                     children: [
                       Expanded(
                         child: ListView(
-                          padding: EdgeInsets.fromLTRB(margen, 16, margen, 24),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                           children: [
-                            EncabezadoSurtido(
-                              titulo: 'Entrada de mercancía',
-                              onVolver: _volver,
-                            ),
+                            encabezado,
                             const SizedBox(height: 16),
-                            formulario,
+                            secciones,
                           ],
                         ),
                       ),
                       BarraInferiorMovimiento(
-                        margen: margen,
+                        margen: 16,
                         hijos: [
                           MensajesMovimiento(error: vm.error, aviso: vm.aviso),
                           FilaResumen(
@@ -167,95 +170,92 @@ class _EntradaMercanciaViewState extends State<EntradaMercanciaView> {
     );
   }
 
-  Widget _formulario(EntradaMercanciaViewModel vm, bool ancho) {
-    final tema = Theme.of(context);
+  Widget _seccionProducto(EntradaMercanciaViewModel vm) {
     final habilitado = !vm.registrando;
-    final etiqueta = tema.textTheme.titleSmall?.copyWith(
-      color: tema.colorScheme.onSurfaceVariant,
-    );
-
-    final cantidad = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          ancho ? 'Unidades que llegaron' : '¿Cuántas unidades llegaron?',
-          style: etiqueta,
-        ),
-        const SizedBox(height: 8),
-        SelectorCantidad(
+    final producto = vm.producto;
+    return SeccionNumerada(
+      numero: 1,
+      titulo: 'Producto y cantidad',
+      padding: EdgeInsets.zero,
+      child: PanelesProductoCantidad(
+        producto: PanelProducto(
           prefijoClave: 'entrada',
-          controlador: _cantidad,
-          habilitado: habilitado,
-          onCambio: vm.cambiarCantidad,
-          onSumar: _sumar,
-        ),
-      ],
-    );
-    final costo = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text('Costo por unidad', style: etiqueta),
-        const SizedBox(height: 8),
-        TextField(
-          key: const Key('entrada_costo'),
-          controller: _costo,
-          enabled: habilitado,
-          onChanged: vm.cambiarCosto,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          style: tema.textTheme.titleLarge,
-          decoration: const InputDecoration(prefixText: r'$ ', hintText: '0'),
-        ),
-      ],
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (ancho) ...[
-          Text('Producto', style: etiqueta),
-          const SizedBox(height: 8),
-        ],
-        TarjetaProductoMovimiento(
-          prefijoClave: 'entrada',
-          producto: vm.producto,
-          detalle: 'Código ${vm.producto?.getCodigo()}',
+          producto: producto,
           textoSinProducto: '¿Qué producto llegó?',
           habilitado: habilitado,
           onElegir: _elegirProducto,
         ),
-        const SizedBox(height: 20),
-        if (ancho)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: cantidad),
-              const SizedBox(width: 16),
-              Expanded(child: costo),
-            ],
-          )
-        else ...[
-          cantidad,
-          const SizedBox(height: 20),
-          costo,
-        ],
-        if (vm.costoDifiere) ...[
-          const SizedBox(height: 16),
-          const _AdvertenciaCosto(),
-        ],
-        const SizedBox(height: 20),
-        Text(
-          ancho ? 'N.º de factura (opcional)' : 'N.º de factura (si la trae)',
-          style: etiqueta,
+        cantidad: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const EtiquetaPanel('¿Cuántas unidades llegaron?'),
+            const SizedBox(height: 12),
+            SelectorCantidad(
+              prefijoClave: 'entrada',
+              controlador: _cantidad,
+              habilitado: habilitado,
+              unidad: producto == null
+                  ? null
+                  : unidadCorta(producto.getUnidadMedida()),
+              onCambio: vm.cambiarCantidad,
+              onSumar: _sumar,
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        TextField(
-          key: const Key('entrada_factura'),
-          controller: _factura,
-          enabled: habilitado,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(hintText: 'Ej.: FV-10231'),
-        ),
-      ],
+      ),
+    );
+  }
+
+  Widget _seccionCosto(EntradaMercanciaViewModel vm) {
+    final habilitado = !vm.registrando;
+    final costo = CampoGip(
+      etiqueta: 'Costo por unidad',
+      controlador: _costo,
+      campoKey: const Key('entrada_costo'),
+      icono: Icons.payments_outlined,
+      prefijo: r'$ ',
+      pista: '0',
+      habilitado: habilitado,
+      tipoTeclado: const TextInputType.numberWithOptions(decimal: true),
+      accionTeclado: TextInputAction.next,
+      onChanged: vm.cambiarCosto,
+    );
+    final factura = CampoGip(
+      etiqueta: 'N.º de factura (opcional)',
+      controlador: _factura,
+      campoKey: const Key('entrada_factura'),
+      icono: Icons.receipt_long_outlined,
+      pista: 'Ej.: FV-10231',
+      habilitado: habilitado,
+      accionTeclado: TextInputAction.done,
+    );
+    return SeccionNumerada(
+      numero: 2,
+      titulo: 'Costo y factura',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LayoutBuilder(
+            builder: (context, restricciones) => restricciones.maxWidth >= 520
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: costo),
+                      const SizedBox(width: 16),
+                      Expanded(child: factura),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [costo, const SizedBox(height: 16), factura],
+                  ),
+          ),
+          if (vm.costoDifiere) ...[
+            const SizedBox(height: 16),
+            const _AdvertenciaCosto(),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -312,46 +312,55 @@ String _total(EntradaMercanciaViewModel vm) {
   return total == null ? r'$ —' : '\$ ${mostrarPrecio(total)}';
 }
 
-/// Columna derecha en escritorio (`wEntrada`).
+/// Columna derecha en la web: lo que llega y el total de la compra (sin barra:
+/// en una entrada el surtido sube).
 class _Resumen extends StatelessWidget {
-  const _Resumen({required this.vm, required this.boton});
+  const _Resumen({
+    required this.vm,
+    required this.boton,
+    required this.onCancelar,
+  });
 
   final EntradaMercanciaViewModel vm;
   final Widget boton;
+  final VoidCallback onCancelar;
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final unidad = vm.producto == null
+    final producto = vm.producto;
+    final unidad = producto == null
         ? ''
-        : ' ${unidadCorta(vm.producto!.getUnidadMedida())}';
+        : ' ${unidadCorta(producto.getUnidadMedida())}';
     final cantidad = vm.cantidad;
     final costo = vm.costo;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Resumen', style: tema.textTheme.titleLarge),
-            const SizedBox(height: 12),
-            FilaResumen(
-              'Llegan',
-              cantidad == null ? '—' : '+ ${mostrarCantidad(cantidad)}$unidad',
-            ),
-            FilaResumen(
-              'Costo por unidad',
-              costo == null ? r'$ —' : '\$ ${mostrarPrecio(costo)}',
-            ),
-            const Divider(),
-            FilaResumen('Total de la compra', _total(vm), destacada: true),
-            const SizedBox(height: 16),
-            MensajesMovimiento(error: vm.error, aviso: vm.aviso),
-            boton,
-          ],
+    return ResumenMovimiento(
+      etiquetaAntes: 'Llegan',
+      antes: cantidad == null ? '—' : '+ ${mostrarCantidad(cantidad)}',
+      etiquetaDespues: 'Total de la compra',
+      despues: _total(vm),
+      conFlecha: false,
+      detalles: [
+        FilaDetalle('Producto', producto?.getNombre() ?? '—'),
+        FilaDetalle(
+          'Llegan',
+          cantidad == null ? '—' : '+ ${mostrarCantidad(cantidad)}$unidad',
         ),
-      ),
+        FilaDetalle(
+          'Costo por unidad',
+          costo == null ? r'$ —' : '\$ ${mostrarPrecio(costo)}',
+        ),
+      ],
+      pie: [
+        MensajesMovimiento(error: vm.error, aviso: vm.aviso),
+        boton,
+        const SizedBox(height: 4),
+        BotonSecundario(
+          texto: 'Cancelar',
+          sinBorde: true,
+          expandido: true,
+          onPressed: vm.registrando ? null : onCancelar,
+        ),
+      ],
     );
   }
 }
