@@ -13,6 +13,7 @@ import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
+import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 
 /// [IMovimientoInventarioRepositorio] sobre la base local (drift), en la tabla
 /// única `movimientos_inventario` con columna `tipo` (DI-03). Los movimientos
@@ -177,6 +178,54 @@ class MovimientoInventarioRepositorioDrift
     return [
       for (final r in resultado)
         _salida(r.readTable(m), r.readTableOrNull(v), item),
+    ];
+  }
+
+  /// Salidas VIGENTES por venta de la tienda con fecha en `[desde, hasta)`
+  /// (CUS-09, DI-28). Cada ítem y producto se arma una sola vez y lo comparten
+  /// las salidas del mismo ítem.
+  @override
+  Future<List<SalidaVenta>> listarSalidasPorTienda(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final p = _base.productos;
+    final v = _base.ventas;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+            ),
+            innerJoin(p, p.id.equalsExp(i.productoId)),
+            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
+          ])
+          ..where(
+            m.tiendaId.equals(tienda.getId()) &
+                m.tipo.equals(_tipoSalidaVenta) &
+                m.estado.equals(_estados[EstadoMovimiento.vigente]!) &
+                m.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                m.fecha.isSmallerThanValue(hasta.toUtc()),
+          )
+          ..orderBy([OrderingTerm.asc(m.fecha)]);
+    final items = <String, ItemInventario>{};
+    return [
+      for (final r in await consulta.get())
+        _salida(
+          r.readTable(m),
+          r.readTableOrNull(v),
+          items.putIfAbsent(r.readTable(i).id, () {
+            final fila = r.readTable(i);
+            return ItemInventario(
+              fila.id,
+              MapeoProducto.aEntidad(r.readTable(p)),
+              fila.stockActual,
+            );
+          }),
+        ),
     ];
   }
 

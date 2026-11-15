@@ -72,6 +72,22 @@ class MovimientoRepositorioFalso
       )
       .toList();
 
+  /// VIGENTES de la tienda con fecha en `[desde, hasta)` (CUS-09, DI-28).
+  @override
+  Future<List<SalidaVenta>> listarSalidasPorTienda(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async => de(tienda)
+      .whereType<SalidaVenta>()
+      .where(
+        (s) =>
+            s.getEstado() == EstadoMovimiento.vigente &&
+            !s.getFecha().isBefore(desde) &&
+            s.getFecha().isBefore(hasta),
+      )
+      .toList();
+
   @override
   Future<DateTime?> buscarFechaPrimerMovimiento(ItemInventario item) async {
     final fechas = _delItem(item).map((m) => m.getFecha()).toList()..sort();
