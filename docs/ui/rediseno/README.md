@@ -149,5 +149,11 @@ ignora; lo que importa son los estilos y la estructura.
   - Las advertencias van en rojo, no en amarillo. Sin "Urgente"/"Pronto", hora del cálculo, "Datos de N
     días", barra de "Alcanza para" ni "Armar lista de pedido". Sin alertas: "No hay productos por agotarse".
     Al empleado: TarjetaAviso "Esta consulta es solo para el propietario".
+- **Fiar** (mockups `mFiar` y `wFiar`, CUS-07, DI-26): en el móvil, pantalla hija de Cobrar con
+  EncabezadoPantalla ("Cobrar" / "Fiar parte de la venta") y el botón fijo abajo; en la web, diálogo sobre
+  Cobrar (radio 22, ancho 720) con la X, "Cancelar" y "Agregar fiado al pago". Tres TarjetaCifra (Total,
+  Ya pagó, Falta en rojo), BarraBusqueda como campo, la lista de clientes con OpcionRadio ("debe $ N" en
+  rojo o "$ 0") y "+ Cliente nuevo (nombre y teléfono)", que abre ahí mismo los dos CampoGip. Debajo, el
+  monto con su ayuda y la frase "X quedará debiendo $ N en total.". Las advertencias van en rojo.
 - **Producto, Buscar producto, Vender y Cobrar:** aplicar los mismos componentes (tarjetas, campos, botones,
   chips), sin cambiar su funcionamiento.
