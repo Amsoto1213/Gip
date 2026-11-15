@@ -4,7 +4,7 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_producto_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
-import 'package:gip/data/helpers/normalizar_texto.dart';
+import 'package:gip/transversal/texto/normalizar_texto.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 

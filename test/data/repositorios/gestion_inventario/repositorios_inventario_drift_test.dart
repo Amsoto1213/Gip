@@ -5,7 +5,7 @@ import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/data/helpers/normalizar_texto.dart';
+import 'package:gip/transversal/texto/normalizar_texto.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/inventario_repositorio_drift.dart';

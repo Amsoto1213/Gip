@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/data/helpers/normalizar_texto.dart';
+import 'package:gip/transversal/texto/normalizar_texto.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 
 /// Conversión entre la fila de `productos` y la entidad [Producto].
