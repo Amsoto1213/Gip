@@ -5,6 +5,10 @@ import 'package:uuid/uuid.dart';
 abstract final class OperacionCola {
   static const insertar = 'INSERTAR';
   static const actualizar = 'ACTUALIZAR';
+
+  /// Borrado de una fila; hoy solo lo usa el reemplazo de las alertas del día
+  /// (DI-25). Los registros de solo agregar nunca se borran (RNF-15).
+  static const eliminar = 'ELIMINAR';
 }
 
 /// Anota una escritura local en `cola_pendientes` para subirla a Supabase.
