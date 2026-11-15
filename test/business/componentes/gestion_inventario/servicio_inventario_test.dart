@@ -476,11 +476,17 @@ void main() {
 
   group('calcularDiferencia (IE-04)', () {
     test('positiva: se contó más de lo que dice el sistema', () async {
-      expect(await servicio.calcularDiferencia(tienda, aceite, d('10')), d('2'));
+      expect(
+        await servicio.calcularDiferencia(tienda, aceite, d('10')),
+        d('2'),
+      );
     });
 
     test('negativa: se contó menos', () async {
-      expect(await servicio.calcularDiferencia(tienda, aceite, d('5')), d('-3'));
+      expect(
+        await servicio.calcularDiferencia(tienda, aceite, d('5')),
+        d('-3'),
+      );
     });
 
     test('cero: el conteo cuadra', () async {
@@ -530,7 +536,11 @@ void main() {
       ('0', '-8'),
     ]) {
       test('contada $contada: el stock queda igual a lo contado', () async {
-        final ajuste = await servicio.registrarConteo(tienda, aceite, d(contada));
+        final ajuste = await servicio.registrarConteo(
+          tienda,
+          aceite,
+          d(contada),
+        );
         expect(await stockGuardado(), d(contada));
         expect(ajuste.getItem().getStockActual(), d(contada));
         expect(ajuste.getCantidad(), d(diferencia));
