@@ -86,6 +86,13 @@ ignora; lo que importa son los estilos y la estructura.
 16. **NotaInfo**: nota que explica cómo leer un dato (mockups `Alertas` y `wAlertas`): fondo `info`,
     ícono de información y texto 15 px en `infoTexto`, con una parte destacada en negrilla al comienzo
     ("**Provisional =** lleva menos de 30 días…"). No es una acción ni un error.
+17. **TarjetaCifra**: cifra pequeña en una tarjeta blanca (radio 18) con etiqueta 14 px, valor 19 px con
+    cifras tabulares y detalle (mockups `mFiar` y `wFiar`: "Total", "Ya pagó", "Falta"). Lo que falta o
+    se resta va en `errorTexto`.
+18. **OpcionRadio**: fila de una lista de opción única (los clientes al fiar): círculo de radio, título en
+    negrilla, subtítulo y un valor a la derecha (en `errorTexto` si es una deuda). Elegida: fondo
+    `primarioSuave` y radio `primario`. Sin borde propio: va dentro de una TarjetaGip con separadores;
+    56 px de alto mínimo.
 
 ## Pantallas
 
