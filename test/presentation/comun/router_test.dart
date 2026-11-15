@@ -12,6 +12,8 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_merca
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
+import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
@@ -49,6 +51,11 @@ class RegistrarVentaFalso extends Mock implements RegistrarVentaCoordinator {}
 
 class RegistrarFiadoFalso extends Mock implements RegistrarFiadoCoordinator {}
 
+class RegistrarAbonoFalso extends Mock implements RegistrarAbonoCoordinator {}
+
+class ConsultarClienteFalso extends Mock
+    implements ConsultarClienteCoordinator {}
+
 const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
 
 void main() {
@@ -56,6 +63,8 @@ void main() {
     usuario: Administrador('2222', 'Carmen Ruiz', '1000000001'),
     tienda: Tienda('1111', 'T001', 'Granero El Porvenir', 'Arjona, Bolívar'),
   );
+
+  setUpAll(() => registerFallbackValue(carmen.tienda));
 
   /// Abre la app con sesión guardada en una pantalla de [ancho] x [alto].
   Future<void> abrir(WidgetTester tester, double ancho, double alto) async {
@@ -68,6 +77,9 @@ void main() {
     when(() => autenticacion.haySesionGuardada()).thenReturn(true);
     when(() => sesionLocal.leer()).thenAnswer((_) async => carmen);
 
+    final clientes = ConsultarClienteFalso();
+    when(() => clientes.buscarClientes(any(), any()))
+        .thenAnswer((_) async => []);
     await tester.pumpWidget(
       GipApp(
         iniciarSesion: IniciarSesionCoordinator(
@@ -80,6 +92,8 @@ void main() {
         registrarConteo: RegistrarConteoFalso(),
         registrarVenta: RegistrarVentaFalso(),
         registrarFiado: RegistrarFiadoFalso(),
+        registrarAbono: RegistrarAbonoFalso(),
+        consultarCliente: clientes,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasVacio(),
       ),
