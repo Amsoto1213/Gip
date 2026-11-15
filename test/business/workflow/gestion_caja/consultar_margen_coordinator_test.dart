@@ -16,6 +16,9 @@ import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.
 import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../componentes/gestion_caja/fakes_caja.dart';
+import '../../componentes/pagos/fakes_pagos.dart';
+
 class MovimientosFalsos extends Mock
     implements IMovimientoInventarioRepositorio {}
 
@@ -41,7 +44,13 @@ void main() {
   setUp(() {
     movimientos = MovimientosFalsos();
     coordinador = ConsultarMargenCoordinator(
-      ServicioReportes(movimientos),
+      ServicioReportes(
+        VentaRepositorioFalso(),
+        movimientos,
+        CajaRepositorioFalso(),
+        FiadoRepositorioFalso(),
+        EstadoSincronizacionFalso(),
+      ),
       ServicioAcceso(AutenticacionFalsa(), SesionLocalFalsa()),
     );
   });

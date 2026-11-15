@@ -34,6 +34,17 @@ class VentaRepositorioFalso implements IVentaRepositorio, Restaurable {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     de(tienda).add(venta);
   }
+
+  @override
+  Future<List<Venta>> listarPorPeriodo(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async => de(tienda)
+      .where(
+        (v) => !v.getFecha().isBefore(desde) && v.getFecha().isBefore(hasta),
+      )
+      .toList();
 }
 
 /// Clientes en memoria, por tienda. Busca como la base: contiene el texto,
@@ -103,4 +114,16 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     de(tienda).add(fiado);
   }
+
+  /// Los abonos no guardan su tienda: se filtran solo por fecha.
+  @override
+  Future<List<Abono>> listarAbonos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async => abonos
+      .where(
+        (a) => !a.getFecha().isBefore(desde) && a.getFecha().isBefore(hasta),
+      )
+      .toList();
 }

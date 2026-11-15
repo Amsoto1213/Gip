@@ -228,6 +228,42 @@ void main() {
     expect(tester.getSize(find.byType(IconButton)), const Size.square(48));
   });
 
+  testWidgets('BotonIconoSecundario: cuadrado de 48 px, se desactiva', (
+    tester,
+  ) async {
+    var tocado = 0;
+    await montar(
+      tester,
+      Align(
+        alignment: Alignment.topLeft,
+        child: BotonIconoSecundario(
+          icono: Icons.chevron_left,
+          tooltip: 'Día anterior',
+          onPressed: () => tocado++,
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Día anterior'));
+    expect(tocado, 1);
+    expect(tester.getSize(find.byType(IconButton)), const Size.square(48));
+
+    await montar(
+      tester,
+      const Align(
+        alignment: Alignment.topLeft,
+        child: BotonIconoSecundario(
+          icono: Icons.chevron_right,
+          tooltip: 'Día siguiente',
+          onPressed: null,
+        ),
+      ),
+    );
+    expect(
+      tester.widget<IconButton>(find.byType(IconButton)).onPressed,
+      isNull,
+    );
+  });
+
   group('CampoGip', () {
     testWidgets('muestra la etiqueta, escribe y marca el foco con el halo', (
       tester,

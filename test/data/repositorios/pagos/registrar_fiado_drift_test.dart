@@ -45,6 +45,13 @@ class FiadoQueFallaDespues implements IFiadoRepositorio {
   @override
   Future<void> registrarAbono(Tienda tienda, Fiado fiado, Abono abono) =>
       _real.registrarAbono(tienda, fiado, abono);
+
+  @override
+  Future<List<Abono>> listarAbonos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) => _real.listarAbonos(tienda, desde, hasta);
 }
 
 /// CUS-07 de punta a punta sobre la base local: el fiado se guarda con la

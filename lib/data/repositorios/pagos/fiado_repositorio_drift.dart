@@ -89,4 +89,25 @@ class FiadoRepositorioDrift implements IFiadoRepositorio {
           operacion: OperacionCola.actualizar,
         );
       });
+
+  /// Abonos de la tienda con fecha en `[desde, hasta)`, con los anulados
+  /// (CUS-10, DI-29). Toda consulta filtra por `tienda_id`.
+  @override
+  Future<List<Abono>> listarAbonos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final filas =
+        await (_base.select(_base.abonos)
+              ..where(
+                (a) =>
+                    a.tiendaId.equals(tienda.getId()) &
+                    a.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                    a.fecha.isSmallerThanValue(hasta.toUtc()),
+              )
+              ..orderBy([(a) => OrderingTerm.asc(a.fecha)]))
+            .get();
+    return filas.map(MapeoFiado.abonoAEntidad).toList();
+  }
 }

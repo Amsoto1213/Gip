@@ -2,6 +2,7 @@ import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_caja/i_caja_repositorio.dart';
+import 'package:gip/business/interfaces/info_tienda/i_estado_sincronizacion.dart';
 
 import '../gestion_inventario/fakes_catalogo.dart';
 
@@ -77,4 +78,23 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
       movimiento,
     ));
   }
+
+  @override
+  Future<List<MovimientoCaja>> listarMovimientos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async => movimientosDe(tienda)
+      .where(
+        (m) => !m.getFecha().isBefore(desde) && m.getFecha().isBefore(hasta),
+      )
+      .toList();
+}
+
+/// Estado de sincronización fijo: [pendientes] dice si quedan cambios sin subir.
+class EstadoSincronizacionFalso implements IEstadoSincronizacion {
+  bool pendientes = false;
+
+  @override
+  Future<bool> hayPendientes(Tienda tienda) async => pendientes;
 }

@@ -54,6 +54,13 @@ class CajaQueFallaDespues implements ICajaRepositorio {
     await _real.registrarMovimiento(tienda, caja, movimiento);
     throw StateError('falla del disco');
   }
+
+  @override
+  Future<List<MovimientoCaja>> listarMovimientos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) => _real.listarMovimientos(tienda, desde, hasta);
 }
 
 /// CUS-08 de punta a punta sobre la base local: el abono, el nuevo saldo del

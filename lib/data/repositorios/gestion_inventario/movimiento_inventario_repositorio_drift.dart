@@ -248,6 +248,54 @@ class MovimientoInventarioRepositorioDrift
     fila.costoUnitario,
   );
 
+  /// Entradas VIGENTES de la tienda con fecha en `[desde, hasta)` (CUS-10,
+  /// DI-29). Cada ítem y producto se arma una sola vez.
+  @override
+  Future<List<EntradaMercancia>> listarEntradasPorTienda(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final p = _base.productos;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+            ),
+            innerJoin(p, p.id.equalsExp(i.productoId)),
+          ])
+          ..where(
+            m.tiendaId.equals(tienda.getId()) &
+                m.tipo.equals(_tipoEntrada) &
+                m.estado.equals(_estados[EstadoMovimiento.vigente]!) &
+                m.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                m.fecha.isSmallerThanValue(hasta.toUtc()),
+          )
+          ..orderBy([OrderingTerm.asc(m.fecha)]);
+    final items = <String, ItemInventario>{};
+    return [
+      for (final r in await consulta.get())
+        EntradaMercancia(
+          r.readTable(m).id,
+          items.putIfAbsent(r.readTable(i).id, () {
+            final fila = r.readTable(i);
+            return ItemInventario(
+              fila.id,
+              MapeoProducto.aEntidad(r.readTable(p)),
+              fila.stockActual,
+            );
+          }),
+          r.readTable(m).cantidad,
+          r.readTable(m).fecha,
+          r.readTable(m).costoUnitario ?? Decimal.zero,
+          r.readTable(m).numeroFactura,
+        )..setEstado(EstadoMovimiento.vigente),
+    ];
+  }
+
   /// Fecha del primer movimiento del ítem, de cualquier tipo y estado (DI-25).
   @override
   Future<DateTime?> buscarFechaPrimerMovimiento(ItemInventario item) async {

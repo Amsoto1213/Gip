@@ -1,5 +1,7 @@
+import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
@@ -8,6 +10,7 @@ import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/pagos/i_venta_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
+import 'package:gip/data/repositorios/pagos/mapeo_fiado.dart';
 
 /// [IVentaRepositorio] sobre la base local (drift). La venta y sus formas de
 /// pago solo se agregan (RNF-15); las formas van en la tabla única
@@ -43,6 +46,89 @@ class VentaRepositorioDrift implements IVentaRepositorio {
       }
     },
   );
+
+  /// Ventas de la tienda con fecha en `[desde, hasta)` con sus formas de pago
+  /// (CUS-10, DI-29). El fiado se arma con su cliente, sin abonos: el reporte
+  /// solo necesita el monto que cubre.
+  @override
+  Future<List<Venta>> listarPorPeriodo(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final filas =
+        await (_base.select(_base.ventas)
+              ..where(
+                (v) =>
+                    v.tiendaId.equals(tienda.getId()) &
+                    v.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                    v.fecha.isSmallerThanValue(hasta.toUtc()),
+              )
+              ..orderBy([(v) => OrderingTerm.asc(v.fecha)]))
+            .get();
+    if (filas.isEmpty) return const [];
+    final ids = filas.map((v) => v.id).toList();
+    final formas =
+        await (_base.select(_base.formasPago)..where(
+              (f) => f.tiendaId.equals(tienda.getId()) & f.ventaId.isIn(ids),
+            ))
+            .get();
+    final fiados = await _fiadosDe(tienda, formas);
+    final porVenta = <String, List<FormaPago>>{};
+    for (final forma in formas) {
+      final entidad = _formaDeFila(forma, fiados);
+      if (entidad != null) {
+        porVenta.putIfAbsent(forma.ventaId, () => []).add(entidad);
+      }
+    }
+    return [
+      for (final v in filas)
+        Venta(v.id, porVenta[v.id] ?? const [], v.total, v.fecha),
+    ];
+  }
+
+  Future<Map<String, Fiado>> _fiadosDe(
+    Tienda tienda,
+    List<FilaFormaPago> formas,
+  ) async {
+    final ids = [
+      for (final f in formas)
+        if (f.tipo == 'FIADO') f.id,
+    ];
+    if (ids.isEmpty) return const {};
+    final f = _base.fiados;
+    final c = _base.clientes;
+    final consulta = _base.select(f).join([
+      innerJoin(c, c.id.equalsExp(f.clienteId)),
+    ])..where(f.tiendaId.equals(tienda.getId()) & f.id.isIn(ids));
+    return {
+      for (final r in await consulta.get())
+        r.readTable(f).id: MapeoFiado.aEntidad(
+          r.readTable(f),
+          Cliente(
+            r.readTable(c).id,
+            r.readTable(c).nombre,
+            r.readTable(c).telefono,
+          ),
+        ),
+    };
+  }
+
+  FormaPago? _formaDeFila(FilaFormaPago fila, Map<String, Fiado> fiados) =>
+      switch (fila.tipo) {
+        'CONTADO' => PagoContado(
+          fila.id,
+          fila.montoRecibido ?? Decimal.zero,
+          fila.cambio ?? Decimal.zero,
+        ),
+        'NEQUI' => PagoNequi(
+          fila.id,
+          fila.monto ?? Decimal.zero,
+          fila.referencia,
+        ),
+        'FIADO' => fiados[fila.id],
+        _ => null,
+      };
 
   FormasPagoCompanion _fila(Tienda tienda, Venta venta, FormaPago forma) =>
       switch (forma) {

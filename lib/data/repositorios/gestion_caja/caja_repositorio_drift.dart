@@ -134,4 +134,37 @@ class CajaRepositorioDrift implements ICajaRepositorio {
       operacion: OperacionCola.insertar,
     );
   });
+
+  /// Movimientos de todas las cajas de la tienda con fecha en `[desde, hasta)`
+  /// (CUS-10, DI-29).
+  @override
+  Future<List<MovimientoCaja>> listarMovimientos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final filas =
+        await (_base.select(_base.movimientosCaja)
+              ..where(
+                (m) =>
+                    m.tiendaId.equals(tienda.getId()) &
+                    m.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                    m.fecha.isSmallerThanValue(hasta.toUtc()),
+              )
+              ..orderBy([(m) => OrderingTerm.asc(m.fecha)]))
+            .get();
+    final tipos = _tipos.map((k, v) => MapEntry(v, k));
+    final clasificaciones = _clasificaciones.map((k, v) => MapEntry(v, k));
+    return [
+      for (final m in filas)
+        MovimientoCaja(
+          m.id,
+          m.valor,
+          m.descripcion,
+          clasificaciones[m.clasificacion]!,
+          tipos[m.tipo]!,
+          m.fecha,
+        ),
+    ];
+  }
 }
