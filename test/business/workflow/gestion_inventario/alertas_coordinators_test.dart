@@ -16,6 +16,7 @@ import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
 import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -146,4 +147,31 @@ void main() {
       );
     });
   });
+
+  test(
+    'RegistrarVentaPerdidaCoordinator guarda y devuelve la venta perdida',
+    () async {
+      final servicio = ServicioAlertas(
+        InventarioRepositorioFalso(),
+        movimientos,
+        perdidas,
+        alertas,
+        ConsumoPromedioSimple(),
+        7,
+      );
+      final coco = Producto(
+        'p1',
+        'C1',
+        'Coco',
+        UnidadMedida.unidad,
+        null,
+        d('3000'),
+      );
+
+      final venta = await RegistrarVentaPerdidaCoordinator(servicio)
+          .registrarVentaPerdida(tienda, coco);
+
+      expect(perdidas.datos[tienda.getId()], contains(venta));
+    },
+  );
 }

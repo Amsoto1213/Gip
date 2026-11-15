@@ -4,6 +4,7 @@ import 'package:decimal/decimal.dart';
 import 'package:gip/business/componentes/gestion_inventario/estrategia_consumo.dart';
 import 'package:gip/business/entidades/gestion_inventario/alerta_reabastecimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/venta_perdida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_alerta_repositorio.dart';
@@ -16,7 +17,7 @@ import 'package:uuid/uuid.dart';
 /// alertas de su tienda una vez al día dentro de la app (CUS-24; RF-05, RD-11,
 /// DA-35) y las entrega a la consulta del Propietario (CUS-05).
 ///
-/// `registrarVentaPerdida` llega con CUS-13 (DI-25).
+/// `registrarVentaPerdida` es de CUS-13 (DI-30).
 class ServicioAlertas {
   ServicioAlertas(
     this._items,
@@ -126,6 +127,22 @@ class ServicioAlertas {
     DateTime desde,
     DateTime hasta,
   ) => _ventasPerdidas.buscarPorPeriodo(tienda, desde, hasta);
+
+  /// CUS-13: crea `VentaPerdida(id, producto, ahora)` (fecha en UTC), la
+  /// guarda con ventasPerdidas.guardar y la devuelve. Solo agrega: el número de
+  /// ventas perdidas sale de contar registros (DA-48, DA-50).
+  Future<VentaPerdida> registrarVentaPerdida(
+    Tienda tienda,
+    Producto producto,
+  ) async {
+    final venta = VentaPerdida(
+      const Uuid().v4(),
+      producto,
+      DateTime.now().toUtc(),
+    );
+    await _ventasPerdidas.guardar(tienda, venta);
+    return venta;
+  }
 
   /// Día local sin hora del momento dado.
   static DateTime diaLocal(DateTime momento) {

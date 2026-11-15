@@ -280,4 +280,42 @@ void main() {
       expect(encontradas.map((v) => v.getId()), ['a']);
     });
   });
+
+  group('registrarVentaPerdida (CUS-13)', () {
+    test(
+      'guarda la venta perdida con id v4, producto y fecha de ahora',
+      () async {
+        final antes = DateTime.now().toUtc();
+        final venta = await servicio.registrarVentaPerdida(tienda, coco);
+        final despues = DateTime.now().toUtc();
+
+        expect(uuidV4.hasMatch(venta.getId()), isTrue);
+        expect(venta.getProducto(), same(coco));
+        expect(venta.getFecha().isUtc, isTrue);
+        expect(venta.getFecha().isBefore(antes), isFalse);
+        expect(venta.getFecha().isAfter(despues), isFalse);
+        expect(perdidas.datos[tienda.getId()], [venta]);
+      },
+    );
+
+    test('dos registros del mismo producto no se pisan', () async {
+      final a = await servicio.registrarVentaPerdida(tienda, coco);
+      final b = await servicio.registrarVentaPerdida(tienda, coco);
+
+      expect(a.getId(), isNot(b.getId()));
+      expect(perdidas.datos[tienda.getId()], hasLength(2));
+    });
+
+    test('aparece en obtenerVentasPerdidas', () async {
+      final venta = await servicio.registrarVentaPerdida(tienda, coco);
+      final ahora = DateTime.now();
+
+      final encontradas = await servicio.obtenerVentasPerdidas(
+        tienda,
+        ahora.subtract(const Duration(days: 1)),
+        ahora.add(const Duration(days: 1)),
+      );
+      expect(encontradas, [venta]);
+    });
+  });
 }
