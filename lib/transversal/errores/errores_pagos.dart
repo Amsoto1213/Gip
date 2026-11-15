@@ -44,3 +44,13 @@ class ExcepcionMontoFiadoNoValido extends ExcepcionNegocio {
   const ExcepcionMontoFiadoNoValido()
     : super('El monto del fiado debe ser mayor que cero');
 }
+
+/// Abono con monto cero, negativo o mayor que el saldo pendiente (CUS-08,
+/// pasos 6 a 8; IE-06).
+class ExcepcionMontoAbonoNoValido extends ExcepcionNegocio {
+  const ExcepcionMontoAbonoNoValido()
+    : super(
+        'El abono debe ser mayor que cero y no puede superar el saldo '
+        'pendiente',
+      );
+}
