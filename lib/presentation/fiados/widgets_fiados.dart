@@ -5,11 +5,13 @@ import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/medio_pago.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
+import 'package:gip/presentation/comun/dialogo_confirmacion.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/opcion_radio.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/fiados/abono_view_model.dart';
+import 'package:gip/presentation/fiados/fiados_view_model.dart';
 import 'package:gip/presentation/fiados/formato_fecha.dart';
 
 /// "$ 47.500".
@@ -26,6 +28,56 @@ String subtituloCliente(Cliente cliente) {
       ? '1 fiado'
       : '${pendientes.length} fiados';
   return '$cuantos · último ${fechaCorta(ultimo)}';
+}
+
+/// "Eliminar datos del cliente" (CUS-21, mockup `Cliente`): pide la
+/// confirmación (RNF-26), llama al view model y muestra el resultado.
+/// [onEliminado] se llama solo si se eliminó, para volver a la lista.
+class BotonEliminarCliente extends StatelessWidget {
+  const BotonEliminarCliente({
+    super.key,
+    required this.vm,
+    required this.cliente,
+    this.onEliminado,
+  });
+
+  final FiadosViewModel vm;
+  final Cliente cliente;
+  final VoidCallback? onEliminado;
+
+  static const pregunta = '¿Confirma que desea eliminar los datos del cliente?';
+
+  Future<void> _eliminar(BuildContext context) async {
+    final mensajes = ScaffoldMessenger.of(context);
+    final confirmado = await pedirConfirmacion(
+      context,
+      pregunta: pregunta,
+      textoConfirmar: 'Eliminar',
+    );
+    if (!confirmado) return;
+    final eliminado = await vm.eliminarCliente(cliente);
+    // El error también va en un aviso flotante: con varios fiados el botón
+    // queda abajo y la tarjeta de aviso de arriba no se vería.
+    mensajes.showSnackBar(
+      SnackBar(
+        content: Text(
+          eliminado
+              ? FiadosViewModel.mensajeClienteEliminado
+              : (vm.aviso ?? FiadosViewModel.mensajeErrorEliminar),
+        ),
+      ),
+    );
+    if (eliminado) onEliminado?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) => BotonDestructivo(
+    key: const Key('cliente_eliminar'),
+    texto: 'Eliminar datos del cliente',
+    icono: Icons.delete_outline,
+    expandido: true,
+    onPressed: () => _eliminar(context),
+  );
 }
 
 /// Fila de un cliente en la lista: nombre, cuántos fiados y lo que debe.

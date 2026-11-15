@@ -53,7 +53,7 @@ ignora; lo que importa son los estilos y la estructura.
 
 1. **TarjetaGip**: la tarjeta base (fondo, borde, radio, sombra).
 2. **SeccionNumerada**: tarjeta con encabezado "círculo verde con número + título" y línea divisoria.
-3. **BotonPrimario** y **BotonSecundario** (contorno, texto verde).
+3. **BotonPrimario** y **BotonSecundario** (contorno, texto verde). **BotonDestructivo** (contorno y texto rojos) solo para eliminar algo que no se puede deshacer, con `pedirConfirmacion` antes (CUS-21, DI-31).
 4. **CampoGip**: campo con etiqueta arriba, ícono y estado de foco; variante contraseña con botón de ojo.
    Variante resaltada (borde `error`, para un valor por revisar o no válido, con el mensaje fuera del
    campo), cifras alineadas a la derecha y letra propia (`estiloTexto`, Archivo 800 en cantidades).

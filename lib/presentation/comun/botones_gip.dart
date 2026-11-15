@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/presentation/comun/tema/colores_gip.dart';
 import 'package:gip/presentation/comun/tema/forma_gip.dart';
 import 'package:gip/presentation/comun/tema/tipografia_gip.dart';
 
@@ -156,6 +157,67 @@ class BotonSecundario extends StatelessWidget {
       textStyle: tema.textTheme.labelLarge?.copyWith(
         fontSize: sinBorde ? 15 : 14,
         fontWeight: sinBorde ? FontWeight.w600 : FontWeight.w700,
+      ),
+    );
+    final icono = this.icono;
+    return icono == null
+        ? OutlinedButton(
+            onPressed: onPressed,
+            style: estilo,
+            child: Text(texto),
+          )
+        : OutlinedButton.icon(
+            onPressed: onPressed,
+            style: estilo,
+            icon: Icon(icono, size: 18),
+            label: Text(texto),
+          );
+  }
+}
+
+/// Botón de una acción que quita algo y no se puede deshacer ("Eliminar datos
+/// del cliente", CUS-21): contorno 1,5 px `errorBorde`, fondo blanco y texto
+/// rojo `error` en negrita. Las acciones normales van en verde; el rojo es
+/// solo para esto (DI-31). Con [relleno] queda en rojo sólido con texto
+/// blanco: es el botón que confirma en el diálogo.
+class BotonDestructivo extends StatelessWidget {
+  const BotonDestructivo({
+    super.key,
+    required this.texto,
+    required this.onPressed,
+    this.icono,
+    this.alto = 48,
+    this.expandido = false,
+    this.relleno = false,
+  });
+
+  final String texto;
+  final VoidCallback? onPressed;
+  final IconData? icono;
+
+  /// Al menos 44 px (área táctil, RNF-19).
+  final double alto;
+  final bool expandido;
+  final bool relleno;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final extra = tema.extension<ColoresExtraGip>()!;
+    final estilo = OutlinedButton.styleFrom(
+      minimumSize: Size(expandido ? double.infinity : 44, alto),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      foregroundColor: relleno ? esquema.onError : esquema.error,
+      backgroundColor: relleno ? esquema.error : esquema.surface,
+      side: BorderSide(
+        color: relleno ? esquema.error : extra.errorBorde,
+        width: FormaGip.grosorBordeCampo,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      textStyle: tema.textTheme.labelLarge?.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
       ),
     );
     final icono = this.icono;

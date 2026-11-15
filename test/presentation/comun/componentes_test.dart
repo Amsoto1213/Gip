@@ -4,6 +4,7 @@ import 'package:gip/presentation/comun/barra_busqueda.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
 import 'package:gip/presentation/comun/chip_estado.dart';
+import 'package:gip/presentation/comun/dialogo_confirmacion.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/logo_gip.dart';
@@ -1052,6 +1053,79 @@ void main() {
       );
       await tester.tap(find.text('Ana'));
       expect(tocada, 1);
+    });
+  });
+
+  testWidgets('BotonDestructivo: rojo, se toca y tiene área táctil de 44 px', (
+    tester,
+  ) async {
+    var tocado = 0;
+    await montar(
+      tester,
+      Align(
+        alignment: Alignment.topLeft,
+        child: BotonDestructivo(
+          texto: 'Eliminar datos del cliente',
+          icono: Icons.delete_outline,
+          onPressed: () => tocado++,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Eliminar datos del cliente'));
+    expect(tocado, 1);
+    final boton = find.byType(OutlinedButton);
+    expect(tester.getSize(boton).height, greaterThanOrEqualTo(44));
+    final esquema = Theme.of(tester.element(boton)).colorScheme;
+    final estilo = tester.widget<OutlinedButton>(boton).style!;
+    expect(estilo.foregroundColor!.resolve({}), esquema.error);
+  });
+
+  group('pedirConfirmacion', () {
+    Future<void> abrirDialogo(WidgetTester tester, List<bool> resultados) =>
+        montar(
+          tester,
+          Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => resultados.add(
+                await pedirConfirmacion(
+                  context,
+                  pregunta: '¿Seguro?',
+                  textoConfirmar: 'Eliminar',
+                ),
+              ),
+              child: const Text('abrir'),
+            ),
+          ),
+        );
+
+    testWidgets('confirmar termina con verdadero', (tester) async {
+      final resultados = <bool>[];
+      await abrirDialogo(tester, resultados);
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Seguro?'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('confirmacion_confirmar')));
+      await tester.pumpAndSettle();
+
+      expect(resultados, [true]);
+      expect(find.text('¿Seguro?'), findsNothing);
+    });
+
+    testWidgets('cancelar o tocar fuera termina con falso', (tester) async {
+      final resultados = <bool>[];
+      await abrirDialogo(tester, resultados);
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirmacion_cancelar')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+
+      expect(resultados, [false, false]);
     });
   });
 }

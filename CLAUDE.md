@@ -83,7 +83,7 @@ El aspecto de toda pantalla sigue `docs/ui/rediseno/README.md` y `docs/ui/tokens
 - **Usa los componentes de `lib/presentation/comun/`**; no rehagas a mano lo que ya resuelven:
   - `EncabezadoPantalla` (título 34/30 px, contexto, miga y volver), `PantallaSeccion` (sección simple).
   - `TarjetaGip` (tarjeta base), `SeccionNumerada` (paso "1 · Título" de un formulario), `TarjetaAccion` (acción de una sección).
-  - `BotonPrimario` (acción principal, también con monto a la derecha), `BotonIconoPrimario` (cuadrado con ícono), `BotonSecundario` (contorno o solo texto).
+  - `BotonPrimario` (acción principal, también con monto a la derecha), `BotonIconoPrimario` (cuadrado con ícono), `BotonSecundario` (contorno o solo texto), `BotonDestructivo` (rojo, solo para eliminar; con `pedirConfirmacion`).
   - `CampoGip` (campo con etiqueta, ícono, ayuda, error y variante contraseña), `BarraBusqueda` (búsqueda como botón o como campo).
   - `ChipEstado` ("Poco", "Agotado"), `SelectorFiltro` (filtros de una lista en píldoras), `OpcionConIcono` (opción única con descripción), `ResumenMovimiento` + `FilaDetalle` (resumen oscuro), `LogoGip`.
   - Navegación: `MenuLateral` (web, desde 1024 px) y `BarraInferior` (móvil) dentro de `MarcoNavegacion`. Las subsecciones del menú se declaran en `rutas_<seccion>.dart` y solo se listan las que ya tienen pantalla.

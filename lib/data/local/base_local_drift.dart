@@ -61,9 +61,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// de MERMA en movimientos_inventario (CUS-03). 6: columna
   /// `cantidad_contada` de AJUSTE_CONTEO en movimientos_inventario (CUS-04).
   /// 7: alertas_reabastecimiento y ventas_perdidas (CUS-24 y CUS-05).
-  /// 8: clientes y fiados (CUS-07). 9: abonos (CUS-08).
+  /// 8: clientes y fiados (CUS-07). 9: abonos (CUS-08). 10: columna
+  /// `eliminado_en` de clientes (CUS-21).
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -133,6 +134,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
         await m.createTable(abonos);
         await m.createIndex(abonosTiendaIdx);
         await m.createIndex(abonosFiadoIdx);
+      }
+      // Si la tabla se acaba de crear en el paso 8, ya trae la columna.
+      if (desde >= 8 && desde < 10) {
+        await m.addColumn(clientes, clientes.eliminadoEn);
       }
     },
   );

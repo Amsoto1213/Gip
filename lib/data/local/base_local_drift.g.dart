@@ -4735,6 +4735,15 @@ class $ClientesTable extends Clientes
     requiredDuringInsert: true,
   ).withConverter<DateTime>($ClientesTable.$converteractualizadoEn);
   @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> eliminadoEn =
+      GeneratedColumn<DateTime>(
+        'eliminado_en',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($ClientesTable.$convertereliminadoEnn);
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     tiendaId,
@@ -4742,6 +4751,7 @@ class $ClientesTable extends Clientes
     nombreNormalizado,
     telefono,
     actualizadoEn,
+    eliminadoEn,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4828,6 +4838,12 @@ class $ClientesTable extends Clientes
           data['${effectivePrefix}actualizado_en'],
         )!,
       ),
+      eliminadoEn: $ClientesTable.$convertereliminadoEnn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}eliminado_en'],
+        ),
+      ),
     );
   }
 
@@ -4838,6 +4854,10 @@ class $ClientesTable extends Clientes
 
   static TypeConverter<DateTime, DateTime> $converteractualizadoEn =
       const ConversorFechaUtc();
+  static TypeConverter<DateTime, DateTime> $convertereliminadoEn =
+      const ConversorFechaUtc();
+  static TypeConverter<DateTime?, DateTime?> $convertereliminadoEnn =
+      NullAwareTypeConverter.wrap($convertereliminadoEn);
 }
 
 class FilaCliente extends DataClass implements Insertable<FilaCliente> {
@@ -4847,6 +4867,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
   final String nombreNormalizado;
   final String telefono;
   final DateTime actualizadoEn;
+  final DateTime? eliminadoEn;
   const FilaCliente({
     required this.id,
     required this.tiendaId,
@@ -4854,6 +4875,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
     required this.nombreNormalizado,
     required this.telefono,
     required this.actualizadoEn,
+    this.eliminadoEn,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4868,6 +4890,11 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
         $ClientesTable.$converteractualizadoEn.toSql(actualizadoEn),
       );
     }
+    if (!nullToAbsent || eliminadoEn != null) {
+      map['eliminado_en'] = Variable<DateTime>(
+        $ClientesTable.$convertereliminadoEnn.toSql(eliminadoEn),
+      );
+    }
     return map;
   }
 
@@ -4879,6 +4906,9 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
       nombreNormalizado: Value(nombreNormalizado),
       telefono: Value(telefono),
       actualizadoEn: Value(actualizadoEn),
+      eliminadoEn: eliminadoEn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(eliminadoEn),
     );
   }
 
@@ -4894,6 +4924,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
       nombreNormalizado: serializer.fromJson<String>(json['nombreNormalizado']),
       telefono: serializer.fromJson<String>(json['telefono']),
       actualizadoEn: serializer.fromJson<DateTime>(json['actualizadoEn']),
+      eliminadoEn: serializer.fromJson<DateTime?>(json['eliminadoEn']),
     );
   }
   @override
@@ -4906,6 +4937,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
       'nombreNormalizado': serializer.toJson<String>(nombreNormalizado),
       'telefono': serializer.toJson<String>(telefono),
       'actualizadoEn': serializer.toJson<DateTime>(actualizadoEn),
+      'eliminadoEn': serializer.toJson<DateTime?>(eliminadoEn),
     };
   }
 
@@ -4916,6 +4948,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
     String? nombreNormalizado,
     String? telefono,
     DateTime? actualizadoEn,
+    Value<DateTime?> eliminadoEn = const Value.absent(),
   }) => FilaCliente(
     id: id ?? this.id,
     tiendaId: tiendaId ?? this.tiendaId,
@@ -4923,6 +4956,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
     nombreNormalizado: nombreNormalizado ?? this.nombreNormalizado,
     telefono: telefono ?? this.telefono,
     actualizadoEn: actualizadoEn ?? this.actualizadoEn,
+    eliminadoEn: eliminadoEn.present ? eliminadoEn.value : this.eliminadoEn,
   );
   FilaCliente copyWithCompanion(ClientesCompanion data) {
     return FilaCliente(
@@ -4936,6 +4970,9 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
       actualizadoEn: data.actualizadoEn.present
           ? data.actualizadoEn.value
           : this.actualizadoEn,
+      eliminadoEn: data.eliminadoEn.present
+          ? data.eliminadoEn.value
+          : this.eliminadoEn,
     );
   }
 
@@ -4947,7 +4984,8 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
           ..write('nombre: $nombre, ')
           ..write('nombreNormalizado: $nombreNormalizado, ')
           ..write('telefono: $telefono, ')
-          ..write('actualizadoEn: $actualizadoEn')
+          ..write('actualizadoEn: $actualizadoEn, ')
+          ..write('eliminadoEn: $eliminadoEn')
           ..write(')'))
         .toString();
   }
@@ -4960,6 +4998,7 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
     nombreNormalizado,
     telefono,
     actualizadoEn,
+    eliminadoEn,
   );
   @override
   bool operator ==(Object other) =>
@@ -4970,7 +5009,8 @@ class FilaCliente extends DataClass implements Insertable<FilaCliente> {
           other.nombre == this.nombre &&
           other.nombreNormalizado == this.nombreNormalizado &&
           other.telefono == this.telefono &&
-          other.actualizadoEn == this.actualizadoEn);
+          other.actualizadoEn == this.actualizadoEn &&
+          other.eliminadoEn == this.eliminadoEn);
 }
 
 class ClientesCompanion extends UpdateCompanion<FilaCliente> {
@@ -4980,6 +5020,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
   final Value<String> nombreNormalizado;
   final Value<String> telefono;
   final Value<DateTime> actualizadoEn;
+  final Value<DateTime?> eliminadoEn;
   final Value<int> rowid;
   const ClientesCompanion({
     this.id = const Value.absent(),
@@ -4988,6 +5029,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
     this.nombreNormalizado = const Value.absent(),
     this.telefono = const Value.absent(),
     this.actualizadoEn = const Value.absent(),
+    this.eliminadoEn = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ClientesCompanion.insert({
@@ -4997,6 +5039,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
     required String nombreNormalizado,
     this.telefono = const Value.absent(),
     required DateTime actualizadoEn,
+    this.eliminadoEn = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tiendaId = Value(tiendaId),
@@ -5010,6 +5053,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
     Expression<String>? nombreNormalizado,
     Expression<String>? telefono,
     Expression<DateTime>? actualizadoEn,
+    Expression<DateTime>? eliminadoEn,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5019,6 +5063,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
       if (nombreNormalizado != null) 'nombre_normalizado': nombreNormalizado,
       if (telefono != null) 'telefono': telefono,
       if (actualizadoEn != null) 'actualizado_en': actualizadoEn,
+      if (eliminadoEn != null) 'eliminado_en': eliminadoEn,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5030,6 +5075,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
     Value<String>? nombreNormalizado,
     Value<String>? telefono,
     Value<DateTime>? actualizadoEn,
+    Value<DateTime?>? eliminadoEn,
     Value<int>? rowid,
   }) {
     return ClientesCompanion(
@@ -5039,6 +5085,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
       nombreNormalizado: nombreNormalizado ?? this.nombreNormalizado,
       telefono: telefono ?? this.telefono,
       actualizadoEn: actualizadoEn ?? this.actualizadoEn,
+      eliminadoEn: eliminadoEn ?? this.eliminadoEn,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5066,6 +5113,11 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
         $ClientesTable.$converteractualizadoEn.toSql(actualizadoEn.value),
       );
     }
+    if (eliminadoEn.present) {
+      map['eliminado_en'] = Variable<DateTime>(
+        $ClientesTable.$convertereliminadoEnn.toSql(eliminadoEn.value),
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5081,6 +5133,7 @@ class ClientesCompanion extends UpdateCompanion<FilaCliente> {
           ..write('nombreNormalizado: $nombreNormalizado, ')
           ..write('telefono: $telefono, ')
           ..write('actualizadoEn: $actualizadoEn, ')
+          ..write('eliminadoEn: $eliminadoEn, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10309,6 +10362,7 @@ typedef $$ClientesTableCreateCompanionBuilder = ClientesCompanion Function({
   required String nombreNormalizado,
   Value<String> telefono,
   required DateTime actualizadoEn,
+  Value<DateTime?> eliminadoEn,
   Value<int> rowid,
 });
 typedef $$ClientesTableUpdateCompanionBuilder = ClientesCompanion Function({
@@ -10318,6 +10372,7 @@ typedef $$ClientesTableUpdateCompanionBuilder = ClientesCompanion Function({
   Value<String> nombreNormalizado,
   Value<String> telefono,
   Value<DateTime> actualizadoEn,
+  Value<DateTime?> eliminadoEn,
   Value<int> rowid,
 });
 
@@ -10385,6 +10440,12 @@ class $$ClientesTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get eliminadoEn => $composableBuilder(
+    column: $table.eliminadoEn,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   Expression<bool> fiadosRefs(
     Expression<bool> Function($$FiadosTableFilterComposer f) f,
   ) {
@@ -10449,6 +10510,11 @@ class $$ClientesTableOrderingComposer
     column: $table.actualizadoEn,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get eliminadoEn => $composableBuilder(
+    column: $table.eliminadoEn,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ClientesTableAnnotationComposer
@@ -10480,6 +10546,12 @@ class $$ClientesTableAnnotationComposer
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get actualizadoEn =>
       $composableBuilder(
         column: $table.actualizadoEn,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get eliminadoEn =>
+      $composableBuilder(
+        column: $table.eliminadoEn,
         builder: (column) => column,
       );
 
@@ -10543,6 +10615,7 @@ class $$ClientesTableTableManager
                 Value<String> nombreNormalizado = const Value.absent(),
                 Value<String> telefono = const Value.absent(),
                 Value<DateTime> actualizadoEn = const Value.absent(),
+                Value<DateTime?> eliminadoEn = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ClientesCompanion(
                 id: id,
@@ -10551,6 +10624,7 @@ class $$ClientesTableTableManager
                 nombreNormalizado: nombreNormalizado,
                 telefono: telefono,
                 actualizadoEn: actualizadoEn,
+                eliminadoEn: eliminadoEn,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10561,6 +10635,7 @@ class $$ClientesTableTableManager
                 required String nombreNormalizado,
                 Value<String> telefono = const Value.absent(),
                 required DateTime actualizadoEn,
+                Value<DateTime?> eliminadoEn = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ClientesCompanion.insert(
                 id: id,
@@ -10569,6 +10644,7 @@ class $$ClientesTableTableManager
                 nombreNormalizado: nombreNormalizado,
                 telefono: telefono,
                 actualizadoEn: actualizadoEn,
+                eliminadoEn: eliminadoEn,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

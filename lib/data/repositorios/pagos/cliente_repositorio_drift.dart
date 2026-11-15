@@ -15,10 +15,10 @@ class ClienteRepositorioDrift implements IClienteRepositorio {
 
   static const _tabla = 'clientes';
 
-  /// Clientes cuyo `nombre_normalizado` contiene el texto normalizado (sin
-  /// mayúsculas ni tildes, RD-08), por nombre, cada uno con sus fiados del más
-  /// reciente al más antiguo, y los abonos de cada fiado, del más antiguo al
-  /// más reciente (CUS-08).
+  /// Clientes (sin los eliminados, CUS-21) cuyo `nombre_normalizado` contiene
+  /// el texto normalizado (sin mayúsculas ni tildes, RD-08), por nombre, cada
+  /// uno con sus fiados del más reciente al más antiguo, y los abonos de cada
+  /// fiado, del más antiguo al más reciente (CUS-08).
   @override
   Future<List<Cliente>> buscarPorNombre(Tienda tienda, String texto) async {
     final patron = '%${_escaparLike(normalizarTexto(texto))}%';
@@ -27,6 +27,7 @@ class ClienteRepositorioDrift implements IClienteRepositorio {
               ..where(
                 (c) =>
                     c.tiendaId.equals(tienda.getId()) &
+                    c.eliminadoEn.isNull() &
                     c.nombreNormalizado.like(patron, escapeChar: r'\'),
               )
               ..orderBy([(c) => OrderingTerm.asc(c.nombreNormalizado)]))
@@ -98,6 +99,43 @@ class ClienteRepositorioDrift implements IClienteRepositorio {
           operacion: existe ? OperacionCola.actualizar : OperacionCola.insertar,
         );
       });
+
+  /// Anonimiza al cliente (CUS-21, RNF-16, DI-31): la fila se queda porque
+  /// sus fiados, abonos y ventas la referencian (RNF-15), pero no guarda
+  /// ningún dato personal. Nombre = 'Cliente eliminado'; `nombre_normalizado`
+  /// y `telefono` quedan vacíos. Se anota en `cola_pendientes` como
+  /// ACTUALIZAR en la misma transacción (DA-33), porque la fila no se borra.
+  @override
+  Future<void> eliminar(Tienda tienda, Cliente cliente) =>
+      _base.transaction(() async {
+        final ahora = DateTime.now().toUtc();
+        final filas =
+            await (_base.update(_base.clientes)..where(
+                  (c) =>
+                      c.id.equals(cliente.getId()) &
+                      c.tiendaId.equals(tienda.getId()),
+                ))
+                .write(
+                  ClientesCompanion(
+                    nombre: const Value(nombreClienteEliminado),
+                    nombreNormalizado: const Value(''),
+                    telefono: const Value(''),
+                    actualizadoEn: Value(ahora),
+                    eliminadoEn: Value(ahora),
+                  ),
+                );
+        if (filas == 0) return;
+        await anotarEnCola(
+          _base,
+          tiendaId: tienda.getId(),
+          tabla: _tabla,
+          registroId: cliente.getId(),
+          operacion: OperacionCola.actualizar,
+        );
+      });
+
+  /// Nombre que queda en la fila de un cliente eliminado (DI-31).
+  static const nombreClienteEliminado = 'Cliente eliminado';
 
   static String _escaparLike(String texto) =>
       texto.replaceAllMapped(RegExp(r'[\\%_]'), (m) => '\\${m[0]}');

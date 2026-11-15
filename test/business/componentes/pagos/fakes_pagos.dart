@@ -68,6 +68,15 @@ class ClienteRepositorioFalso implements IClienteRepositorio {
       ..removeWhere((c) => c.getId() == cliente.getId())
       ..add(cliente);
   }
+
+  /// Ids de los clientes que se eliminaron con [eliminar].
+  final List<String> eliminados = [];
+
+  @override
+  Future<void> eliminar(Tienda tienda, Cliente cliente) async {
+    de(tienda).removeWhere((c) => c.getId() == cliente.getId());
+    eliminados.add(cliente.getId());
+  }
 }
 
 /// Fiados en memoria, por tienda. [fallar] simula una falla del disco.

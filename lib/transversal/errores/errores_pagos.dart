@@ -54,3 +54,9 @@ class ExcepcionMontoAbonoNoValido extends ExcepcionNegocio {
         'pendiente',
       );
 }
+
+/// Eliminar los datos de un cliente que aún debe (CUS-21, pasos 8 a 10).
+class ExcepcionClienteConSaldo extends ExcepcionNegocio {
+  const ExcepcionClienteConSaldo()
+    : super('No se pueden eliminar los datos: el cliente aún debe');
+}

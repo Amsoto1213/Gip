@@ -7,9 +7,9 @@ import 'package:gip/business/entidades/pagos/cliente.dart';
 /// Controller del caso de uso CUS-19 Consultar saldo e historial de cliente;
 /// lo usan también las pantallas de CUS-07 y CUS-08 («include»).
 ///
-/// Por ahora solo [buscarClientes] y [consultarSaldoTotal]. `listarFiados`,
-/// `buscarFiadosPorCliente`, `consultarHistorial` y `eliminarCliente` llegan
-/// con CUS-19 completo y CUS-21 (DI-27). Recibe [ServicioFiados] como en EA,
+/// Por ahora [buscarClientes], [consultarSaldoTotal] y [eliminarCliente]
+/// (CUS-21). `listarFiados`, `buscarFiadosPorCliente` y `consultarHistorial`
+/// llegan con CUS-19 completo (DI-27). Recibe [ServicioFiados] como en EA,
 /// aunque aún no lo usa.
 class ConsultarClienteCoordinator {
   ConsultarClienteCoordinator(
@@ -26,4 +26,10 @@ class ConsultarClienteCoordinator {
   /// Llama a servicioClientes.consultarSaldoTotal(cliente).
   Decimal consultarSaldoTotal(Cliente cliente) =>
       _servicioClientes.consultarSaldoTotal(cliente);
+
+  /// Llama a servicioClientes.eliminarCliente(tienda, cliente) (CUS-21,
+  /// RNF-16). La confirmación explícita la pide la pantalla antes de llamar
+  /// (RNF-26).
+  Future<void> eliminarCliente(Tienda tienda, Cliente cliente) =>
+      _servicioClientes.eliminarCliente(tienda, cliente);
 }
