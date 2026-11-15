@@ -77,4 +77,15 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
       movimiento,
     ));
   }
+
+  @override
+  Future<List<MovimientoCaja>> listarMovimientos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async => movimientosDe(tienda)
+      .where(
+        (m) => !m.getFecha().isBefore(desde) && m.getFecha().isBefore(hasta),
+      )
+      .toList();
 }

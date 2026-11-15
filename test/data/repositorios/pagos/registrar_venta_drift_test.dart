@@ -43,6 +43,13 @@ class CajaQueFalla implements ICajaRepositorio {
     Caja caja,
     MovimientoCaja movimiento,
   ) => throw StateError('falla del disco');
+
+  @override
+  Future<List<MovimientoCaja>> listarMovimientos(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) => _real.listarMovimientos(tienda, desde, hasta);
 }
 
 /// CUS-02 de punta a punta sobre la base local: ServicioVentas con los
