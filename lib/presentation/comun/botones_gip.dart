@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gip/presentation/comun/tema/forma_gip.dart';
+import 'package:gip/presentation/comun/tema/tipografia_gip.dart';
 
 /// Botón principal del rediseño: verde `primario`, texto blanco 17 px peso
 /// 700, radio 16, sombra `botonPrimario` y hover/presionado en
@@ -14,6 +15,7 @@ class BotonPrimario extends StatelessWidget {
     this.iconoAlFinal = false,
     this.cargando = false,
     this.compacto = false,
+    this.valor,
   });
 
   final String texto;
@@ -27,6 +29,10 @@ class BotonPrimario extends StatelessWidget {
   /// 50 px de alto, radio 14 y texto 16: botones de encabezado
   /// ("Producto nuevo").
   final bool compacto;
+
+  /// Monto a la derecha, con cifras tabulares y una flecha ("Cobrar …
+  /// $ 5.600 ›"). Con valor, el texto va a la izquierda.
+  final String? valor;
 
   @override
   Widget build(BuildContext context) {
@@ -66,21 +72,40 @@ class BotonPrimario extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        child: Row(
-          mainAxisSize: compacto ? MainAxisSize.min : MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (marca != null && !iconoAlFinal) ...[
-              marca,
-              const SizedBox(width: 10),
-            ],
-            Flexible(child: etiqueta),
-            if (marca != null && iconoAlFinal) ...[
-              const SizedBox(width: 10),
-              marca,
-            ],
-          ],
-        ),
+        child: valor != null
+            ? Row(
+                children: [
+                  if (marca != null) ...[marca, const SizedBox(width: 10)],
+                  Expanded(child: etiqueta),
+                  const SizedBox(width: 12),
+                  Text(
+                    valor!,
+                    style: tema.textTheme.headlineMedium
+                        ?.copyWith(
+                          fontSize: 20,
+                          color: activo ? colorTexto : null,
+                        )
+                        .cifrasTabulares,
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right),
+                ],
+              )
+            : Row(
+                mainAxisSize: compacto ? MainAxisSize.min : MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (marca != null && !iconoAlFinal) ...[
+                    marca,
+                    const SizedBox(width: 10),
+                  ],
+                  Flexible(child: etiqueta),
+                  if (marca != null && iconoAlFinal) ...[
+                    const SizedBox(width: 10),
+                    marca,
+                  ],
+                ],
+              ),
       ),
     );
   }

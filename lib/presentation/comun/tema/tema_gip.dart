@@ -72,6 +72,18 @@ abstract final class TemaGip {
         fillColor: ColoresGip.superficie,
         border: campoBorde,
         enabledBorder: campoBorde,
+        errorBorder: campoBorde.copyWith(
+          borderSide: const BorderSide(
+            color: ColoresGip.error,
+            width: FormaGip.grosorBordeCampo,
+          ),
+        ),
+        focusedErrorBorder: campoBorde.copyWith(
+          borderSide: const BorderSide(
+            color: ColoresGip.error,
+            width: FormaGip.grosorBordeCampo,
+          ),
+        ),
         focusedBorder: campoBorde.copyWith(
           borderSide: const BorderSide(
             color: ColoresGip.primario,
@@ -134,6 +146,24 @@ abstract final class TemaGip {
             (estados) => estados.contains(WidgetState.selected)
                 ? ColoresGip.primario
                 : ColoresGip.texto,
+          ),
+        ),
+      ),
+      // Píldoras de opción (sugerencias de efectivo): la elegida en verde
+      // suave con borde verde.
+      chipTheme: ChipThemeData(
+        showCheckmark: false,
+        backgroundColor: ColoresGip.superficie,
+        selectedColor: ColoresGip.primarioSuave,
+        labelStyle: textos.labelMedium!.copyWith(fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        shape: const StadiumBorder(),
+        side: WidgetStateBorderSide.resolveWith(
+          (estados) => BorderSide(
+            color: estados.contains(WidgetState.selected)
+                ? ColoresGip.primario
+                : ColoresGip.borde,
+            width: FormaGip.grosorBordeCampo,
           ),
         ),
       ),

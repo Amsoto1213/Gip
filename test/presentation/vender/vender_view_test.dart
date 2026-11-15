@@ -17,6 +17,7 @@ import 'package:gip/composition_root/registrar_pagos.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/main.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:mocktail/mocktail.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
@@ -217,7 +218,7 @@ void main() {
     expect(find.text('El monto recibido no alcanza'), findsOneWidget);
     expect(
       tester
-          .widget<ButtonStyleButton>(find.byKey(const Key('cobrar_confirmar')))
+          .widget<BotonPrimario>(find.byKey(const Key('cobrar_confirmar')))
           .onPressed,
       isNull,
     );

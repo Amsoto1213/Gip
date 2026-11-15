@@ -17,6 +17,7 @@ class CampoGip extends StatefulWidget {
     this.icono,
     this.pista,
     this.ayuda,
+    this.error,
     this.prefijo,
     this.contrasena = false,
     this.habilitado = true,
@@ -41,6 +42,9 @@ class CampoGip extends StatefulWidget {
 
   /// Línea gris debajo del campo ("El código interno no se cambia").
   final String? ayuda;
+
+  /// Mensaje de error del valor escrito; pinta el borde en `error`.
+  final String? error;
 
   /// Texto fijo antes del valor ("$ ").
   final String? prefijo;
@@ -95,6 +99,8 @@ class _CampoGipState extends State<CampoGip> {
           style: tema.textTheme.bodyLarge,
           decoration: InputDecoration(
             hintText: widget.pista,
+            errorText: widget.error,
+            errorMaxLines: 2,
             prefixText: widget.prefijo,
             constraints: BoxConstraints(minHeight: widget.alto),
             contentPadding: EdgeInsets.symmetric(

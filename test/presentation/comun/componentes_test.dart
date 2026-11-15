@@ -121,6 +121,24 @@ void main() {
       );
     });
 
+    testWidgets('con valor: texto a la izquierda y monto a la derecha', (
+      tester,
+    ) async {
+      await montar(
+        tester,
+        BotonPrimario(texto: 'Cobrar', valor: r'$ 5.600', onPressed: () {}),
+      );
+      expect(
+        tester.getCenter(find.text(r'$ 5.600')).dx,
+        greaterThan(tester.getCenter(find.text('Cobrar')).dx),
+      );
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.text(r'$ 5.600')).style?.fontFeatures,
+        contains(const FontFeature.tabularFigures()),
+      );
+    });
+
     testWidgets('cargando: muestra el indicador y no se puede tocar', (
       tester,
     ) async {
@@ -245,6 +263,20 @@ void main() {
         tester.getSize(find.byKey(const Key('correo'))).height,
         greaterThanOrEqualTo(52),
       );
+    });
+
+    testWidgets('muestra el error debajo del campo', (tester) async {
+      final controlador = TextEditingController();
+      addTearDown(controlador.dispose);
+      await montar(
+        tester,
+        CampoGip(
+          etiqueta: 'Efectivo recibido',
+          controlador: controlador,
+          error: 'El monto recibido no alcanza',
+        ),
+      );
+      expect(find.text('El monto recibido no alcanza'), findsOneWidget);
     });
 
     testWidgets('muestra la ayuda debajo del campo', (tester) async {
