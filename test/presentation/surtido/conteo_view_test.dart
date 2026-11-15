@@ -302,6 +302,74 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  /// Escribe [digitos] uno por uno en el campo que tiene el foco, como el
+  /// teclado: cada tecla cambia el texto y deja correr la consulta de la
+  /// diferencia antes de la siguiente.
+  Future<void> teclear(WidgetTester tester, String digitos) async {
+    var texto = '';
+    for (final digito in digitos.split('')) {
+      texto += digito;
+      tester.testTextInput.enterText(texto);
+      await tester.pump();
+      await esperarBase(tester);
+    }
+  }
+
+  EditableText editable(WidgetTester tester, String nombre) =>
+      tester.widget<EditableText>(
+        find.descendant(of: campo(nombre), matching: find.byType(EditableText)),
+      );
+
+  void comprobarFoco(WidgetTester tester, String nombre, String texto) {
+    final segundo = editable(tester, nombre);
+    // El foco sigue en este campo: ni en otra fila, ni en la búsqueda, ni en
+    // el filtro.
+    expect(
+      FocusManager.instance.primaryFocus,
+      same(segundo.focusNode),
+      reason: 'el foco se movió',
+    );
+    expect(segundo.controller.text, texto);
+  }
+
+  for (final tamano in const [Size(1280, 800), Size(360, 640)]) {
+    testWidgets('${tamano.width.toInt()}×${tamano.height.toInt()}: al '
+        'escribir seguido en la segunda fila el foco y el texto se mantienen', (
+      tester,
+    ) async {
+      await abrir(tester, tamano);
+      await tester.ensureVisible(campo('Café molido 250 g'));
+      await tester.pumpAndSettle();
+      await tester.showKeyboard(campo('Café molido 250 g'));
+      await tester.pump();
+
+      await teclear(tester, '125');
+      comprobarFoco(tester, 'Café molido 250 g', '125');
+      expect(textoDe(tester, diferencia('Café molido 250 g')), '+104');
+      expect(editable(tester, 'Arroz 500 g').controller.text, '');
+      expect(editable(tester, 'Huevo AA').controller.text, '');
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('con el filtro Sin contar la fila no se va mientras se escribe', (
+    tester,
+  ) async {
+    await abrir(tester, const Size(1280, 800));
+    await tester.tap(find.byKey(const Key('conteo_filtro_2')));
+    await tester.pumpAndSettle();
+    await tester.showKeyboard(campo('Café molido 250 g'));
+    await tester.pump();
+
+    await teclear(tester, '23');
+    comprobarFoco(tester, 'Café molido 250 g', '23');
+    // Al cambiar el filtro otra vez, la lista se recalcula.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.tap(find.byKey(const Key('conteo_filtro_2')));
+    await tester.pumpAndSettle();
+    expect(campo('Café molido 250 g'), findsNothing);
+  });
+
   for (final tamano in const [Size(320, 568), Size(800, 700)]) {
     testWidgets('sin desbordes en ${tamano.width.toInt()}×'
         '${tamano.height.toInt()} con una diferencia grande', (tester) async {

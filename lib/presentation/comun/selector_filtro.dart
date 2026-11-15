@@ -8,6 +8,8 @@ typedef OpcionFiltro<T> = ({T valor, String etiqueta});
 /// elegida va rellena en `navFondo` con texto blanco y las demás con contorno.
 /// Solo cambia lo que se ve; no es una acción, por eso no va en verde. Si no
 /// caben en una línea, bajan a la siguiente. Cada píldora mide 44 px de alto.
+/// Las píldoras no toman el foco: tocar una no se lo quita al campo en el que
+/// se está escribiendo.
 class SelectorFiltro<T> extends StatelessWidget {
   const SelectorFiltro({
     super.key,
@@ -49,6 +51,7 @@ class SelectorFiltro<T> extends StatelessWidget {
               ),
               child: InkWell(
                 customBorder: const StadiumBorder(),
+                canRequestFocus: false,
                 onTap: () => onElegir(opcion.valor),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 44),

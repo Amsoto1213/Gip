@@ -183,6 +183,15 @@ void main() {
       vm.elegirFiltro(FiltroConteo.conDiferencia);
       expect(vm.filas.single.producto, same(huevo));
     });
+
+    test('la fila que se escribe no se va hasta cambiar el filtro', () async {
+      vm.elegirFiltro(FiltroConteo.sinContar);
+      await vm.cambiarCantidad(cafe, '23');
+      expect(vm.filas.map((f) => f.producto), contains(same(cafe)));
+      expect(vm.sinContar, 3);
+      vm.elegirFiltro(FiltroConteo.sinContar);
+      expect(vm.filas.map((f) => f.producto), isNot(contains(same(cafe))));
+    });
   });
 
   group('confirmar', () {

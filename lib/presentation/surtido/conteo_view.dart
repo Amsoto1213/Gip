@@ -31,9 +31,32 @@ class ConteoView extends StatefulWidget {
 
 class _ConteoViewState extends State<ConteoView> {
   final _busqueda = TextEditingController();
+  final _campos = _CamposConteo();
+  ConteoViewModel? _vm;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final vm = context.read<ConteoViewModel>();
+    if (!identical(vm, _vm)) {
+      _vm?.removeListener(_sincronizar);
+      _vm = vm..addListener(_sincronizar);
+    }
+  }
+
+  /// Lleva a cada campo el texto del view model cuando este lo cambia por su
+  /// cuenta (un ajuste guardado deja la cantidad vacía). Corre fuera del
+  /// redibujo, así que no mueve el cursor del campo en el que se escribe.
+  void _sincronizar() {
+    for (final fila in _vm!.todas) {
+      _campos.sincronizar(fila);
+    }
+  }
 
   @override
   void dispose() {
+    _vm?.removeListener(_sincronizar);
+    _campos.dispose();
     _busqueda.dispose();
     super.dispose();
   }
@@ -105,7 +128,7 @@ class _ConteoViewState extends State<ConteoView> {
                               web: true,
                             ),
                             const SizedBox(height: 16),
-                            _Lista(vm: vm, web: true),
+                            _Lista(vm: vm, campos: _campos, web: true),
                           ],
                         ),
                       ),
@@ -131,7 +154,7 @@ class _ConteoViewState extends State<ConteoView> {
                               web: false,
                             ),
                             const SizedBox(height: 16),
-                            _Lista(vm: vm, web: false),
+                            _Lista(vm: vm, campos: _campos, web: false),
                           ],
                         ),
                       ),
@@ -153,6 +176,42 @@ class _ConteoViewState extends State<ConteoView> {
         ),
       ),
     );
+  }
+}
+
+/// Controlador y foco del campo "Contado" de cada producto, por id. Se crean
+/// una sola vez y viven lo que vive la pantalla: al redibujar la lista (cada
+/// tecla, un filtro, una fila que cambia de estado) el campo sigue siendo el
+/// mismo y no pierde el foco ni el cursor.
+class _CamposConteo {
+  final _controladores = <String, TextEditingController>{};
+  final _focos = <String, FocusNode>{};
+
+  TextEditingController controlador(FilaConteo fila) =>
+      _controladores.putIfAbsent(
+        fila.producto.getId(),
+        () => TextEditingController(text: fila.texto),
+      );
+
+  FocusNode foco(FilaConteo fila) => _focos.putIfAbsent(
+    fila.producto.getId(),
+    () => FocusNode(debugLabel: 'conteo_${fila.producto.getId()}'),
+  );
+
+  void sincronizar(FilaConteo fila) {
+    final controlador = _controladores[fila.producto.getId()];
+    if (controlador != null && controlador.text != fila.texto) {
+      controlador.text = fila.texto;
+    }
+  }
+
+  void dispose() {
+    for (final c in _controladores.values) {
+      c.dispose();
+    }
+    for (final f in _focos.values) {
+      f.dispose();
+    }
   }
 }
 
@@ -336,9 +395,10 @@ class _BusquedaYFiltros extends StatelessWidget {
 
 /// Lista de productos: tabla en la web, tarjeta con filas en el móvil.
 class _Lista extends StatelessWidget {
-  const _Lista({required this.vm, required this.web});
+  const _Lista({required this.vm, required this.campos, required this.web});
 
   final ConteoViewModel vm;
+  final _CamposConteo campos;
   final bool web;
 
   @override
@@ -367,7 +427,19 @@ class _Lista extends StatelessWidget {
     final hijos = [
       for (final (i, fila) in filas.indexed) ...[
         if (i > 0) Divider(height: 1, color: tema.colorScheme.outlineVariant),
-        web ? _FilaWeb(fila: fila, vm: vm) : _FilaMovil(fila: fila, vm: vm),
+        web
+            ? _FilaWeb(
+                key: ValueKey('fila_${fila.producto.getId()}'),
+                fila: fila,
+                vm: vm,
+                campos: campos,
+              )
+            : _FilaMovil(
+                key: ValueKey('fila_${fila.producto.getId()}'),
+                fila: fila,
+                vm: vm,
+                campos: campos,
+              ),
       ],
     ];
     if (web) {
@@ -426,10 +498,16 @@ class _EncabezadoTabla extends StatelessWidget {
 }
 
 class _FilaWeb extends StatelessWidget {
-  const _FilaWeb({required this.fila, required this.vm});
+  const _FilaWeb({
+    super.key,
+    required this.fila,
+    required this.vm,
+    required this.campos,
+  });
 
   final FilaConteo fila;
   final ConteoViewModel vm;
+  final _CamposConteo campos;
 
   @override
   Widget build(BuildContext context) {
@@ -439,7 +517,7 @@ class _FilaWeb extends StatelessWidget {
     final cifras = tema.textTheme.bodyLarge?.cifrasTabulares;
     return Container(
       key: Key('conteo_fila_${producto.getId()}'),
-      color: fila.revisar ? extra.alertaFondo : null,
+      color: fila.revisar ? extra.alertaFondo : tema.colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -473,7 +551,13 @@ class _FilaWeb extends StatelessWidget {
               const SizedBox(width: _Columnas.espacio),
               SizedBox(
                 width: _Columnas.contado,
-                child: _CampoContado(fila: fila, vm: vm),
+                child: _CampoContado(
+                  key: ValueKey('contado_${producto.getId()}'),
+                  fila: fila,
+                  vm: vm,
+                  controlador: campos.controlador(fila),
+                  foco: campos.foco(fila),
+                ),
               ),
               const SizedBox(width: _Columnas.espacio),
               Expanded(child: _Diferencia(fila: fila)),
@@ -498,10 +582,16 @@ class _FilaWeb extends StatelessWidget {
 }
 
 class _FilaMovil extends StatelessWidget {
-  const _FilaMovil({required this.fila, required this.vm});
+  const _FilaMovil({
+    super.key,
+    required this.fila,
+    required this.vm,
+    required this.campos,
+  });
 
   final FilaConteo fila;
   final ConteoViewModel vm;
+  final _CamposConteo campos;
 
   @override
   Widget build(BuildContext context) {
@@ -510,7 +600,7 @@ class _FilaMovil extends StatelessWidget {
     final producto = fila.producto;
     return Container(
       key: Key('conteo_fila_${producto.getId()}'),
-      color: fila.revisar ? extra.alertaFondo : null,
+      color: fila.revisar ? extra.alertaFondo : tema.colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -537,7 +627,13 @@ class _FilaMovil extends StatelessWidget {
               const SizedBox(width: 12),
               SizedBox(
                 width: 92,
-                child: _CampoContado(fila: fila, vm: vm),
+                child: _CampoContado(
+                  key: ValueKey('contado_${producto.getId()}'),
+                  fila: fila,
+                  vm: vm,
+                  controlador: campos.controlador(fila),
+                  foco: campos.foco(fila),
+                ),
               ),
               const SizedBox(width: 8),
               SizedBox(width: 56, child: _Diferencia(fila: fila)),
@@ -570,54 +666,40 @@ class _FilaMovil extends StatelessWidget {
   }
 }
 
-/// Campo de la cantidad contada. Tiene su propio controlador y lo alinea con
-/// el texto del view model cuando este cambia por otro lado ("Volver a
-/// contar" o un ajuste guardado).
-class _CampoContado extends StatefulWidget {
-  const _CampoContado({required this.fila, required this.vm});
+/// Campo de la cantidad contada. El controlador y el foco son los de
+/// [_CamposConteo]: no se crean aquí, para que sobrevivan al redibujo.
+class _CampoContado extends StatelessWidget {
+  const _CampoContado({
+    super.key,
+    required this.fila,
+    required this.vm,
+    required this.controlador,
+    required this.foco,
+  });
 
   final FilaConteo fila;
   final ConteoViewModel vm;
-
-  @override
-  State<_CampoContado> createState() => _CampoContadoState();
-}
-
-class _CampoContadoState extends State<_CampoContado> {
-  late final _controlador = TextEditingController(text: widget.fila.texto);
-
-  @override
-  void didUpdateWidget(_CampoContado anterior) {
-    super.didUpdateWidget(anterior);
-    if (widget.fila.texto != _controlador.text) {
-      _controlador.text = widget.fila.texto;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controlador.dispose();
-    super.dispose();
-  }
+  final TextEditingController controlador;
+  final FocusNode foco;
 
   @override
   Widget build(BuildContext context) {
-    final fila = widget.fila;
     return Semantics(
       label: 'Cantidad contada de ${fila.producto.getNombre()}',
       child: CampoGip(
         etiqueta: '',
-        controlador: _controlador,
+        controlador: controlador,
+        focusNode: foco,
         campoKey: Key('conteo_contado_${fila.producto.getId()}'),
         alto: 48,
         alineacion: TextAlign.end,
         resaltado: fila.revisar,
-        habilitado: !widget.vm.registrando,
+        habilitado: !vm.registrando,
         tipoTeclado: TextInputType.numberWithOptions(
           decimal: fila.admiteDecimales,
         ),
         accionTeclado: TextInputAction.next,
-        onChanged: (texto) => widget.vm.cambiarCantidad(fila.producto, texto),
+        onChanged: (texto) => vm.cambiarCantidad(fila.producto, texto),
       ),
     );
   }

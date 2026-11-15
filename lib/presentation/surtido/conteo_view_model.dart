@@ -99,6 +99,7 @@ class ConteoViewModel extends ChangeNotifier {
   String? _error;
   String? _aviso;
   final Map<String, int> _ultimaConsulta = {};
+  Set<String> _visibles = const {};
   bool _cerrado = false;
 
   bool get cargando => _cargando;
@@ -120,21 +121,29 @@ class ConteoViewModel extends ChangeNotifier {
   List<FilaConteo> get todas => List.unmodifiable(_filas);
 
   /// Filas que pasan el filtro por nombre (normalizado como en CUS-06) y el
-  /// filtro elegido.
-  List<FilaConteo> get filas {
+  /// filtro elegido. Cuáles pasan se decide al buscar, al elegir el filtro, al
+  /// cargar y al confirmar, no al escribir una cantidad: así la fila en la que
+  /// el tendero escribe no se va de la lista (con "Sin contar", por ejemplo).
+  List<FilaConteo> get filas =>
+      _filas.where((f) => _visibles.contains(f.producto.getId())).toList();
+
+  void _fijarVisibles() => _visibles = {
+    for (final f in _filas)
+      if (_pasaFiltro(f)) f.producto.getId(),
+  };
+
+  bool _pasaFiltro(FilaConteo f) {
     final buscado = normalizarTexto(_busqueda);
-    return _filas.where((f) {
-      if (buscado.isNotEmpty &&
-          !normalizarTexto(f.producto.getNombre()).contains(buscado)) {
-        return false;
-      }
-      return switch (_filtro) {
-        FiltroConteo.todos => true,
-        FiltroConteo.contados => f.contado,
-        FiltroConteo.sinContar => !f.contado,
-        FiltroConteo.conDiferencia => _conDiferencia(f),
-      };
-    }).toList();
+    if (buscado.isNotEmpty &&
+        !normalizarTexto(f.producto.getNombre()).contains(buscado)) {
+      return false;
+    }
+    return switch (_filtro) {
+      FiltroConteo.todos => true,
+      FiltroConteo.contados => f.contado,
+      FiltroConteo.sinContar => !f.contado,
+      FiltroConteo.conDiferencia => _conDiferencia(f),
+    };
   }
 
   int get total => _filas.length;
@@ -167,6 +176,7 @@ class ConteoViewModel extends ChangeNotifier {
       final items = await _coordinator.listarExistencias(_tienda);
       if (_cerrado) return;
       _filas = [for (final item in items) FilaConteo(item: item)];
+      _fijarVisibles();
     } on ExcepcionNegocio catch (e) {
       if (_cerrado) return;
       _error = e.mensaje;
@@ -181,11 +191,13 @@ class ConteoViewModel extends ChangeNotifier {
 
   void buscar(String texto) {
     _busqueda = texto;
+    _fijarVisibles();
     notifyListeners();
   }
 
   void elegirFiltro(FiltroConteo filtro) {
     _filtro = filtro;
+    _fijarVisibles();
     notifyListeners();
   }
 
@@ -267,6 +279,7 @@ class ConteoViewModel extends ChangeNotifier {
       _error = mensajeErrorGuardar;
     } finally {
       _registrando = false;
+      _fijarVisibles();
       if (!_cerrado) {
         if (registrados.length == 1) {
           _aviso =

@@ -10,13 +10,16 @@ import 'package:gip/presentation/comun/tema/forma_gip.dart';
 /// borde va en `alerta` (un valor que hay que revisar, sin ser error) y
 /// [alineacion] permite cifras a la derecha (cantidades en una lista).
 ///
-/// [campoKey] va en el `TextField` para que las pruebas lo encuentren.
+/// [campoKey] va en el `TextField` para que las pruebas lo encuentren. Con
+/// [focusNode], el foco lo maneja quien crea el campo (una lista que se
+/// redibuja al escribir conserva así el campo enfocado).
 class CampoGip extends StatefulWidget {
   const CampoGip({
     super.key,
     required this.etiqueta,
     required this.controlador,
     this.campoKey,
+    this.focusNode,
     this.icono,
     this.pista,
     this.ayuda,
@@ -40,6 +43,7 @@ class CampoGip extends StatefulWidget {
   final String etiqueta;
   final TextEditingController controlador;
   final Key? campoKey;
+  final FocusNode? focusNode;
   final IconData? icono;
 
   /// Texto gris dentro del campo vacío ("nombre@tienda.com").
@@ -106,6 +110,7 @@ class _CampoGipState extends State<CampoGip> {
         child: TextField(
           key: widget.campoKey,
           controller: widget.controlador,
+          focusNode: widget.focusNode,
           enabled: widget.habilitado,
           obscureText: widget.contrasena && _oculto,
           keyboardType: widget.tipoTeclado,

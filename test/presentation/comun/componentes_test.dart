@@ -595,6 +595,25 @@ void main() {
     expect(find.text('78'), findsOneWidget);
   });
 
+  testWidgets('CampoGip usa el FocusNode que recibe', (tester) async {
+    final controlador = TextEditingController();
+    final foco = FocusNode();
+    addTearDown(controlador.dispose);
+    addTearDown(foco.dispose);
+    await montar(
+      tester,
+      CampoGip(
+        etiqueta: 'Contado',
+        controlador: controlador,
+        focusNode: foco,
+        campoKey: const Key('campo'),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('campo')));
+    await tester.pump();
+    expect(foco.hasFocus, isTrue);
+  });
+
   group('SelectorFiltro', () {
     Future<List<String>> montarFiltro(
       WidgetTester tester, {
@@ -629,6 +648,36 @@ void main() {
 
       await tester.tap(find.text('Sin contar'));
       expect(elegidos, ['sin']);
+    });
+
+    testWidgets('tocar una píldora no le quita el foco a un campo', (
+      tester,
+    ) async {
+      final controlador = TextEditingController();
+      final foco = FocusNode();
+      addTearDown(controlador.dispose);
+      addTearDown(foco.dispose);
+      await montar(
+        tester,
+        Column(
+          children: [
+            TextField(controller: controlador, focusNode: foco),
+            SelectorFiltro<String>(
+              opciones: const [
+                (valor: 'todos', etiqueta: 'Todos'),
+                (valor: 'sin', etiqueta: 'Sin contar'),
+              ],
+              elegido: 'todos',
+              onElegir: (_) {},
+            ),
+          ],
+        ),
+      );
+      foco.requestFocus();
+      await tester.pump();
+      await tester.tap(find.text('Sin contar'));
+      await tester.pump();
+      expect(foco.hasFocus, isTrue);
     });
 
     testWidgets('píldoras de 44 px que bajan de línea sin desbordar', (
