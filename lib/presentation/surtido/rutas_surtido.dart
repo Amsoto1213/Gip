@@ -2,12 +2,15 @@ import 'package:flutter/widgets.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
+import 'package:gip/presentation/surtido/conteo_view.dart';
+import 'package:gip/presentation/surtido/conteo_view_model.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view_model.dart';
 import 'package:gip/presentation/surtido/perdida_view.dart';
@@ -35,11 +38,15 @@ const rutaEntradaMercancia = '$rutaPrincipalSurtido/entrada';
 /// Pantalla Pérdida o devolución (CUS-03).
 const rutaPerdida = '$rutaPrincipalSurtido/perdida';
 
+/// Pantalla Conteo físico (CUS-04).
+const rutaConteo = '$rutaPrincipalSurtido/conteo';
+
 /// Subsecciones de Surtido en el menú lateral: solo las que ya tienen
-/// pantalla (DI-23). Existencias llega con CUS-25 y Conteo físico con CUS-04.
+/// pantalla (DI-23). Existencias llega con CUS-25.
 const subseccionesSurtido = <Subseccion>[
   (etiqueta: 'Entrada de mercancía', ruta: rutaEntradaMercancia),
   (etiqueta: 'Pérdida o devolución', ruta: rutaPerdida),
+  (etiqueta: 'Conteo físico', ruta: rutaConteo),
 ];
 
 /// Rama de la sección Surtido en la navegación principal. Las pantallas de la
@@ -85,6 +92,16 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
           ),
         ),
         GoRoute(
+          path: 'conteo',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => ConteoViewModel(
+              context.read<RegistrarConteoCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
+            )..cargar(),
+            child: const ConteoView(),
+          ),
+        ),
+        GoRoute(
           path: 'producto',
           builder: (context, state) => ChangeNotifierProvider(
             create: (context) => ProductoViewModel(
@@ -126,3 +143,6 @@ void abrirEntradaMercancia(BuildContext context) =>
 
 /// Abre la pantalla Pérdida o devolución.
 void abrirPerdida(BuildContext context) => context.push(rutaPerdida);
+
+/// Abre la pantalla Conteo físico.
+void abrirConteo(BuildContext context) => context.push(rutaConteo);
