@@ -10,6 +10,8 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
 
 import '../gestion_inventario/fakes_inventario.dart';
+import '../pagos/fakes_pagos.dart';
+import 'fakes_caja.dart';
 
 /// calcularMargenes (CUS-09, RF-08, ERS 3.2.4).
 void main() {
@@ -26,7 +28,13 @@ void main() {
 
   setUp(() {
     movimientos = MovimientoRepositorioFalso();
-    servicio = ServicioReportes(movimientos);
+    servicio = ServicioReportes(
+      VentaRepositorioFalso(),
+      movimientos,
+      CajaRepositorioFalso(),
+      FiadoRepositorioFalso(),
+      EstadoSincronizacionFalso(),
+    );
     huevo = ItemInventario(
       'i1',
       Producto('p1', 'H1', 'Huevo AA', UnidadMedida.unidad, d('400'), d('550')),
