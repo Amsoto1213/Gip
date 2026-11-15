@@ -36,3 +36,25 @@ Implementar en `lib/presentation/comun/tema/` (`ColorScheme` + `TextTheme` de Ma
 - Navegación móvil inferior de 72 px con 5 secciones: **Vender, Surtido, Fiados, Caja, Negocio** (insignia en Negocio con el número de alertas).
 - Web: mismas 5 secciones; ancho de diseño 1280–1440 px, adaptable (RNF-20). Mismas acciones en móvil y web (ver tablero "Matriz de paridad").
 - Íconos de trazo (estilo Lucide). Sin emoji.
+
+## Rediseño visual (14 nov 2026)
+
+Detalle en `docs/ui/rediseno/README.md` y en sus prototipos HTML. En código: colores en `ColoresGip`/`ColoresExtraGip` (`tema/colores_gip.dart`), radios y sombras en `FormaGip` (`tema/forma_gip.dart`).
+
+| Token | Valor | Uso |
+|---|---|---|
+| superficieSuave | `#F7F9F7` | encabezados de tabla, filas al pasar el mouse, caja del producto |
+| pasoFondo / pasoFondoActivo | `#EEF3F0` / `#DCE7E1` | botones − y + (normal / mouse encima) |
+| navFondo | `#13201B` | menú lateral web y caja oscura del resumen |
+| navTexto / navTextoSecundario | `#C9D3CE` / `#9FB0A8` | textos del menú lateral |
+| verdeCirculoClaro / verdeCirculoOscuro | `#0E7A56` / `#095C40` | círculos decorativos del login |
+| sombraTarjeta | `0 1px 2px rgba(19,32,27,.04), 0 8px 24px rgba(19,32,27,.05)` | tarjetas normales |
+| sombraElevada | `0 1px 2px rgba(19,32,27,.04), 0 22px 56px rgba(19,32,27,.10)` | tarjeta del login, resumen |
+| sombraBotonPrimario | `0 6px 16px rgba(11,107,75,.28)` | botón principal |
+| haloFoco | `0 0 0 4px rgba(11,107,75,.14)` | campo con foco |
+
+- Radios: tarjeta 22, tarjeta de acción 20, caja de ícono 14–16, campos 14, botón principal 16, chip 999.
+- Campos: 52–54 px de alto, borde 1,5 px `bordeFuerte`; con foco, borde `primario` y halo.
+- Botón principal: 56–58 px, texto 17 px peso 700; hover y presionado en `primarioOscuro`.
+- Títulos de pantalla: Archivo 800, 34 px web / 30 px móvil (23 px en pantallas internas del móvil), interletrado −0,02 em.
+- Las acciones van solo en verde; amarillo y rojo solo para estados ("Poco", "Agotado", errores, lo que se resta).

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gip/presentation/comun/tema/colores_gip.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
 import 'package:gip/presentation/comun/tema/tipografia_gip.dart';
 
 export 'colores_gip.dart';
+export 'forma_gip.dart';
 export 'tipografia_gip.dart';
 
 /// Tema Material 3 del GIP con los tokens de `docs/ui/tokens.md`.
@@ -32,8 +34,11 @@ abstract final class TemaGip {
     );
     final textos = TipografiaGip.textTheme();
     final campoBorde = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: ColoresGip.bordeFuerte),
+      borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+      borderSide: const BorderSide(
+        color: ColoresGip.bordeFuerte,
+        width: FormaGip.grosorBordeCampo,
+      ),
     );
     final etiquetaNavegacion = textos.labelMedium!;
 
@@ -53,7 +58,7 @@ abstract final class TemaGip {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(FormaGip.radioTarjeta),
           side: const BorderSide(color: ColoresGip.borde),
         ),
       ),
@@ -70,24 +75,48 @@ abstract final class TemaGip {
         border: campoBorde,
         enabledBorder: campoBorde,
         focusedBorder: campoBorde.copyWith(
-          borderSide: const BorderSide(color: ColoresGip.primario, width: 2),
+          borderSide: const BorderSide(
+            color: ColoresGip.primario,
+            width: FormaGip.grosorBordeCampo,
+          ),
+        ),
+        hintStyle: textos.bodyLarge!.copyWith(
+          color: ColoresGip.textoSecundario,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: textos.titleMedium!.copyWith(fontWeight: FontWeight.w700),
-        ),
+        style:
+            FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  FormaGip.radioBotonPrimario,
+                ),
+              ),
+              textStyle: textos.titleMedium!.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ).copyWith(
+              // Hover y presionado con primarioOscuro (rediseño).
+              backgroundColor: WidgetStateProperty.resolveWith(
+                (estados) => estados.contains(WidgetState.disabled)
+                    ? null
+                    : estados.contains(WidgetState.pressed) ||
+                          estados.contains(WidgetState.hovered)
+                    ? ColoresGip.primarioOscuro
+                    : ColoresGip.primario,
+              ),
+            ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(44, 44),
-          side: const BorderSide(color: ColoresGip.bordeFuerte),
+          side: const BorderSide(
+            color: ColoresGip.bordeFuerte,
+            width: FormaGip.grosorBordeCampo,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(FormaGip.radioCampo),
           ),
         ),
       ),

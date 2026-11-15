@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>GIP · Surtido (web)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0B6B4B}a:hover{color:#08523A}
+.nav a{color:#C9D3CE;text-decoration:none}.nav a:hover{background:rgba(255,255,255,0.06);color:#FFFFFF}
+.accion:hover{border-color:#0B6B4B;box-shadow:0 10px 28px rgba(19,32,27,0.10)}
+.fila:hover{background:#F7F9F7}
+.buscar input{border:0;outline:0;background:transparent;font:inherit;color:#13201B;flex:1;min-width:0}
+</style>
+</helmet>
+<div style="min-height: 980px; display: flex; flex-wrap: wrap; background: #F3F5F2; font-family: Inter, system-ui, sans-serif; color: #13201B">
+  <nav class="nav" aria-label="Secciones" style="flex: 1 1 264px; max-width: 280px; box-sizing: border-box; background: #13201B; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 4px 8px 22px">
+      <div style="width: 44px; height: 44px; border-radius: 14px; background: #0B6B4B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: Archivo, sans-serif; font-weight: 800; font-size: 16px">GIP</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 16px; color: #FFFFFF">Granero El Porvenir</span>
+        <span style="font-size: 13px; color: #9FB0A8">Arjona, Bolívar</span>
+      </div>
+    </div>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Vender</a>
+    <a href="#" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 700; background: #0B6B4B; color: #FFFFFF">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Surtido</a>
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 4px 0 8px 32px">
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px; background: rgba(255,255,255,0.08); color: #FFFFFF; font-weight: 600">Existencias</a>
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px">Entrada de mercancía</a>
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px">Pérdida o devolución</a>
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px">Conteo físico</a>
+    </div>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path></svg>Fiados</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><path d="M2 10h20"></path></svg>Caja</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>Negocio</a>
+    <div style="flex: 1"></div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+      <div style="width: 36px; height: 36px; border-radius: 999px; background: #E3F1EA; color: #0B6B4B; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">CR</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-size: 14px; font-weight: 600; color: #FFFFFF">Carmen Ruiz</span>
+        <span style="font-size: 12px; color: #9FB0A8">Administradora</span>
+      </div>
+    </div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 36px 44px 48px; display: flex; flex-direction: column; gap: 24px">
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: Archivo, sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.02em">Surtido</h1>
+        <span style="font-size: 15px; color: #4A5852">128 productos · valor del surtido $ 4.812.000</span>
+      </div>
+      <button type="button" style="height: 50px; padding: 0 22px; border: 0; border-radius: 14px; background: #0B6B4B; color: #FFFFFF; font: inherit; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 16px rgba(11,107,75,0.25); cursor: pointer">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Producto nuevo</button>
+    </header>
+    <div style="display: flex; gap: 12px">
+      <label class="buscar" style="flex: 1; height: 58px; box-sizing: border-box; background: #FFFFFF; border: 1.5px solid #C7D0CB; border-radius: 16px; display: flex; align-items: center; gap: 12px; padding: 0 18px; box-shadow: 0 1px 2px rgba(19,32,27,0.04)">
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4A5852" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar producto</span>
+        <input type="search" placeholder="Buscar por nombre o pasar el lector…" style="font-size: 16px">
+        <span style="font-size: 12px; font-weight: 600; color: #4A5852; border: 1px solid #DCE2DE; border-radius: 8px; padding: 4px 8px">Ctrl K</span>
+      </label>
+      <button type="button" aria-label="Leer código con el lector" style="width: 58px; height: 58px; border: 0; border-radius: 16px; background: #13201B; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M8 7v10"></path><path d="M12 7v10"></path><path d="M16 7v10"></path></svg>
+      </button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+      <button type="button" class="accion" style="text-align: left; background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; font: inherit; color: inherit; cursor: pointer; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 6px 18px rgba(19,32,27,0.05)">
+        <div style="width: 52px; height: 52px; border-radius: 16px; background: #E3F1EA; display: flex; align-items: center; justify-content: center; flex: none">
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B6B4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span style="font-weight: 700; font-size: 17px">Registrar entrada</span>
+          <span style="font-size: 14px; color: #4A5852">Llegó mercancía del proveedor</span>
+        </div>
+      </button>
+      <button type="button" class="accion" style="text-align: left; background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; font: inherit; color: inherit; cursor: pointer; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 6px 18px rgba(19,32,27,0.05)">
+        <div style="width: 52px; height: 52px; border-radius: 16px; background: #E3F1EA; display: flex; align-items: center; justify-content: center; flex: none">
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B6B4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17 13.5 8.5 8.5 13.5 2 7"></path><path d="M16 17h6v-6"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span style="font-weight: 700; font-size: 17px">Registrar pérdida</span>
+          <span style="font-size: 14px; color: #4A5852">Vencido, dañado o devuelto</span>
+        </div>
+      </button>
+      <button type="button" class="accion" style="text-align: left; background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 16px; font: inherit; color: inherit; cursor: pointer; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 6px 18px rgba(19,32,27,0.05)">
+        <div style="width: 52px; height: 52px; border-radius: 16px; background: #E3F1EA; display: flex; align-items: center; justify-content: center; flex: none">
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B6B4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span style="font-weight: 700; font-size: 17px">Conteo físico</span>
+          <span style="font-size: 14px; color: #4A5852">Cuadrar lo que hay en el estante</span>
+        </div>
+      </button>
+    </div>
+    <section style="background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 22px; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 10px 30px rgba(19,32,27,0.06); overflow: hidden">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px; border-bottom: 1px solid #EEF1EF">
+        <h2 style="margin: 0; font-family: Archivo, sans-serif; font-weight: 700; font-size: 20px">Existencias</h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 0; background: #13201B; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600">Todos · 128</button>
+          <button type="button" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid #F2C14E; background: #FFF4D6; color: #6B4200; font: inherit; font-size: 14px; font-weight: 600">Poco · 6</button>
+          <button type="button" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid #F3C1BC; background: #FCE8E6; color: #B3261E; font: inherit; font-size: 14px; font-weight: 600">Agotados · 1</button>
+          <button type="button" style="height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid #C7D0CB; background: #FFFFFF; color: #13201B; font: inherit; font-size: 14px; font-weight: 600">Por peso</button>
+        </div>
+      </div>
+      <div style="overflow-x: auto">
+        <div style="min-width: 760px">
+          <div style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.3fr 1.6fr; gap: 12px; padding: 12px 22px; font-size: 13px; font-weight: 600; color: #4A5852; text-transform: uppercase; letter-spacing: 0.04em; background: #F7F9F7">
+            <span>Producto</span><span>Unidad</span><span style="text-align: right">Precio</span><span style="text-align: right">Hay</span><span>Último movimiento</span>
+          </div>
+          <sc-for list="{{ filas }}" as="f" hint-placeholder-count="6">
+            <div class="fila" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.3fr 1.6fr; gap: 12px; align-items: center; padding: 14px 22px; border-top: 1px solid #EEF1EF">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+                <div style="width: 40px; height: 40px; border-radius: 12px; background: #F3F5F2; display: flex; align-items: center; justify-content: center; flex: none">
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5852" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+                </div>
+                <div style="display: flex; flex-direction: column; min-width: 0">
+                  <span style="font-weight: 600; font-size: 16px">{{ f.nombre }}</span>
+                  <span style="font-size: 13px; color: #4A5852">{{ f.codigo }}</span>
+                </div>
+              </div>
+              <span style="font-size: 15px; color: #4A5852">{{ f.unidad }}</span>
+              <span style="font-size: 15px; text-align: right; font-variant-numeric: tabular-nums">{{ f.precio }}</span>
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px">
+                <sc-if value="{{ f.tieneEstado }}" hint-placeholder-val="{{ false }}">
+                  <span style="{{ f.estadoEstilo }}">{{ f.estado }}</span>
+                </sc-if>
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums">{{ f.hay }}</span>
+              </div>
+              <span style="font-size: 14px; color: #4A5852">{{ f.mov }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+renderVals() {
+const poco = 'font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #FFF4D6; color: #6B4200';
+const agotado = 'font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #FCE8E6; color: #B3261E';
+const filas = [
+  { nombre: 'Aceite 1 L', codigo: 'P014', unidad: 'Unidad', precio: '$ 9.900', hay: '32', mov: 'Entrada · hoy 4:10 p. m.' },
+  { nombre: 'Arroz 500 g', codigo: 'P001', unidad: 'Unidad', precio: '$ 2.800', hay: '46', mov: 'Venta · hoy 3:52 p. m.' },
+  { nombre: 'Coco', codigo: 'P032', unidad: 'Unidad', precio: '$ 3.000', hay: '2', mov: 'Venta · hoy 11:20 a. m.', estado: 'Poco', estadoEstilo: poco },
+  { nombre: 'Queso costeño', codigo: 'P045', unidad: 'Libra', precio: '$ 9.000', hay: '0', mov: 'Venta · ayer 7:40 p. m.', estado: 'Agotado', estadoEstilo: agotado },
+  { nombre: 'Panela 500 g', codigo: 'P020', unidad: 'Unidad', precio: '$ 3.200', hay: '12', mov: 'Conteo · 9 nov.' },
+  { nombre: 'Chocolate en pastilla', codigo: 'P027', unidad: 'Unidad', precio: '$ 4.300', hay: '9', mov: 'Pérdida · 8 nov.' }
+].map((f) => ({ ...f, tieneEstado: Boolean(f.estado) }));
+return { filas };
+}
+}
+</script>
+</body>
+</html>
