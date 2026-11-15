@@ -32,3 +32,15 @@ class ExcepcionFormasPagoNoValidas extends ExcepcionNegocio {
   const ExcepcionFormasPagoNoValidas()
     : super('Las formas de pago no cubren el total de la venta');
 }
+
+/// Cliente nuevo sin nombre (CUS-07, pasos 4 a 6).
+class ExcepcionNombreClienteObligatorio extends ExcepcionNegocio {
+  const ExcepcionNombreClienteObligatorio()
+    : super('El nombre del cliente es obligatorio');
+}
+
+/// Fiado con monto cero o negativo (CUS-07, pasos 14 a 16; IE-06).
+class ExcepcionMontoFiadoNoValido extends ExcepcionNegocio {
+  const ExcepcionMontoFiadoNoValido()
+    : super('El monto del fiado debe ser mayor que cero');
+}
