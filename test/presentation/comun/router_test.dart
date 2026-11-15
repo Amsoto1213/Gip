@@ -9,6 +9,7 @@ import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
@@ -28,6 +29,9 @@ class BuscarProductoFalso extends Mock implements BuscarProductoCoordinator {}
 
 class RegistrarEntradaFalso extends Mock
     implements RegistrarEntradaMercanciaCoordinator {}
+
+class RegistrarPerdidaFalso extends Mock
+    implements RegistrarPerdidaCoordinator {}
 
 class RegistrarVentaFalso extends Mock implements RegistrarVentaCoordinator {}
 
@@ -58,6 +62,7 @@ void main() {
         gestionarProducto: GestionarProductoFalso(),
         buscarProducto: BuscarProductoFalso(),
         registrarEntradaMercancia: RegistrarEntradaFalso(),
+        registrarPerdida: RegistrarPerdidaFalso(),
         registrarVenta: RegistrarVentaFalso(),
       ),
     );

@@ -5,6 +5,8 @@ import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/merma.dart';
+import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -14,6 +16,7 @@ import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/inventario_repositorio_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/movimiento_inventario_repositorio_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/producto_repositorio_drift.dart';
+import 'package:gip/transversal/errores/errores_inventario.dart';
 
 /// Lee con el repositorio real y falla al guardar el ítem, para probar el
 /// rollback de la transacción de drift.
@@ -207,7 +210,113 @@ void main() {
     });
   });
 
+  group('guardar una merma (CUS-03)', () {
+    test('inserta tipo MERMA con cantidad negativa y su motivo', () async {
+      await movimientos.guardar(
+        tienda,
+        Merma(
+          'm1',
+          item,
+          d('-2.5'),
+          DateTime.utc(2026, 11, 14, 9),
+          MotivoMerma.devueltoProveedor,
+        ),
+      );
+
+      final fila = (await filas()).single;
+      expect(fila.id, 'm1');
+      expect(fila.tiendaId, 't1');
+      expect(fila.tipo, 'MERMA');
+      expect(fila.estado, 'VIGENTE');
+      expect(fila.cantidad, d('-2.5'));
+      expect(fila.motivo, 'DEVUELTO_PROVEEDOR');
+      expect(fila.costoUnitario, isNull);
+      expect(fila.ventaId, isNull);
+      final anotada = (await cola()).single;
+      expect(
+        (anotada.tabla, anotada.registroId, anotada.operacion),
+        ('movimientos_inventario', 'm1', 'INSERTAR'),
+      );
+    });
+
+    test('guarda cada motivo con su nombre del servidor', () async {
+      var n = 0;
+      for (final motivo in MotivoMerma.values) {
+        await movimientos.guardar(
+          tienda,
+          Merma('m${n++}', item, d('-1'), DateTime.utc(2026), motivo),
+        );
+      }
+      expect((await filas()).map((f) => f.motivo), [
+        'VENCIDO',
+        'DANADO',
+        'DEVUELTO_PROVEEDOR',
+        'OTRO',
+      ]);
+    });
+
+    test('una merma no cuenta como última entrada', () async {
+      await movimientos.guardar(
+        tienda,
+        Merma('m1', item, d('-1'), DateTime.utc(2026), MotivoMerma.otro),
+      );
+      expect(await movimientos.buscarUltimaEntrada(item), isNull);
+    });
+  });
+
   group('con ServicioInventario y UnidadTrabajoDrift', () {
+    test('registrarMerma baja el stock y guarda el motivo', () async {
+      final servicio = ServicioInventario(
+        items,
+        movimientos,
+        d('5'),
+        UnidadTrabajoDrift(base),
+      );
+
+      final merma = await servicio.registrarMerma(
+        tienda,
+        aceite,
+        d('3'),
+        MotivoMerma.vencido,
+      );
+
+      expect(merma.getItem().getStockActual(), d('5'));
+      expect(
+        (await items.buscarItem(tienda, aceite))!.getStockActual(),
+        d('5'),
+      );
+      final fila = (await filas()).single;
+      expect(
+        (fila.tipo, fila.cantidad, fila.motivo),
+        ('MERMA', d('-3'), 'VENCIDO'),
+      );
+      expect((await cola()).map((c) => (c.tabla, c.operacion)), [
+        ('movimientos_inventario', 'INSERTAR'),
+        ('items_inventario', 'ACTUALIZAR'),
+      ]);
+    });
+
+    test('registrarMerma mayor a la existencia no guarda nada', () async {
+      final servicio = ServicioInventario(
+        items,
+        movimientos,
+        d('5'),
+        UnidadTrabajoDrift(base),
+      );
+
+      await expectLater(
+        servicio.registrarMerma(tienda, aceite, d('9'), MotivoMerma.danado),
+        throwsA(isA<ExcepcionCantidadSuperaExistencia>()),
+      );
+
+      expect(await filas(), isEmpty);
+      expect(await cola(), isEmpty);
+      expect(
+        (await items.buscarItem(tienda, aceite))!.getStockActual(),
+        d('8'),
+      );
+    });
+
     test('registrarEntrada guarda movimiento, stock y cola juntos', () async {
       final servicio = ServicioInventario(
         items,

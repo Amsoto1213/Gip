@@ -34,3 +34,17 @@ class ExcepcionStockNegativo extends ExcepcionNegocio {
   const ExcepcionStockNegativo()
     : super('No hay suficiente existencia del producto');
 }
+
+/// Cantidad <= 0 o motivo sin elegir en una pérdida o devolución (CUS-03,
+/// pasos 5 a 7).
+class ExcepcionDatosMermaNoValidos extends ExcepcionNegocio {
+  const ExcepcionDatosMermaNoValidos()
+    : super('La cantidad debe ser mayor que cero y el motivo es obligatorio');
+}
+
+/// La pérdida o devolución saca más de lo que hay en el surtido (CUS-03, paso
+/// 22; DI-22).
+class ExcepcionCantidadSuperaExistencia extends ExcepcionNegocio {
+  const ExcepcionCantidadSuperaExistencia()
+    : super('La cantidad supera la existencia');
+}

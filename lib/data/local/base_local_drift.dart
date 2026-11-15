@@ -47,9 +47,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
 
   /// 1: cola_pendientes. 2: productos e items_inventario (CUS-18).
   /// 3: movimientos_inventario (CUS-01). 4: cajas, movimientos_caja, ventas,
-  /// formas_pago y las columnas de SALIDA_VENTA (CUS-02).
+  /// formas_pago y las columnas de SALIDA_VENTA (CUS-02). 5: columna `motivo`
+  /// de MERMA en movimientos_inventario (CUS-03).
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,6 +90,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
             movimientosInventario.precioUnitario,
           );
         }
+      }
+      // Si la tabla se acaba de crear en el paso 3, ya trae la columna.
+      if (desde >= 3 && desde < 5) {
+        await m.addColumn(movimientosInventario, movimientosInventario.motivo);
       }
     },
   );

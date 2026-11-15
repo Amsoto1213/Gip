@@ -15,8 +15,9 @@ import 'package:gip/data/local/tablas/ventas.dart';
 /// de cada subclase son nulas en los otros tipos: ENTRADA usa
 /// `costo_unitario` y `numero_factura`; SALIDA_VENTA, `venta_id`,
 /// `precio_unitario` y `costo_unitario` (el precio de compra del momento,
-/// nulo si no se conocía; DA-61, DI-21). Las de MERMA y AJUSTE_CONTEO las
-/// agrega su caso de uso (DI-20).
+/// nulo si no se conocía; DA-61, DI-21); MERMA, `motivo` (VENCIDO, DANADO,
+/// DEVUELTO_PROVEEDOR u OTRO; DI-22). Las de AJUSTE_CONTEO las agrega su caso
+/// de uso (DI-20).
 @DataClassName('FilaMovimientoInventario')
 @TableIndex(name: 'movimientos_inventario_tienda_idx', columns: {#tiendaId})
 @TableIndex(
@@ -37,6 +38,7 @@ class MovimientosInventario extends Table {
   TextColumn get ventaId => text().nullable().references(Ventas, #id)();
   TextColumn get precioUnitario =>
       text().map(const ConversorDecimal()).nullable()();
+  TextColumn get motivo => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

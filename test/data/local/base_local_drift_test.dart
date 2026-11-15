@@ -89,7 +89,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 4);
+      expect(actual.schemaVersion, 5);
       expect(
         await tablas(actual),
         containsAll([
@@ -104,7 +104,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 4);
+      expect(version.read<int>('user_version'), 5);
       await actual.close();
     });
 
@@ -147,8 +147,42 @@ void main() {
                   .customSelect('PRAGMA table_info(movimientos_inventario)')
                   .get())
               .map((f) => f.read<String>('name'));
-      expect(columnas, containsAll(['venta_id', 'precio_unitario']));
+      expect(columnas, containsAll(['venta_id', 'precio_unitario', 'motivo']));
       await v4.close();
     });
+    test(
+      'de la versión 4 a la 5 agrega motivo (MERMA) sin perder filas',
+      () async {
+        final archivo = File('${carpeta.path}/gip.sqlite');
+
+        // Deja la base como estaba en la versión 4 (CUS-02), con una entrada.
+        final v4 = BaseLocalDrift(NativeDatabase(archivo));
+        await v4.customStatement(
+          'ALTER TABLE movimientos_inventario DROP COLUMN motivo',
+        );
+        await v4.customStatement('PRAGMA foreign_keys = OFF');
+        await v4.customStatement(
+          "INSERT INTO movimientos_inventario (id, tienda_id, item_id, tipo, "
+          "cantidad, fecha, estado, costo_unitario) VALUES ('e1', 't1', 'i1', "
+          "'ENTRADA', '24', '2026-11-14T10:00:00.000Z', 'VIGENTE', '8600')",
+        );
+        await v4.customStatement('PRAGMA user_version = 4');
+        await v4.close();
+
+        final v5 = BaseLocalDrift(NativeDatabase(archivo));
+        final columnas =
+            (await v5
+                    .customSelect('PRAGMA table_info(movimientos_inventario)')
+                    .get())
+                .map((f) => f.read<String>('name'));
+        expect(columnas, contains('motivo'));
+        final fila = await v5
+            .customSelect('SELECT id, motivo FROM movimientos_inventario')
+            .getSingle();
+        expect(fila.read<String>('id'), 'e1');
+        expect(fila.read<String?>('motivo'), isNull);
+        await v5.close();
+      },
+    );
   });
 }

@@ -106,6 +106,7 @@ void main() {
         gestionarProducto: inventario.gestionarProducto,
         buscarProducto: inventario.buscarProducto,
         registrarEntradaMercancia: inventario.registrarEntradaMercancia,
+        registrarPerdida: inventario.registrarPerdida,
         registrarVenta: pagos.registrarVenta,
       ),
     );

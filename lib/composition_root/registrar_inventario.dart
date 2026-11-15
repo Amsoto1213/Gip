@@ -4,6 +4,7 @@ import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/inventario_repositorio_drift.dart';
@@ -17,6 +18,7 @@ typedef CoordinadoresInventario = ({
   GestionarProductoCoordinator gestionarProducto,
   BuscarProductoCoordinator buscarProducto,
   RegistrarEntradaMercanciaCoordinator registrarEntradaMercancia,
+  RegistrarPerdidaCoordinator registrarPerdida,
   ServicioInventario servicioInventario,
 });
 
@@ -50,6 +52,7 @@ CoordinadoresInventario registrarInventario(
     registrarEntradaMercancia: RegistrarEntradaMercanciaCoordinator(
       servicioInventario,
     ),
+    registrarPerdida: RegistrarPerdidaCoordinator(servicioInventario),
     servicioInventario: servicioInventario,
   );
 }
