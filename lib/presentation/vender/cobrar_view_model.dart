@@ -1,26 +1,27 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
+import 'package:gip/presentation/vender/fiar_view_model.dart';
 import 'package:gip/transversal/errores/errores_pagos.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
 
-/// Medio que el tendero está llenando en la pantalla Cobrar. Fiado llega con
-/// CUS-07.
-enum MedioCobro { efectivo, nequi }
+/// Medio que el tendero está llenando en la pantalla Cobrar.
+enum MedioCobro { efectivo, nequi, fiado }
 
 /// Estado de la pantalla Cobrar (CUS-02, mockup `Cobro`). Llama solo a
 /// [RegistrarVentaCoordinator].
 ///
-/// Conserva el [PagoContado] y el [PagoNequi] hasta confirmar; antes no se
-/// guarda nada (DA-57). El efectivo cubre lo que no cubre Nequi: si el Nequi
-/// cambia, vuelve a pedir el pago de contado con el mismo efectivo recibido
-/// (DI-21).
+/// Conserva el [PagoContado], el [PagoNequi] y el [Fiado] (CUS-07) hasta
+/// confirmar; antes no se guarda nada (DA-57). El efectivo cubre lo que no
+/// cubren Nequi y el fiado: si alguno cambia, vuelve a pedir el pago de
+/// contado con el mismo efectivo recibido (DI-21, DI-26).
 class CobrarViewModel extends ChangeNotifier {
   CobrarViewModel(
     this._coordinator,
@@ -53,6 +54,7 @@ class CobrarViewModel extends ChangeNotifier {
   Decimal? _efectivoRecibido;
   PagoContado? _contado;
   PagoNequi? _nequi;
+  Fiado? _fiado;
   String? _errorEfectivo;
   String? _errorNequi;
   String? _error;
@@ -62,6 +64,7 @@ class CobrarViewModel extends ChangeNotifier {
   MedioCobro get medio => _medio;
   PagoContado? get contado => _contado;
   PagoNequi? get nequi => _nequi;
+  Fiado? get fiado => _fiado;
   Decimal? get efectivoRecibido => _efectivoRecibido;
 
   /// Error del campo de efectivo ("El monto recibido no alcanza"), o null.
@@ -75,21 +78,46 @@ class CobrarViewModel extends ChangeNotifier {
 
   bool get confirmando => _confirmando;
 
-  /// Lo que debe cubrir el efectivo: el total menos lo pagado por Nequi.
-  Decimal get efectivoACubrir => total - (_nequi?.getMonto() ?? Decimal.zero);
+  Decimal get _montoNequi => _nequi?.getMonto() ?? Decimal.zero;
 
-  /// Lo que falta por cubrir con las formas de pago actuales.
+  /// Lo que debe cubrir el efectivo: el total menos lo pagado por Nequi y lo
+  /// fiado.
+  Decimal get efectivoACubrir =>
+      total - _montoNequi - (_fiado?.getMontoInicial() ?? Decimal.zero);
+
+  /// Lo que falta por cubrir con las formas de pago actuales. Negativo si
+  /// entre todas pasan el total.
   Decimal get faltante =>
       total -
-      [
-        _contado,
-        _nequi,
-      ].nonNulls.fold(Decimal.zero, (s, f) => s + f.calcularMontoCubierto());
+      formasPago.fold(Decimal.zero, (s, f) => s + f.calcularMontoCubierto());
 
   bool get pagoCompleto => faltante == Decimal.zero;
 
   /// Formas de pago que se entregan al confirmar.
-  List<FormaPago> get formasPago => [_contado, _nequi].nonNulls.toList();
+  List<FormaPago> get formasPago =>
+      [_contado, _nequi, _fiado].nonNulls.toList();
+
+  /// Lo que se le pasa a Fiar: lo que ya cubren el efectivo recibido (aunque
+  /// no alcance) y Nequi, y lo que falta, que es lo que se sugiere fiar.
+  DatosFiar get datosFiar {
+    final restoNequi = total - _montoNequi;
+    final recibido = _efectivoRecibido ?? Decimal.zero;
+    final efectivo = restoNequi <= Decimal.zero || recibido <= Decimal.zero
+        ? Decimal.zero
+        : (recibido < restoNequi ? recibido : restoNequi);
+    final yaPago = _montoNequi + efectivo;
+    final falta = total - yaPago;
+    final medios = [
+      if (efectivo > Decimal.zero) 'efectivo',
+      if (_montoNequi > Decimal.zero) 'Nequi',
+    ];
+    return (
+      total: total,
+      yaPago: yaPago,
+      detallePagado: medios.isEmpty ? 'nada aún' : medios.join(' y '),
+      falta: falta > Decimal.zero ? falta : Decimal.zero,
+    );
+  }
 
   /// Sugerencias de efectivo recibido: el monto justo y los tres primeros
   /// redondeos a billetes que lo superan (mockup `Cobro`).
@@ -152,6 +180,23 @@ class CobrarViewModel extends ChangeNotifier {
     _efectivoRecibido = null;
     _contado = null;
     _errorEfectivo = null;
+    notifyListeners();
+  }
+
+  /// Fiado preparado en Fiar (CUS-07): reemplaza al anterior y el efectivo
+  /// pasa a cubrir solo lo que no se fía.
+  void agregarFiado(Fiado fiado) {
+    _fiado = fiado;
+    _error = null;
+    _recalcularContado();
+    notifyListeners();
+  }
+
+  /// "×" del fiado.
+  void quitarFiado() {
+    _fiado = null;
+    _error = null;
+    _recalcularContado();
     notifyListeners();
   }
 

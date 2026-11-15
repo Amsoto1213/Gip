@@ -7,12 +7,13 @@ import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/vender/cobrar_view_model.dart';
+import 'package:gip/presentation/vender/rutas_vender.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 /// Pantalla Cobrar (CUS-02, mockup `Cobro`, con los componentes del
-/// rediseño): efectivo con cambio, Nequi y
-/// "Confirmar venta". Fiado llega con CUS-07. En la web también es una
+/// rediseño): efectivo con cambio, Nequi, fiado (CUS-07, abre Fiar) y
+/// "Confirmar venta". En la web también es una
 /// pantalla aparte, no el panel del mockup `Vender` (DI-21). Al confirmar
 /// vuelve a Vender con verdadero.
 class CobrarView extends StatefulWidget {
@@ -56,6 +57,14 @@ class _CobrarViewState extends State<CobrarView> {
     _vm.quitarNequi();
   }
 
+  /// Abre Fiar (CUS-07) y agrega el fiado que vuelve a las formas de pago.
+  Future<void> _fiar() async {
+    FocusScope.of(context).unfocus();
+    final vm = _vm;
+    final fiado = await abrirFiar(context, vm.datosFiar);
+    if (fiado != null && mounted) vm.agregarFiado(fiado);
+  }
+
   Future<void> _confirmar() async {
     FocusScope.of(context).unfocus();
     final registrada = await _vm.confirmar();
@@ -92,7 +101,19 @@ class _CobrarViewState extends State<CobrarView> {
                   total: vm.total,
                 ),
                 const SizedBox(height: 20),
-                Text('¿Cómo paga?', style: tema.textTheme.labelMedium),
+                Row(
+                  children: [
+                    Text('¿Cómo paga?', style: tema.textTheme.labelMedium),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Puede combinar hasta 3',
+                        textAlign: TextAlign.end,
+                        style: tema.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 SegmentedButton<MedioCobro>(
                   segments: const [
@@ -106,6 +127,11 @@ class _CobrarViewState extends State<CobrarView> {
                       icon: Icon(Icons.phone_android),
                       label: Text('Nequi'),
                     ),
+                    ButtonSegment(
+                      value: MedioCobro.fiado,
+                      icon: Icon(Icons.receipt_long_outlined),
+                      label: Text('Fiado'),
+                    ),
                   ],
                   selected: {vm.medio},
                   showSelectedIcon: false,
@@ -117,15 +143,18 @@ class _CobrarViewState extends State<CobrarView> {
                 const SizedBox(height: 16),
                 TarjetaGip(
                   padding: const EdgeInsets.all(20),
-                  child: vm.medio == MedioCobro.efectivo
-                      ? _panelEfectivo(vm)
-                      : _panelNequi(vm),
+                  child: switch (vm.medio) {
+                    MedioCobro.efectivo => _panelEfectivo(vm),
+                    MedioCobro.nequi => _panelNequi(vm),
+                    MedioCobro.fiado => _panelFiado(vm),
+                  },
                 ),
                 const SizedBox(height: 16),
                 _ResumenPagos(
                   vm: vm,
                   onQuitarContado: _quitarContado,
                   onQuitarNequi: _quitarNequi,
+                  onQuitarFiado: vm.quitarFiado,
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 12),
@@ -199,7 +228,10 @@ class _CobrarViewState extends State<CobrarView> {
   Widget _panelEfectivo(CobrarViewModel vm) {
     final tema = Theme.of(context);
     if (vm.efectivoACubrir <= Decimal.zero) {
-      return Text('Nequi ya cubre el total', style: tema.textTheme.bodyLarge);
+      return Text(
+        'Los otros pagos ya cubren el total',
+        style: tema.textTheme.bodyLarge,
+      );
     }
     final contado = vm.contado;
     final sugerencias = vm.sugerenciasEfectivo;
@@ -291,6 +323,33 @@ class _CobrarViewState extends State<CobrarView> {
     ],
   );
 
+  Widget _panelFiado(CobrarViewModel vm) {
+    final tema = Theme.of(context);
+    final fiado = vm.fiado;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          fiado == null
+              ? 'Fíe todo o lo que falta a un cliente. Se guarda cuando '
+                    'confirme la venta.'
+              : '${fiado.getCliente().getNombre()} queda debiendo '
+                    '\$ ${mostrarPrecio(fiado.getMontoInicial())} de esta venta.',
+          key: const Key('cobrar_fiado_texto'),
+          style: tema.textTheme.bodyLarge,
+        ),
+        const SizedBox(height: 12),
+        BotonSecundario(
+          key: const Key('cobrar_fiar'),
+          texto: fiado == null ? 'Elegir cliente y monto' : 'Cambiar fiado',
+          icono: fiado == null ? Icons.person_search_outlined : Icons.edit,
+          expandido: true,
+          onPressed: _fiar,
+        ),
+      ],
+    );
+  }
+
   /// 15000 → "15 mil"; si no es de miles exactos, el precio completo.
   static String _enMiles(Decimal valor) {
     final mil = Decimal.fromInt(1000);
@@ -352,17 +411,21 @@ class _ResumenPagos extends StatelessWidget {
     required this.vm,
     required this.onQuitarContado,
     required this.onQuitarNequi,
+    required this.onQuitarFiado,
   });
 
   final CobrarViewModel vm;
   final VoidCallback onQuitarContado;
   final VoidCallback onQuitarNequi;
+  final VoidCallback onQuitarFiado;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final contado = vm.contado;
     final nequi = vm.nequi;
+    final fiado = vm.fiado;
+    final extra = tema.extension<ColoresExtraGip>()!;
     Widget fila(String clave, String texto, Decimal valor, VoidCallback f) =>
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -410,6 +473,13 @@ class _ResumenPagos extends StatelessWidget {
             nequi.getMonto(),
             onQuitarNequi,
           ),
+        if (fiado != null)
+          fila(
+            'fiado',
+            'Fiado · ${fiado.getCliente().getNombre()}',
+            fiado.getMontoInicial(),
+            onQuitarFiado,
+          ),
         if (vm.pagoCompleto)
           Row(
             children: [
@@ -431,9 +501,14 @@ class _ResumenPagos extends StatelessWidget {
           Text(
             'Falta \$ ${mostrarPrecio(vm.faltante)}',
             key: const Key('cobrar_falta'),
-            style: tema.textTheme.titleSmall?.copyWith(
-              color: tema.extension<ColoresExtraGip>()!.alertaTexto,
-            ),
+            style: tema.textTheme.titleSmall?.copyWith(color: extra.errorTexto),
+          )
+        else
+          Text(
+            'Los pagos pasan el total por '
+            '\$ ${mostrarPrecio(-vm.faltante)}',
+            key: const Key('cobrar_sobra'),
+            style: tema.textTheme.titleSmall?.copyWith(color: extra.errorTexto),
           ),
       ],
     );
