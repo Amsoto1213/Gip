@@ -20,8 +20,9 @@ enum EstiloFiltro {
 /// línea, bajan a la siguiente. Cada opción mide 44 px de alto y no toma el
 /// foco: tocar una no se lo quita al campo en el que se está escribiendo.
 ///
-/// - [EstiloFiltro.pildoras]: la elegida va rellena en `navFondo` con texto
-///   blanco y las demás con contorno.
+/// - [EstiloFiltro.pildoras]: texto de 13 px; la elegida va rellena en
+///   `navFondo` con texto blanco y las demás con contorno
+///   (`conteo-movil.html`).
 /// - [EstiloFiltro.pestanas]: grupo con fondo `fondo` y radio 14; la elegida
 ///   en `superficie` con sombra y texto 700, las demás sin fondo en
 ///   `textoSecundario`.
@@ -140,12 +141,13 @@ class SelectorFiltro<T> extends StatelessWidget {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 44),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Center(
                       widthFactor: 1,
                       child: Text(
                         opcion.etiqueta,
                         style: tema.textTheme.labelLarge?.copyWith(
+                          fontSize: 13,
                           color: opcion.valor == elegido
                               ? esquema.onPrimary
                               : esquema.onSurface,

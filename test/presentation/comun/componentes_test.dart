@@ -651,6 +651,25 @@ void main() {
     expect(find.text('78'), findsOneWidget);
   });
 
+  testWidgets('CampoGip con estiloTexto usa esa letra', (tester) async {
+    final controlador = TextEditingController(text: '46');
+    addTearDown(controlador.dispose);
+    const estilo = TextStyle(fontSize: 20, fontWeight: FontWeight.w800);
+    await montar(
+      tester,
+      CampoGip(
+        etiqueta: '',
+        controlador: controlador,
+        campoKey: const Key('campo'),
+        estiloTexto: estilo,
+      ),
+    );
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('campo'))).style,
+      estilo,
+    );
+  });
+
   testWidgets('CampoGip usa el FocusNode que recibe', (tester) async {
     final controlador = TextEditingController();
     final foco = FocusNode();

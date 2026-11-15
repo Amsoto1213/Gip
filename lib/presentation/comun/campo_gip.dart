@@ -37,6 +37,7 @@ class CampoGip extends StatefulWidget {
     this.onSubmitted,
     this.alineacion = TextAlign.start,
     this.resaltado = false,
+    this.estiloTexto,
   });
 
   /// Texto encima del campo. Vacío para un campo sin etiqueta.
@@ -75,6 +76,10 @@ class CampoGip extends StatefulWidget {
 
   /// Borde en `error` para marcar un valor por revisar o no válido.
   final bool resaltado;
+
+  /// Letra del valor escrito; por defecto `bodyLarge`. Para cantidades
+  /// importantes, Archivo 800 con cifras tabulares (fila del conteo).
+  final TextStyle? estiloTexto;
 
   @override
   State<CampoGip> createState() => _CampoGipState();
@@ -120,7 +125,7 @@ class _CampoGipState extends State<CampoGip> {
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
           textAlign: widget.alineacion,
-          style: tema.textTheme.bodyLarge,
+          style: widget.estiloTexto ?? tema.textTheme.bodyLarge,
           decoration: InputDecoration(
             enabledBorder: widget.resaltado ? bordeResaltado : null,
             focusedBorder: widget.resaltado ? bordeResaltado : null,

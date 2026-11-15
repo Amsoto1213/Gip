@@ -56,7 +56,7 @@ Detalle en `docs/ui/rediseno/README.md` y en sus prototipos HTML. En código: co
 | haloFoco | `0 0 0 4px rgba(11,107,75,.14)` | campo con foco |
 | sombraPestana | `0 1px 3px rgba(19,32,27,.12)` | pestaña de filtro elegida |
 
-- Radios: tarjeta 22, tarjeta de acción 20, caja de ícono 14–16, campos 14, botón principal 16, chip 999, grupo de pestañas 14 y pestaña 11.
+- Radios: tarjeta 22 (18 en las tarjetas de lista del móvil), tarjeta de acción 20, caja de ícono 14–16 (12 en una fila de tabla), campos 14, botón principal 16, chip 999, grupo de pestañas 14 y pestaña 11.
 - Campos: 52–54 px de alto, borde 1,5 px `bordeFuerte`; con foco, borde `primario` y halo.
 - Botón principal: 56–58 px, texto 17 px peso 700; hover y presionado en `primarioOscuro`.
 - Títulos de pantalla: Archivo 800, 34 px web / 30 px móvil (23 px en pantallas internas del móvil), interletrado −0,02 em.

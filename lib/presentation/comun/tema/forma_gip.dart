@@ -5,9 +5,15 @@ import 'package:flutter/material.dart';
 abstract final class FormaGip {
   // Radios.
   static const radioTarjeta = 22.0;
+
+  /// Tarjetas del móvil en listas densas (avance y filas del conteo).
+  static const radioTarjetaMovil = 18.0;
   static const radioTarjetaAccion = 20.0;
   static const radioCajaIcono = 16.0;
   static const radioCajaIconoPequena = 14.0;
+
+  /// Caja de 40 px con el ícono del producto en una fila de tabla.
+  static const radioCajaIconoTabla = 12.0;
   static const radioCampo = 14.0;
   static const radioBotonPrimario = 16.0;
   static const radioChip = 999.0;
