@@ -13,6 +13,7 @@ import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/estado_fiado.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
@@ -40,6 +41,10 @@ class FiadoQueFallaDespues implements IFiadoRepositorio {
     await _real.crear(tienda, fiado);
     throw StateError('falla del disco');
   }
+
+  @override
+  Future<void> registrarAbono(Tienda tienda, Fiado fiado, Abono abono) =>
+      _real.registrarAbono(tienda, fiado, abono);
 }
 
 /// CUS-07 de punta a punta sobre la base local: el fiado se guarda con la

@@ -1,4 +1,5 @@
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/interfaces/pagos/i_fiado_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
@@ -39,4 +40,9 @@ class FiadoRepositorioDrift implements IFiadoRepositorio {
       operacion: OperacionCola.insertar,
     );
   });
+
+  /// Pendiente: llega con la tabla `abonos` (CUS-08).
+  @override
+  Future<void> registrarAbono(Tienda tienda, Fiado fiado, Abono abono) =>
+      throw UnimplementedError('La tabla abonos llega en el siguiente paso');
 }
