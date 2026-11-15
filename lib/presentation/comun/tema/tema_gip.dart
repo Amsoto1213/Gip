@@ -27,7 +27,6 @@ abstract final class TemaGip {
       onSurfaceVariant: ColoresGip.textoSecundario,
       outline: ColoresGip.bordeFuerte,
       outlineVariant: ColoresGip.borde,
-      // Barra lateral oscura de la web.
       inverseSurface: ColoresGip.texto,
       onInverseSurface: ColoresGip.superficie,
       scrim: ColoresGip.velo,
@@ -40,7 +39,6 @@ abstract final class TemaGip {
         width: FormaGip.grosorBordeCampo,
       ),
     );
-    final etiquetaNavegacion = textos.labelMedium!;
 
     return ThemeData(
       colorScheme: esquema,
@@ -118,52 +116,6 @@ abstract final class TemaGip {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(FormaGip.radioCampo),
           ),
-        ),
-      ),
-      // Barra inferior del móvil: 72 px, activo en verde sin "píldora".
-      navigationBarTheme: NavigationBarThemeData(
-        height: 72,
-        backgroundColor: ColoresGip.superficie,
-        surfaceTintColor: Colors.transparent,
-        indicatorColor: Colors.transparent,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        iconTheme: WidgetStateProperty.resolveWith(
-          (estados) => IconThemeData(
-            size: 26,
-            color: estados.contains(WidgetState.selected)
-                ? ColoresGip.primario
-                : ColoresGip.textoSecundario,
-          ),
-        ),
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (estados) => etiquetaNavegacion.copyWith(
-            color: estados.contains(WidgetState.selected)
-                ? ColoresGip.primario
-                : ColoresGip.textoSecundario,
-          ),
-        ),
-      ),
-      // Barra lateral de la web: fondo oscuro y activo en verde.
-      navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: ColoresGip.texto,
-        indicatorColor: ColoresGip.primario,
-        indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        selectedIconTheme: const IconThemeData(
-          size: 24,
-          color: ColoresGip.superficie,
-        ),
-        unselectedIconTheme: const IconThemeData(
-          size: 24,
-          color: ColoresGip.bordeFuerte,
-        ),
-        selectedLabelTextStyle: textos.labelLarge!.copyWith(
-          color: ColoresGip.superficie,
-        ),
-        unselectedLabelTextStyle: textos.labelLarge!.copyWith(
-          fontWeight: FontWeight.w500,
-          color: ColoresGip.bordeFuerte,
         ),
       ),
     );

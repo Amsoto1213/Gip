@@ -5,6 +5,7 @@ import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coor
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view.dart';
@@ -33,6 +34,13 @@ const rutaEntradaMercancia = '$rutaPrincipalSurtido/entrada';
 
 /// Pantalla Pérdida o devolución (CUS-03).
 const rutaPerdida = '$rutaPrincipalSurtido/perdida';
+
+/// Subsecciones de Surtido en el menú lateral: solo las que ya tienen
+/// pantalla (DI-23). Existencias llega con CUS-25 y Conteo físico con CUS-04.
+const subseccionesSurtido = <Subseccion>[
+  (etiqueta: 'Entrada de mercancía', ruta: rutaEntradaMercancia),
+  (etiqueta: 'Pérdida o devolución', ruta: rutaPerdida),
+];
 
 /// Rama de la sección Surtido en la navegación principal. Las pantallas de la
 /// sección se agregan aquí como rutas hijas.

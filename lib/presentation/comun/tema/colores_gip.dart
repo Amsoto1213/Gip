@@ -155,9 +155,21 @@ class ColoresExtraGip extends ThemeExtension<ColoresExtraGip> {
       pasoFondoActivo: Color.lerp(pasoFondoActivo, other.pasoFondoActivo, t)!,
       navFondo: Color.lerp(navFondo, other.navFondo, t)!,
       navTexto: Color.lerp(navTexto, other.navTexto, t)!,
-      navTextoSecundario: Color.lerp(navTextoSecundario, other.navTextoSecundario, t)!,
-      verdeCirculoClaro: Color.lerp(verdeCirculoClaro, other.verdeCirculoClaro, t)!,
-      verdeCirculoOscuro: Color.lerp(verdeCirculoOscuro, other.verdeCirculoOscuro, t)!,
+      navTextoSecundario: Color.lerp(
+        navTextoSecundario,
+        other.navTextoSecundario,
+        t,
+      )!,
+      verdeCirculoClaro: Color.lerp(
+        verdeCirculoClaro,
+        other.verdeCirculoClaro,
+        t,
+      )!,
+      verdeCirculoOscuro: Color.lerp(
+        verdeCirculoOscuro,
+        other.verdeCirculoOscuro,
+        t,
+      )!,
     );
   }
 }

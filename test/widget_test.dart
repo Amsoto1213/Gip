@@ -13,6 +13,7 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coord
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
+import 'package:gip/presentation/comun/barra_inferior.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
@@ -74,7 +75,7 @@ void main() {
     await tester.pumpWidget(app());
   }
 
-  Finder barra() => find.byType(NavigationBar);
+  Finder barra() => find.byType(BarraInferior);
 
   /// Las 5 pestañas de la navegación principal están a la vista.
   void expectCincoPestanas() {
