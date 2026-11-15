@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
+import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
@@ -64,6 +65,7 @@ Future<void> main() async {
       generarAlertas: alertas.generarAlertas,
       consultarAlertas: alertas.consultarAlertas,
       consultarMargen: reportes.consultarMargen,
+      generarReporteDiario: reportes.generarReporteDiario,
     ),
   );
 }
@@ -84,6 +86,7 @@ class GipApp extends StatefulWidget {
     required this.generarAlertas,
     required this.consultarAlertas,
     required this.consultarMargen,
+    required this.generarReporteDiario,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -99,6 +102,7 @@ class GipApp extends StatefulWidget {
   final GenerarAlertasDiariasCoordinator generarAlertas;
   final ConsultarAlertasCoordinator consultarAlertas;
   final ConsultarMargenCoordinator consultarMargen;
+  final GenerarReporteDiarioCoordinator generarReporteDiario;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -143,6 +147,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.consultarCliente),
         Provider.value(value: widget.consultarAlertas),
         Provider.value(value: widget.consultarMargen),
+        Provider.value(value: widget.generarReporteDiario),
       ],
       child: MaterialApp.router(
         title: 'GIP',

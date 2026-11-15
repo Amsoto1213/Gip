@@ -25,6 +25,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'presentation/negocio/alertas_falsos.dart';
 import 'presentation/negocio/margen_falsos.dart';
+import 'presentation/negocio/reporte_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -89,6 +90,7 @@ void main() {
     generarAlertas: GenerarAlertasFalso(),
     consultarAlertas: ConsultarAlertasFalso(),
     consultarMargen: ConsultarMargenFalso(),
+    generarReporteDiario: GenerarReporteDiarioFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).

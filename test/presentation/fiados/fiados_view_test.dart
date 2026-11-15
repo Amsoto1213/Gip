@@ -24,6 +24,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../negocio/alertas_falsos.dart';
 import '../negocio/margen_falsos.dart';
+import '../negocio/reporte_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -130,6 +131,7 @@ void main() {
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasFalso(),
         consultarMargen: ConsultarMargenFalso(),
+        generarReporteDiario: GenerarReporteDiarioFalso(),
       ),
     );
     await tester.pumpAndSettle();
