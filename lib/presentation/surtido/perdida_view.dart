@@ -1,16 +1,22 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
-import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
-import 'package:gip/presentation/comun/tema/colores_gip.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
+import 'package:gip/presentation/comun/opcion_con_icono.dart';
+import 'package:gip/presentation/comun/resumen_movimiento.dart';
+import 'package:gip/presentation/comun/seccion_numerada.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
 import 'package:gip/presentation/surtido/perdida_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:gip/presentation/surtido/widgets_movimiento.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// Pantalla Pérdida o devolución (CUS-03, mockups `mPerdida` y `wPerdida`).
+/// Pantalla Pérdida o devolución (CUS-03), según
+/// `docs/ui/rediseno/perdida-web.html`: sección 1 "Producto y cantidad",
+/// sección 2 "Motivo" y, en la web, el resumen a la derecha.
 ///
 /// El producto se elige en Buscar producto (CUS-06) en modo seleccionar; si la
 /// pantalla abre sin producto, la búsqueda se abre sola. El motivo se elige de
@@ -54,6 +60,13 @@ class _PerdidaViewState extends State<PerdidaView> {
     _cantidad.text = mostrarCantidad(cantidad);
   }
 
+  /// Atajo "Todas (N)": pone toda la existencia como cantidad. Solo cambia el
+  /// campo; las reglas siguen en el view model (DI-23).
+  void _todas(Decimal existencia) {
+    _cantidad.text = mostrarCantidad(existencia);
+    context.read<PerdidaViewModel>().cambiarCantidad(_cantidad.text);
+  }
+
   Future<void> _registrar() async {
     FocusScope.of(context).unfocus();
     final registrada = await context.read<PerdidaViewModel>().registrar();
@@ -71,53 +84,52 @@ class _PerdidaViewState extends State<PerdidaView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<PerdidaViewModel>();
-    final ancho = MediaQuery.sizeOf(context).width >= 720;
-    final margen = ancho ? 32.0 : 20.0;
-    final boton = BotonRegistrarMovimiento(
-      prefijoClave: 'perdida',
+    final web = FormaGip.esWeb(context);
+    final boton = BotonPrimario(
+      key: const Key('perdida_registrar'),
       texto: 'Registrar pérdida',
-      registrando: vm.registrando,
+      icono: Icons.check,
+      cargando: vm.registrando,
       onPressed: vm.puedeConfirmar ? _registrar : null,
     );
-    final encabezado = EncabezadoSurtido(
-      titulo: ancho
-          ? 'Pérdida o devolución al proveedor'
-          : 'Pérdida o devolución',
+    final encabezado = EncabezadoPantalla(
+      titulo: web ? 'Registrar pérdida o devolución' : 'Pérdida o devolución',
+      miga: 'Pérdida o devolución',
+      seccion: 'Surtido',
+      contexto: web
+          ? 'Saque del surtido lo que se venció, se dañó o se le devolvió al '
+                'proveedor.'
+          : null,
       onVolver: _volver,
     );
-    final formulario = _formulario(vm, ancho);
+    final secciones = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _seccionProducto(vm),
+        const SizedBox(height: 18),
+        _seccionMotivo(vm),
+      ],
+    );
 
     return Scaffold(
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: ancho ? 1180 : 880),
-            child: ancho
+            constraints: BoxConstraints(maxWidth: web ? 1240 : 880),
+            child: web
                 ? ListView(
-                    padding: EdgeInsets.fromLTRB(margen, 16, margen, 24),
+                    padding: const EdgeInsets.fromLTRB(44, 32, 44, 48),
                     children: [
                       encabezado,
-                      const SizedBox(height: 20),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Card(
-                              margin: EdgeInsets.zero,
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: formulario,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            flex: 2,
-                            child: _Resumen(vm: vm, boton: boton),
-                          ),
-                        ],
+                      const SizedBox(height: 24),
+                      ColumnasMovimiento(
+                        formulario: secciones,
+                        resumen: _Resumen(
+                          vm: vm,
+                          boton: boton,
+                          onCancelar: _volver,
+                        ),
                       ),
                     ],
                   )
@@ -126,16 +138,18 @@ class _PerdidaViewState extends State<PerdidaView> {
                     children: [
                       Expanded(
                         child: ListView(
-                          padding: EdgeInsets.fromLTRB(margen, 16, margen, 24),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                           children: [
                             encabezado,
                             const SizedBox(height: 16),
-                            formulario,
+                            secciones,
+                            const SizedBox(height: 12),
+                            const _NotaMotivo(),
                           ],
                         ),
                       ),
                       BarraInferiorMovimiento(
-                        margen: margen,
+                        margen: 16,
                         hijos: [
                           MensajesMovimiento(error: vm.error, aviso: vm.aviso),
                           FilaResumen(
@@ -154,57 +168,69 @@ class _PerdidaViewState extends State<PerdidaView> {
     );
   }
 
-  Widget _formulario(PerdidaViewModel vm, bool ancho) {
-    final tema = Theme.of(context);
+  Widget _seccionProducto(PerdidaViewModel vm) {
     final habilitado = !vm.registrando;
-    final etiqueta = tema.textTheme.titleSmall?.copyWith(
-      color: tema.colorScheme.onSurfaceVariant,
-    );
     final producto = vm.producto;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (ancho) ...[
-          Text('Producto', style: etiqueta),
-          const SizedBox(height: 8),
-        ],
-        TarjetaProductoMovimiento(
+    final existencia = vm.existencia;
+    return SeccionNumerada(
+      numero: 1,
+      titulo: 'Producto y cantidad',
+      padding: EdgeInsets.zero,
+      child: PanelesProductoCantidad(
+        producto: PanelProducto(
           prefijoClave: 'perdida',
           producto: producto,
-          detalle: producto == null ? '' : _detalleProducto(vm, producto),
           textoSinProducto: '¿Qué producto sale?',
+          existencia: existencia == null
+              ? null
+              : 'Hay ${mostrarCantidad(existencia)}',
           habilitado: habilitado,
           onElegir: _elegirProducto,
         ),
-        const SizedBox(height: 20),
-        Text('¿Cuántas salen del surtido?', style: etiqueta),
-        const SizedBox(height: 8),
-        SelectorCantidad(
-          prefijoClave: 'perdida',
-          controlador: _cantidad,
-          habilitado: habilitado,
-          decimales: vm.admiteDecimales,
-          onCambio: vm.cambiarCantidad,
-          onSumar: _sumar,
+        cantidad: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const EtiquetaPanel('¿Cuántas salen del surtido?'),
+            const SizedBox(height: 12),
+            SelectorCantidad(
+              prefijoClave: 'perdida',
+              controlador: _cantidad,
+              habilitado: habilitado,
+              decimales: vm.admiteDecimales,
+              unidad: producto == null
+                  ? null
+                  : unidadCorta(producto.getUnidadMedida()),
+              onCambio: vm.cambiarCantidad,
+              onSumar: _sumar,
+            ),
+            if (existencia != null && existencia > Decimal.zero) ...[
+              const SizedBox(height: 12),
+              AtajoCantidad(
+                key: const Key('perdida_todas'),
+                texto: 'Todas (${mostrarCantidad(existencia)})',
+                onPressed: habilitado ? () => _todas(existencia) : null,
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 20),
-        Text('Motivo (obligatorio)', style: etiqueta),
-        const SizedBox(height: 8),
-        _SelectorMotivo(
-          seleccionado: vm.motivo,
-          habilitado: habilitado,
-          onElegir: (motivo) {
-            // Cierra el teclado de la cantidad al elegir el motivo.
-            FocusScope.of(context).unfocus();
-            vm.elegirMotivo(motivo);
-          },
-        ),
-        const SizedBox(height: 16),
-        const _NotaMotivo(),
-      ],
+      ),
     );
   }
+
+  Widget _seccionMotivo(PerdidaViewModel vm) => SeccionNumerada(
+    numero: 2,
+    titulo: 'Motivo',
+    etiqueta: 'Obligatorio',
+    child: _SelectorMotivo(
+      seleccionado: vm.motivo,
+      habilitado: !vm.registrando,
+      onElegir: (motivo) {
+        // Cierra el teclado de la cantidad al elegir el motivo.
+        FocusScope.of(context).unfocus();
+        vm.elegirMotivo(motivo);
+      },
+    ),
+  );
 }
 
 /// Nombre del motivo como lo ve el tendero.
@@ -215,20 +241,20 @@ String _nombreMotivo(MotivoMerma motivo) => switch (motivo) {
   MotivoMerma.otro => 'Otro',
 };
 
-String _nombreUnidad(UnidadMedida unidad) => switch (unidad) {
-  UnidadMedida.unidad => 'Unidad',
-  UnidadMedida.kilogramo => 'Kilogramo',
-  UnidadMedida.libra => 'Libra',
+/// Descripción del motivo (`docs/ui/rediseno/README.md`).
+String _descripcionMotivo(MotivoMerma motivo) => switch (motivo) {
+  MotivoMerma.vencido => 'Pasó la fecha de vencimiento',
+  MotivoMerma.danado => 'Roto, mojado o abierto',
+  MotivoMerma.devueltoProveedor => 'Se lo lleva el proveedor',
+  MotivoMerma.otro => 'Cualquier otra razón',
 };
 
-/// "Hay 14 · Unidad"; sin la existencia todavía, solo la unidad.
-String _detalleProducto(PerdidaViewModel vm, Producto producto) {
-  final unidad = _nombreUnidad(producto.getUnidadMedida());
-  final existencia = vm.existencia;
-  return existencia == null
-      ? unidad
-      : 'Hay ${mostrarCantidad(existencia)} · $unidad';
-}
+IconData _iconoMotivo(MotivoMerma motivo) => switch (motivo) {
+  MotivoMerma.vencido => Icons.event_busy_outlined,
+  MotivoMerma.danado => Icons.broken_image_outlined,
+  MotivoMerma.devueltoProveedor => Icons.local_shipping_outlined,
+  MotivoMerma.otro => Icons.more_horiz,
+};
 
 /// "12 unidades", "1 unidad", "2,5 kg".
 String _cantidadLarga(Decimal cantidad, UnidadMedida unidad) {
@@ -247,7 +273,8 @@ String _quedaraEnLargo(PerdidaViewModel vm) {
   return _cantidadLarga(quedara, producto.getUnidadMedida());
 }
 
-/// Lista cerrada de motivos en tarjetas de opción única (IE-03 b).
+/// Lista cerrada de motivos en 2 x 2 (IE-03 b); en una pantalla angosta, uno
+/// por fila.
 class _SelectorMotivo extends StatelessWidget {
   const _SelectorMotivo({
     required this.seleccionado,
@@ -261,204 +288,76 @@ class _SelectorMotivo extends StatelessWidget {
 
   static const _separacion = 12.0;
 
-  /// Una fila de 4 (wPerdida) si en cada opción cabe la palabra más larga de
-  /// los motivos; si no, 2 x 2 (mPerdida); en una pantalla muy angosta o con
-  /// letra muy grande, una por fila. Así ninguna palabra se corta
-  /// ("Devuelto al / proveedor").
-  @override
-  Widget build(BuildContext context) {
-    final estilo = _OpcionMotivo.estiloTexto(context);
-    final escala = MediaQuery.textScalerOf(context);
-    var palabraMasLarga = 0.0;
-    for (final motivo in MotivoMerma.values) {
-      for (final palabra in _nombreMotivo(motivo).split(' ')) {
-        final medida = TextPainter(
-          text: TextSpan(text: palabra, style: estilo),
-          textDirection: TextDirection.ltr,
-          textScaler: escala,
-          maxLines: 1,
-        )..layout();
-        if (medida.width > palabraMasLarga) palabraMasLarga = medida.width;
-        medida.dispose();
-      }
-    }
-    final anchoNecesario = _OpcionMotivo.anchoFijo + palabraMasLarga.ceil() + 1;
-    return LayoutBuilder(
-      builder: (context, restricciones) {
-        double anchoCon(int columnas) =>
-            (restricciones.maxWidth - (columnas - 1) * _separacion) / columnas;
-        final columnas = anchoCon(4) >= anchoNecesario
-            ? 4
-            : anchoCon(2) >= anchoNecesario
-            ? 2
-            : 1;
-        return _cuadricula(columnas);
-      },
-    );
-  }
-
-  Widget _cuadricula(int columnas) {
-    const separacion = _separacion;
-    final filas = <Widget>[];
-    const motivos = MotivoMerma.values;
-    for (var i = 0; i < motivos.length; i += columnas) {
-      if (i > 0) filas.add(const SizedBox(height: separacion));
-      filas.add(
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var j = i; j < i + columnas && j < motivos.length; j++) ...[
-                if (j > i) const SizedBox(width: separacion),
-                Expanded(
-                  child: _OpcionMotivo(
-                    motivo: motivos[j],
-                    seleccionada: motivos[j] == seleccionado,
-                    habilitado: habilitado,
-                    onElegir: onElegir,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      );
-    }
-    return Semantics(
-      label: 'Motivo (obligatorio)',
-      container: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: filas,
-      ),
-    );
-  }
-}
-
-class _OpcionMotivo extends StatelessWidget {
-  const _OpcionMotivo({
-    required this.motivo,
-    required this.seleccionada,
-    required this.habilitado,
-    required this.onElegir,
-  });
-
-  final MotivoMerma motivo;
-  final bool seleccionada;
-  final bool habilitado;
-  final ValueChanged<MotivoMerma> onElegir;
-
-  static const _relleno = 12.0;
-  static const _icono = 20.0;
-  static const _espacio = 10.0;
-
-  /// Ancho de la opción sin contar el texto: relleno, radio y espacio.
-  static const anchoFijo = 2 * _relleno + _icono + _espacio;
-
-  /// Texto de la opción: Inter 15 en negrita, como en los mockups.
-  static TextStyle? estiloTexto(BuildContext context) =>
-      Theme.of(context).textTheme.bodyMedium
-          ?.copyWith(fontWeight: FontWeight.w700, height: 1.2);
+  /// Ancho mínimo de cada opción para que el título y la descripción no se
+  /// corten feo.
+  static const _anchoMinimo = 250.0;
 
   @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final esquema = tema.colorScheme;
-    final forma = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
-      side: BorderSide(
-        color: seleccionada ? esquema.primary : esquema.outlineVariant,
-        width: seleccionada ? 2 : 1,
-      ),
-    );
-    return Semantics(
-      inMutuallyExclusiveGroup: true,
-      checked: seleccionada,
-      button: true,
-      child: Material(
-        key: Key('perdida_motivo_${motivo.name}'),
-        color: seleccionada ? esquema.primaryContainer : esquema.surface,
-        shape: forma,
-        child: InkWell(
-          customBorder: forma,
-          onTap: habilitado ? () => onElegir(motivo) : null,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 58),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _relleno,
-                vertical: 10,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    seleccionada
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_unchecked,
-                    size: _icono,
-                    color: seleccionada
-                        ? esquema.primary
-                        : esquema.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: _espacio),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, restricciones) {
+      final escala = MediaQuery.textScalerOf(context).scale(1);
+      final columnas =
+          (restricciones.maxWidth - _separacion) / 2 >= _anchoMinimo * escala
+          ? 2
+          : 1;
+      const motivos = MotivoMerma.values;
+      final filas = <Widget>[];
+      for (var i = 0; i < motivos.length; i += columnas) {
+        if (i > 0) filas.add(const SizedBox(height: _separacion));
+        filas.add(
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (
+                  var j = i;
+                  j < i + columnas && j < motivos.length;
+                  j++
+                ) ...[
+                  if (j > i) const SizedBox(width: _separacion),
                   Expanded(
-                    child: Text(
-                      _nombreMotivo(motivo),
-                      style: estiloTexto(context),
+                    child: OpcionConIcono(
+                      key: Key('perdida_motivo_${motivos[j].name}'),
+                      icono: _iconoMotivo(motivos[j]),
+                      titulo: _nombreMotivo(motivos[j]),
+                      descripcion: _descripcionMotivo(motivos[j]),
+                      elegida: motivos[j] == seleccionado,
+                      onTap: habilitado ? () => onElegir(motivos[j]) : null,
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
+        );
+      }
+      return Semantics(
+        label: 'Motivo (obligatorio)',
+        container: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: filas,
         ),
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
-/// Nota informativa del mockup bajo los motivos.
-class _NotaMotivo extends StatelessWidget {
-  const _NotaMotivo();
-
-  @override
-  Widget build(BuildContext context) {
-    final extra = Theme.of(context).extension<ColoresExtraGip>()!;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: extra.info,
-        border: Border.all(color: extra.infoTexto.withValues(alpha: 0.2)),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline, color: extra.infoTexto),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'No se puede guardar sin motivo. El motivo aparece en el '
-              'reporte de pérdidas del mes.',
-              style: TextStyle(color: extra.infoTexto),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Columna derecha en escritorio (`wPerdida`).
+/// Columna derecha en la web: [ResumenMovimiento] con la existencia, lo que
+/// sale y el motivo.
 class _Resumen extends StatelessWidget {
-  const _Resumen({required this.vm, required this.boton});
+  const _Resumen({
+    required this.vm,
+    required this.boton,
+    required this.onCancelar,
+  });
 
   final PerdidaViewModel vm;
   final Widget boton;
+  final VoidCallback onCancelar;
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
     final producto = vm.producto;
     final unidad = producto == null
         ? ''
@@ -467,40 +366,48 @@ class _Resumen extends StatelessWidget {
     final cantidad = vm.cantidad;
     final quedara = vm.quedaraEn;
     final motivo = vm.motivo;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Resumen', style: tema.textTheme.titleLarge),
-            const SizedBox(height: 12),
-            FilaResumen(
-              'Existencia actual',
-              existencia == null
-                  ? '—'
-                  : '${mostrarCantidad(existencia)}$unidad',
-            ),
-            const Divider(),
-            FilaResumen(
-              'Salen',
-              cantidad == null ? '—' : '− ${mostrarCantidad(cantidad)}$unidad',
-            ),
-            const Divider(),
-            FilaResumen('Motivo', motivo == null ? '—' : _nombreMotivo(motivo)),
-            const Divider(),
-            FilaResumen(
-              'Quedará en',
-              quedara == null ? '—' : '${mostrarCantidad(quedara)}$unidad',
-              destacada: true,
-            ),
-            const SizedBox(height: 16),
-            MensajesMovimiento(error: vm.error, aviso: vm.aviso),
-            boton,
-          ],
+    final fraccion =
+        existencia != null && quedara != null && existencia > Decimal.zero
+        ? quedara.toDouble() / existencia.toDouble()
+        : null;
+    return ResumenMovimiento(
+      antes: existencia == null ? '—' : mostrarCantidad(existencia),
+      despues: quedara == null ? '—' : mostrarCantidad(quedara),
+      fraccionQueda: fraccion,
+      detalles: [
+        FilaDetalle('Producto', producto?.getNombre() ?? '—'),
+        FilaDetalle(
+          'Salen',
+          cantidad == null ? '—' : '− ${mostrarCantidad(cantidad)}$unidad',
+          resta: cantidad != null,
         ),
-      ),
+        FilaDetalle('Motivo', motivo == null ? '—' : _nombreMotivo(motivo)),
+      ],
+      pie: [
+        MensajesMovimiento(error: vm.error, aviso: vm.aviso),
+        boton,
+        const SizedBox(height: 4),
+        BotonSecundario(
+          texto: 'Cancelar',
+          sinBorde: true,
+          expandido: true,
+          onPressed: vm.registrando ? null : onCancelar,
+        ),
+        const SizedBox(height: 6),
+        const _NotaMotivo(),
+      ],
     );
   }
+}
+
+/// Nota bajo el resumen (web) o bajo los motivos (móvil).
+class _NotaMotivo extends StatelessWidget {
+  const _NotaMotivo();
+
+  @override
+  Widget build(BuildContext context) => Text(
+    'El motivo queda guardado y aparece en el reporte de pérdidas del mes.',
+    style: Theme.of(context).textTheme.bodySmall
+        ?.copyWith(fontSize: 13, height: 1.45),
+  );
 }

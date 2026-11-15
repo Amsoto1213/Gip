@@ -12,6 +12,7 @@ El diseño está en Enterprise Architect y exportado a texto en `docs/diseno/`. 
 - `docs/diseno/secuencias/CUS-XX.md` — diagrama de secuencia de cada caso de uso (el flujo que hay que implementar).
 - `docs/diseno/arquitectura.md` — componentes de la arquitectura en capas.
 - `docs/ui/tokens.md` y `docs/ui/mockups/` — colores, tipografía y pantallas (mockups móvil y web).
+- `docs/ui/rediseno/` — rediseño visual aprobado: `README.md` (reglas, tokens y componentes) y prototipos HTML. Manda sobre el aspecto de los mockups.
 - `docs/decisiones.md` — decisiones de implementación (DI-xx) que no están en EA.
 - `docs/probar-en-telefono.md` — cómo se prueba en Android sin cable (APK de GitHub y depuración inalámbrica).
 - `docs/versiones.md` — versiones fijadas de Flutter, herramientas, paquetes y navegadores soportados. **No cambies versiones** ni corras `flutter upgrade`/`pub upgrade --major-versions`.
@@ -74,6 +75,24 @@ Reglas que verifica `tool/check_layers.sh` (corre en CI):
 - ViewModels: `ChangeNotifier`, uno por pantalla, llaman a **un** coordinador. Las vistas no contienen reglas.
 - Tema: usa los tokens de `docs/ui/tokens.md` vía `presentation/comun/tema/`. No pongas colores sueltos en widgets.
 - Áreas táctiles de 44 px o más; pantallas usables en 5" y en escritorio (RNF-19, RNF-20).
+
+## Interfaz
+
+El aspecto de toda pantalla sigue `docs/ui/rediseno/README.md` y `docs/ui/tokens.md`. En pantallas nuevas (y al tocar una existente):
+
+- **Usa los componentes de `lib/presentation/comun/`**; no rehagas a mano lo que ya resuelven:
+  - `EncabezadoPantalla` (título 34/30 px, contexto, miga y volver), `PantallaSeccion` (sección simple).
+  - `TarjetaGip` (tarjeta base), `SeccionNumerada` (paso "1 · Título" de un formulario), `TarjetaAccion` (acción de una sección).
+  - `BotonPrimario` (acción principal, también con monto a la derecha), `BotonIconoPrimario` (cuadrado con ícono), `BotonSecundario` (contorno o solo texto).
+  - `CampoGip` (campo con etiqueta, ícono, ayuda, error y variante contraseña), `BarraBusqueda` (búsqueda como botón o como campo).
+  - `ChipEstado` ("Poco", "Agotado"), `OpcionConIcono` (opción única con descripción), `ResumenMovimiento` + `FilaDetalle` (resumen oscuro), `LogoGip`.
+  - Navegación: `MenuLateral` (web, desde 1024 px) y `BarraInferior` (móvil) dentro de `MarcoNavegacion`. Las subsecciones del menú se declaran en `rutas_<seccion>.dart` y solo se listan las que ya tienen pantalla.
+- **Formularios de movimiento** (entrada, pérdida, conteo…): el patrón de Pérdida, con `SeccionNumerada`, `ColumnasMovimiento` y `ResumenMovimiento` en la web, y tarjetas apiladas con el botón fijo abajo en el móvil (`presentation/surtido/widgets_movimiento.dart`).
+- **Nada de valores sueltos en los widgets**: colores de `Theme.of(context).colorScheme` o `ColoresExtraGip`; radios, sombras, alturas y el ancho web de `FormaGip`; letras del `textTheme` (montos con `.cifrasTabulares`). Un token nuevo va primero a `tema/` y a `docs/ui/tokens.md`.
+- **Las acciones van solo en verde** (`primario`, `primarioSuave`); amarillo y rojo solo para estados (poca existencia, agotado, errores, lo que se resta).
+- **Web y móvil**: decide con `FormaGip.esWeb(context)` o con `LayoutBuilder`; prueba la pantalla en 360×640 y 1280×800 sin desbordes, con áreas táctiles de 44 px o más.
+- **Si falta un componente**, agrégalo a `comun/` con su prueba de widget en `test/presentation/comun/` en vez de darle estilo dentro de la pantalla.
+- **Sin funcionalidad ni datos inventados**: si el diseño muestra algo que el caso de uso todavía no entrega (cifras, tablas, el lector), no lo muestres y anótalo en `docs/decisiones.md`.
 
 ## Comandos
 

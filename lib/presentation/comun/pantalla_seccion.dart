@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
 
-/// Encabezado de una sección principal: saludo o fecha opcional arriba y el
-/// título en Archivo 800 (mockups `Main` y `mNegocio`). Debajo van los
-/// [hijos] de la sección, si los hay.
+/// Pantalla simple de una sección principal: [EncabezadoPantalla] con el
+/// [titulo] y, si hay, el [saludo] o la fecha como línea de contexto. Debajo
+/// van los [hijos] de la sección, si los hay.
 class PantallaSeccion extends StatelessWidget {
   const PantallaSeccion({
     super.key,
@@ -19,25 +21,23 @@ class PantallaSeccion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
+    final web = FormaGip.esWeb(context);
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          children: [
-            if (saludo != null)
-              Text(
-                saludo!,
-                style: tema.textTheme.bodyLarge?.copyWith(
-                  color: tema.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            Semantics(
-              header: true,
-              child: Text(titulo, style: tema.textTheme.headlineLarge),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1180),
+            child: ListView(
+              padding: web
+                  ? const EdgeInsets.fromLTRB(44, 36, 44, 48)
+                  : const EdgeInsets.fromLTRB(16, 28, 16, 24),
+              children: [
+                EncabezadoPantalla(titulo: titulo, contexto: saludo),
+                ...hijos,
+              ],
             ),
-            ...hijos,
-          ],
+          ),
         ),
       ),
     );

@@ -13,8 +13,13 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coord
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
+import 'package:gip/presentation/comun/barra_inferior.dart';
+import 'package:gip/presentation/comun/marco_navegacion.dart';
+import 'package:gip/presentation/comun/menu_lateral.dart';
+import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
+import 'package:gip/presentation/surtido/perdida_view.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -39,7 +44,7 @@ const secciones = ['Vender', 'Surtido', 'Fiados', 'Caja', 'Negocio'];
 
 void main() {
   final UsuarioActivo carmen = (
-    usuario: Administrador('2222', 'Carmen', '1000000001'),
+    usuario: Administrador('2222', 'Carmen Ruiz', '1000000001'),
     tienda: Tienda('1111', 'T001', 'Granero El Porvenir', 'Arjona, Bolívar'),
   );
 
@@ -70,7 +75,9 @@ void main() {
   }
 
   Finder titulo(String texto) => find.descendant(
-    of: find.byType(PantallaSeccion),
+    of: find.byWidgetPredicate(
+      (w) => w is PantallaSeccion || w is EncabezadoPantalla,
+    ),
     matching: find.text(texto),
   );
 
@@ -79,8 +86,8 @@ void main() {
   ) async {
     await abrir(tester, 390, 844);
 
-    expect(find.byType(NavigationRail), findsNothing);
-    final barra = find.byType(NavigationBar);
+    expect(find.byType(MenuLateral), findsNothing);
+    final barra = find.byType(BarraInferior);
     expect(barra, findsOneWidget);
     for (final seccion in secciones) {
       expect(
@@ -88,33 +95,84 @@ void main() {
         findsOneWidget,
       );
     }
+    expect(tester.getSize(barra).height, BarraInferior.alto);
+    // La sección activa lleva la píldora.
+    expect(
+      find.descendant(
+        of: find.ancestor(
+          of: find.byKey(const Key('barra_inferior_activa')),
+          matching: find.byType(InkWell),
+        ),
+        matching: find.text('Vender'),
+      ),
+      findsOneWidget,
+    );
     expect(titulo('Vender'), findsOneWidget);
   });
 
-  testWidgets('en pantalla ancha muestra las 5 secciones al lado', (
+  testWidgets('en pantalla ancha, menú lateral con la tienda y el usuario', (
     tester,
   ) async {
     await abrir(tester, 1280, 800);
 
-    expect(find.byType(NavigationBar), findsNothing);
-    final barra = find.byType(NavigationRail);
-    expect(barra, findsOneWidget);
+    expect(find.byType(BarraInferior), findsNothing);
+    final menu = find.byType(MenuLateral);
+    expect(menu, findsOneWidget);
     for (final seccion in secciones) {
       expect(
-        find.descendant(of: barra, matching: find.text(seccion)),
+        find.descendant(of: menu, matching: find.text(seccion)),
         findsOneWidget,
       );
     }
-    expect(tester.widget<NavigationRail>(barra).extended, isTrue);
     expect(find.text('Granero El Porvenir'), findsOneWidget);
+    expect(find.text('Arjona, Bolívar'), findsOneWidget);
+    expect(find.text('Carmen Ruiz'), findsOneWidget);
+    expect(find.text('CR'), findsOneWidget);
+    expect(find.text('Administrador'), findsOneWidget);
+    // Vender no tiene subsecciones.
+    expect(find.text('Entrada de mercancía'), findsNothing);
   });
 
-  testWidgets('en tableta la barra lateral va sin extender', (tester) async {
+  testWidgets('en tableta se usa la barra inferior', (tester) async {
     await abrir(tester, 800, 1000);
 
-    final barra = find.byType(NavigationRail);
-    expect(barra, findsOneWidget);
-    expect(tester.widget<NavigationRail>(barra).extended, isFalse);
+    expect(find.byType(BarraInferior), findsOneWidget);
+    expect(find.byType(MenuLateral), findsNothing);
+  });
+
+  testWidgets('el menú muestra las subsecciones de Surtido y las abre', (
+    tester,
+  ) async {
+    await abrir(tester, 1280, 800);
+
+    await tester.tap(find.text('Surtido').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Entrada de mercancía'), findsOneWidget);
+    expect(find.text('Pérdida o devolución'), findsOneWidget);
+
+    await tester.tap(find.text('Pérdida o devolución'));
+    await tester.pumpAndSettle();
+    // Pérdida abre sola la búsqueda del producto; al volver queda Pérdida
+    // con su subsección marcada.
+    expect(find.byType(BuscarProductoView), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver a Surtido'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PerdidaView), findsOneWidget);
+    final subseccion = tester.getSemantics(
+      find.descendant(
+        of: find.byType(MenuLateral),
+        matching: find.text('Pérdida o devolución'),
+      ),
+    );
+    expect(subseccion, isSemantics(isSelected: true));
+  });
+
+  test('el rol se muestra como Administrador o Empleado', () {
+    expect(
+      MarcoNavegacion.nombreRol(Administrador('1', 'Carmen', '1')),
+      'Administrador',
+    );
+    expect(MarcoNavegacion.nombreRol(Empleado('2', 'Luis', '2')), 'Empleado');
   });
 
   for (final (ancho, alto) in [(390.0, 844.0), (1280.0, 800.0)]) {
@@ -136,7 +194,7 @@ void main() {
 
     await tester.tap(find.text('Surtido').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Producto nuevo'));
+    await tester.tap(find.byTooltip('Producto nuevo'));
     await tester.pumpAndSettle();
     expect(find.byType(ProductoView), findsOneWidget);
 
@@ -151,7 +209,7 @@ void main() {
 
     await tester.tap(find.text('Surtido').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Buscar producto'));
+    await tester.tap(find.text('Buscar en el surtido…'));
     await tester.pumpAndSettle();
     expect(find.byType(BuscarProductoView), findsOneWidget);
 

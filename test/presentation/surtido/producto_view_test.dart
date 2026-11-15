@@ -52,8 +52,16 @@ void main() {
   Future<void> escribir(WidgetTester tester, String campo, String texto) =>
       tester.enterText(find.byKey(Key('producto_$campo')), texto);
 
+  /// El botón va al final de la lista: baja hasta él.
+  Future<void> bajarHasta(WidgetTester tester, Finder objetivo) =>
+      tester.scrollUntilVisible(
+        objetivo,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
   Future<void> guardar(WidgetTester tester) async {
-    await tester.ensureVisible(find.text('Guardar producto'));
+    await bajarHasta(tester, find.text('Guardar producto'));
     await tester.tap(find.text('Guardar producto'));
     // Las consultas de drift corren fuera del reloj falso de la prueba.
     await tester.runAsync(
@@ -76,7 +84,8 @@ void main() {
     await guardar(tester);
 
     expect(find.text('Producto creado'), findsOneWidget);
-    expect(find.text('Editar producto'), findsOneWidget);
+    // El título quedó arriba, fuera de la vista tras bajar al botón.
+    expect(find.text('Editar producto', skipOffstage: false), findsOneWidget);
 
     final lista = await tester.runAsync(
       () => InventarioRepositorioDrift(base).listarItems(tienda),
@@ -117,7 +126,7 @@ void main() {
       find.text('El código interno ya existe o faltan datos válidos'),
       findsOneWidget,
     );
-    expect(find.text('Producto nuevo'), findsOneWidget);
+    expect(find.text('Producto nuevo', skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('en escritorio muestra Cancelar y los precios en una fila', (
@@ -138,6 +147,7 @@ void main() {
     tester,
   ) async {
     await abrir(tester);
+    await bajarHasta(tester, find.text('Guardar producto'));
     for (final texto in ['Unidad', 'Kilo', 'Libra', 'Guardar producto']) {
       final caja = tester.getSize(
         find

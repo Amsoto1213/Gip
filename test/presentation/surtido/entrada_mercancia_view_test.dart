@@ -109,14 +109,16 @@ void main() {
     await abrir(tester, tamano: tamano);
     await tester.tap(find.byKey(const Key('surtido_registrar_entrada')));
     await tester.pumpAndSettle();
-    expect(find.text('Buscar producto'), findsOneWidget);
+    // En la web también sale en la miga.
+    expect(find.text('Buscar producto'), findsWidgets);
 
     await tester.enterText(find.byKey(const Key('buscar_texto')), 'aceite');
     await esperarBase(tester);
     await tester.tap(find.text('Aceite 1 L'));
     await esperarBase(tester);
     expect(find.text('Entrada de mercancía'), findsOneWidget);
-    expect(find.text('Aceite 1 L'), findsOneWidget);
+    // En la web el nombre sale también en el resumen.
+    expect(find.text('Aceite 1 L'), findsWidgets);
   }
 
   Future<void> escribir(WidgetTester tester, String clave, String texto) async {
@@ -232,7 +234,8 @@ void main() {
   ) async {
     await crearAceite(tester);
     await abrir(tester, inicio: rutaEntradaMercancia);
-    expect(find.text('Buscar producto'), findsOneWidget);
+    // En la web también sale en la miga.
+    expect(find.text('Buscar producto'), findsWidgets);
 
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
@@ -249,7 +252,7 @@ void main() {
     await tester.tap(find.text('Aceite 1 L'));
     await esperarBase(tester);
     expect(find.text('Aceite 1 L'), findsOneWidget);
-    expect(find.text('Cambiar'), findsOneWidget);
+    expect(find.text('Cambiar producto'), findsOneWidget);
   });
 
   for (final tamano in const [Size(360, 640), Size(1280, 800)]) {
@@ -274,6 +277,14 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(r'$ 225.600'), findsOneWidget);
+      if (tamano.width >= 720) {
+        expect(find.text('Registrar entrada de mercancía'), findsOneWidget);
+        expect(find.text('Costo y factura'), findsOneWidget);
+        expect(find.text('Total de la compra'), findsOneWidget);
+        expect(find.text('Cancelar'), findsOneWidget);
+        // En una entrada el surtido sube: sin barra de lo que se quita.
+        expect(find.byKey(const Key('resumen_barra')), findsNothing);
+      }
       await registrar(tester);
       expect(find.text('Entrada registrada. Nuevo stock: 25'), findsOneWidget);
       expect(tester.takeException(), isNull);

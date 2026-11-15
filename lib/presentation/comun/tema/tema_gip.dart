@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gip/presentation/comun/tema/colores_gip.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
 import 'package:gip/presentation/comun/tema/tipografia_gip.dart';
 
 export 'colores_gip.dart';
+export 'forma_gip.dart';
 export 'tipografia_gip.dart';
 
 /// Tema Material 3 del GIP con los tokens de `docs/ui/tokens.md`.
@@ -25,17 +27,18 @@ abstract final class TemaGip {
       onSurfaceVariant: ColoresGip.textoSecundario,
       outline: ColoresGip.bordeFuerte,
       outlineVariant: ColoresGip.borde,
-      // Barra lateral oscura de la web.
       inverseSurface: ColoresGip.texto,
       onInverseSurface: ColoresGip.superficie,
       scrim: ColoresGip.velo,
     );
     final textos = TipografiaGip.textTheme();
     final campoBorde = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: ColoresGip.bordeFuerte),
+      borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+      borderSide: const BorderSide(
+        color: ColoresGip.bordeFuerte,
+        width: FormaGip.grosorBordeCampo,
+      ),
     );
-    final etiquetaNavegacion = textos.labelMedium!;
 
     return ThemeData(
       colorScheme: esquema,
@@ -53,7 +56,7 @@ abstract final class TemaGip {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(FormaGip.radioTarjeta),
           side: const BorderSide(color: ColoresGip.borde),
         ),
       ),
@@ -69,72 +72,111 @@ abstract final class TemaGip {
         fillColor: ColoresGip.superficie,
         border: campoBorde,
         enabledBorder: campoBorde,
+        errorBorder: campoBorde.copyWith(
+          borderSide: const BorderSide(
+            color: ColoresGip.error,
+            width: FormaGip.grosorBordeCampo,
+          ),
+        ),
+        focusedErrorBorder: campoBorde.copyWith(
+          borderSide: const BorderSide(
+            color: ColoresGip.error,
+            width: FormaGip.grosorBordeCampo,
+          ),
+        ),
         focusedBorder: campoBorde.copyWith(
-          borderSide: const BorderSide(color: ColoresGip.primario, width: 2),
+          borderSide: const BorderSide(
+            color: ColoresGip.primario,
+            width: FormaGip.grosorBordeCampo,
+          ),
+        ),
+        hintStyle: textos.bodyLarge!.copyWith(
+          color: ColoresGip.textoSecundario,
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        style:
+            FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  FormaGip.radioBotonPrimario,
+                ),
+              ),
+              textStyle: textos.titleMedium!.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ).copyWith(
+              // Hover y presionado con primarioOscuro (rediseño).
+              backgroundColor: WidgetStateProperty.resolveWith(
+                (estados) => estados.contains(WidgetState.disabled)
+                    ? null
+                    : estados.contains(WidgetState.pressed) ||
+                          estados.contains(WidgetState.hovered)
+                    ? ColoresGip.primarioOscuro
+                    : ColoresGip.primario,
+              ),
+            ),
+      ),
+      // Opción única ("Se vende por"): 52 px, radio 14, la elegida en verde
+      // suave con texto verde (las acciones van solo en verde, rediseño).
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(Size(0, 52)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+            ),
           ),
-          textStyle: textos.titleMedium!.copyWith(fontWeight: FontWeight.w700),
+          side: const WidgetStatePropertyAll(
+            BorderSide(
+              color: ColoresGip.bordeFuerte,
+              width: FormaGip.grosorBordeCampo,
+            ),
+          ),
+          textStyle: WidgetStatePropertyAll(
+            textos.labelLarge!.copyWith(fontWeight: FontWeight.w700),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? ColoresGip.primarioSuave
+                : ColoresGip.superficie,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (estados) => estados.contains(WidgetState.selected)
+                ? ColoresGip.primario
+                : ColoresGip.texto,
+          ),
+        ),
+      ),
+      // Píldoras de opción (sugerencias de efectivo): la elegida en verde
+      // suave con borde verde.
+      chipTheme: ChipThemeData(
+        showCheckmark: false,
+        backgroundColor: ColoresGip.superficie,
+        selectedColor: ColoresGip.primarioSuave,
+        labelStyle: textos.labelMedium!.copyWith(fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        shape: const StadiumBorder(),
+        side: WidgetStateBorderSide.resolveWith(
+          (estados) => BorderSide(
+            color: estados.contains(WidgetState.selected)
+                ? ColoresGip.primario
+                : ColoresGip.borde,
+            width: FormaGip.grosorBordeCampo,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(44, 44),
-          side: const BorderSide(color: ColoresGip.bordeFuerte),
+          side: const BorderSide(
+            color: ColoresGip.bordeFuerte,
+            width: FormaGip.grosorBordeCampo,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(FormaGip.radioCampo),
           ),
-        ),
-      ),
-      // Barra inferior del móvil: 72 px, activo en verde sin "píldora".
-      navigationBarTheme: NavigationBarThemeData(
-        height: 72,
-        backgroundColor: ColoresGip.superficie,
-        surfaceTintColor: Colors.transparent,
-        indicatorColor: Colors.transparent,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        iconTheme: WidgetStateProperty.resolveWith(
-          (estados) => IconThemeData(
-            size: 26,
-            color: estados.contains(WidgetState.selected)
-                ? ColoresGip.primario
-                : ColoresGip.textoSecundario,
-          ),
-        ),
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (estados) => etiquetaNavegacion.copyWith(
-            color: estados.contains(WidgetState.selected)
-                ? ColoresGip.primario
-                : ColoresGip.textoSecundario,
-          ),
-        ),
-      ),
-      // Barra lateral de la web: fondo oscuro y activo en verde.
-      navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: ColoresGip.texto,
-        indicatorColor: ColoresGip.primario,
-        indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        selectedIconTheme: const IconThemeData(
-          size: 24,
-          color: ColoresGip.superficie,
-        ),
-        unselectedIconTheme: const IconThemeData(
-          size: 24,
-          color: ColoresGip.bordeFuerte,
-        ),
-        selectedLabelTextStyle: textos.labelLarge!.copyWith(
-          color: ColoresGip.superficie,
-        ),
-        unselectedLabelTextStyle: textos.labelLarge!.copyWith(
-          fontWeight: FontWeight.w500,
-          color: ColoresGip.bordeFuerte,
         ),
       ),
     );
