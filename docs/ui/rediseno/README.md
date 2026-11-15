@@ -15,6 +15,8 @@ ignora; lo que importa son los estilos y la estructura.
 | `surtido-web.html` | Surtido, web (con el menú lateral nuevo) |
 | `surtido-movil.html` | Surtido, móvil (con la barra inferior nueva) |
 | `perdida-web.html` | Pérdida o devolución, web: patrón para todos los formularios de movimiento |
+| `conteo-web.html` | Conteo físico, web: tabla con estado por fila |
+| `conteo-movil.html` | Conteo físico, móvil |
 
 ## Reglas generales
 
@@ -42,7 +44,10 @@ ignora; lo que importa son los estilos y la estructura.
 | `navFondo` | `#13201B` | menú lateral web y caja oscura del resumen |
 | `navTexto` / `navTextoSecundario` | `#C9D3CE` / `#9FB0A8` | textos del menú lateral |
 | `verdeCirculoClaro` / `verdeCirculoOscuro` | `#0E7A56` / `#095C40` | círculos decorativos del login |
-| radios | tarjeta 22, tarjeta de acción 20, caja de ícono 14–16, chip 999 | |
+| `errorFondoSuave` | `#FFF5F4` | fila con diferencia grande o con error (conteo) |
+| `errorBorde` / `errorTexto` | `#F3C1BC` / `#8C1D18` | tarjeta de aviso en rojo |
+| `sombraPestana` | `0 1px 3px rgba(19,32,27,0.12)` | pestaña de filtro elegida |
+| radios | tarjeta 22 (18 en listas del móvil), tarjeta de acción 20, caja de ícono 14–16 (12 en tabla), chip 999, pestañas 14 / 11 | |
 
 ## Componentes comunes (en `lib/presentation/comun/`)
 
@@ -50,7 +55,8 @@ ignora; lo que importa son los estilos y la estructura.
 2. **SeccionNumerada**: tarjeta con encabezado "círculo verde con número + título" y línea divisoria.
 3. **BotonPrimario** y **BotonSecundario** (contorno, texto verde).
 4. **CampoGip**: campo con etiqueta arriba, ícono y estado de foco; variante contraseña con botón de ojo.
-   Variante resaltada (borde `alerta`, para un valor por revisar) y cifras alineadas a la derecha.
+   Variante resaltada (borde `error`, para un valor por revisar o no válido, con el mensaje fuera del
+   campo), cifras alineadas a la derecha y letra propia (`estiloTexto`, Archivo 800 en cantidades).
 5. **BarraBusqueda**: campo grande de búsqueda (58 px web / 52 px móvil) con el botón oscuro del lector al
    lado. Mientras no exista CUS-17, el botón del lector no se muestra.
 6. **TarjetaAccion**: caja de ícono `primarioSuave` con el ícono en `primario`, título 17 px peso 700 y una
@@ -67,8 +73,15 @@ ignora; lo que importa son los estilos y la estructura.
 11. **BarraInferior** (móvil): 5 secciones; la activa con el ícono dentro de una píldora `primarioSuave`.
 12. **LogoGip**: cuadro redondeado con el ícono de paquete (inventory_2 o equivalente) y "GIP" en Archivo
     800. Fondo blanco con el ícono en `primario` sobre fondos verdes; al revés sobre fondos claros.
-13. **SelectorFiltro**: filtros de una lista en píldoras de 44 px ("Todos", "Contados"…); la elegida
-    rellena en `navFondo` con texto blanco y las demás con contorno. No es una acción: no va en verde.
+13. **SelectorFiltro**: filtros de una lista ("Todos", "Contados"…), de 44 px de alto y sin tomar el foco.
+    En píldoras (móvil, 13 px): la elegida rellena en `navFondo` con texto blanco y las demás con
+    contorno. En pestañas (web, encima de una tabla): grupo en `fondo` con radio 14 y la elegida en
+    blanco con `sombraPestana`. No es una acción: no va en verde.
+14. **PildoraEstado**: estado de una fila (13 px, peso 700): verde (`primarioSuave`, "Cuadra"), gris
+    (`fondo`, "Se ajusta"), rojo (`errorFondo`, "Diferencia grande") o blanco con borde punteado
+    (`bordeFuerte`, "Sin contar").
+15. **TarjetaAviso**: aviso en rojo: fondo `errorFondo`, borde `errorBorde`, caja blanca de 44 px con el
+    ícono en `error`, título y texto en `errorTexto`.
 
 ## Pantallas
 
@@ -87,10 +100,31 @@ ignora; lo que importa son los estilos y la estructura.
   "Cualquier otra razón"; a la derecha el ResumenMovimiento.
 - **Entrada de mercancía:** el mismo patrón que Pérdida: sección 1 "Producto y cantidad", sección 2 "Costo y
   factura" y el ResumenMovimiento (sin barra de lo que se quita: aquí el stock sube).
-- **Conteo físico:** según `mConteo` y `Conteo`: avance "N de M contados" con barra, BarraBusqueda como
-  campo y SelectorFiltro (Todos, Contados, Sin contar, Con diferencia · N). Web: tabla (Producto, Código,
-  Según el sistema, Contado, Diferencia, Estado) y franja `navFondo` con la nota y "Confirmar ajuste de N
-  productos". Móvil: filas en una TarjetaGip y el botón fijo abajo. La fila que supera el umbral va en
-  `alertaFondo` con el campo resaltado, el aviso del diagrama y "Volver a contar" (DI-24).
+- **Conteo físico** (`conteo-web.html`, `conteo-movil.html`, DI-24):
+  - **Web:** arriba, la tarjeta "Avance del conteo" con "N de M contados" (número en Archivo 800, 30 px)
+    y la barra (`primario` sobre `separador`, 10 px) y "Los productos sin contar no cambian."; a su lado,
+    solo si hay, la TarjetaAviso "N diferencias grandes" con el mensaje del diagrama ("La diferencia
+    supera el umbral. Revise el conteo antes de confirmar"), sin el número del umbral. Debajo, una
+    tarjeta con la BarraBusqueda como campo y el SelectorFiltro en pestañas (Todos · N, Contados · N,
+    Sin contar · N, Con diferencia · N) y la tabla: encabezado en mayúsculas sobre `superficieSuave` y
+    columnas Producto (caja de ícono, nombre y unidad), Según el sistema, Contado (campo de 120 px),
+    Diferencia (Archivo 800, 18 px) y Estado. Por debajo de 780 px la tabla se desplaza de lado. Al
+    final, una tarjeta blanca solo con "Confirmar ajuste de N productos" a la derecha.
+  - **Móvil:** tarjeta de avance (radio 18) con la PildoraEstado roja "N por revisar"; BarraBusqueda;
+    SelectorFiltro en píldoras (Todos, Sin contar · N, Diferencia · N); las filas en una TarjetaGip con
+    nombre, "Según el sistema: N", el campo de 92 px y la diferencia, y el mensaje en rojo debajo cuando
+    hay. Barra blanca fija abajo solo con "Confirmar ajuste de N".
+  - **Estados de la fila:**
+
+    | Estado | Fila | Campo | Diferencia | Estado (web) / mensaje (móvil) |
+    |---|---|---|---|---|
+    | Sin contar | `superficie` | normal, "—" | "—" gris | píldora punteada "Sin contar" |
+    | Cuadra | `superficie` | normal | "0" en `primario` | píldora verde "Cuadra" |
+    | Se ajusta | `superficie` | normal | "+2" / "−1" en `texto` | píldora gris "Se ajusta" |
+    | Diferencia grande | `errorFondoSuave` | borde `error` | en `error` | píldora roja "Diferencia grande" / el mensaje del diagrama |
+    | Error (negativa, decimales en unidades) | `errorFondoSuave` | borde `error` | "—" en `error` | el mensaje en `error` ("La cantidad contada no puede ser negativa") |
+
+  - Las advertencias van en rojo, no en amarillo. No hay "Volver a contar" ni "Pausar": el número se
+    corrige en el mismo campo. Confirmar queda desactivado mientras una fila tenga error.
 - **Producto, Buscar producto, Vender y Cobrar:** aplicar los mismos componentes (tarjetas, campos, botones,
   chips), sin cambiar su funcionamiento.
