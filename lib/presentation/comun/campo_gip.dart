@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gip/presentation/comun/tema/colores_gip.dart';
 import 'package:gip/presentation/comun/tema/forma_gip.dart';
 
 /// Campo del rediseño: etiqueta arriba (14 px, peso 600), caja de 52–54 px con
 /// radio 14, borde 1,5 px `bordeFuerte` e [icono] a la izquierda en
 /// `textoSecundario`. Con foco: borde `primario` y halo de 4 px. Con
-/// [contrasena] oculta el texto y agrega el botón de ojo.
+/// [contrasena] oculta el texto y agrega el botón de ojo. Con [resaltado] el
+/// borde va en `alerta` (un valor que hay que revisar, sin ser error) y
+/// [alineacion] permite cifras a la derecha (cantidades en una lista).
 ///
 /// [campoKey] va en el `TextField` para que las pruebas lo encuentren.
 class CampoGip extends StatefulWidget {
@@ -29,6 +32,8 @@ class CampoGip extends StatefulWidget {
     this.mayusculas = TextCapitalization.none,
     this.onChanged,
     this.onSubmitted,
+    this.alineacion = TextAlign.start,
+    this.resaltado = false,
   });
 
   /// Texto encima del campo. Vacío para un campo sin etiqueta.
@@ -61,6 +66,12 @@ class CampoGip extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
+  /// Alineación del texto escrito; a la derecha para cifras en columna.
+  final TextAlign alineacion;
+
+  /// Borde en `alerta` para marcar un valor por revisar (no bloquea).
+  final bool resaltado;
+
   @override
   State<CampoGip> createState() => _CampoGipState();
 }
@@ -74,6 +85,14 @@ class _CampoGipState extends State<CampoGip> {
     final tema = Theme.of(context);
     final esquema = tema.colorScheme;
     final icono = widget.icono;
+    final extra = tema.extension<ColoresExtraGip>()!;
+    final bordeResaltado = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+      borderSide: BorderSide(
+        color: extra.alerta,
+        width: FormaGip.grosorBordeCampo,
+      ),
+    );
     final campo = Focus(
       canRequestFocus: false,
       skipTraversal: true,
@@ -96,8 +115,11 @@ class _CampoGipState extends State<CampoGip> {
           textCapitalization: widget.mayusculas,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
+          textAlign: widget.alineacion,
           style: tema.textTheme.bodyLarge,
           decoration: InputDecoration(
+            enabledBorder: widget.resaltado ? bordeResaltado : null,
+            focusedBorder: widget.resaltado ? bordeResaltado : null,
             hintText: widget.pista,
             errorText: widget.error,
             errorMaxLines: 2,

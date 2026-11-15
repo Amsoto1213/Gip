@@ -10,6 +10,7 @@ import 'package:gip/presentation/comun/logo_gip.dart';
 import 'package:gip/presentation/comun/opcion_con_icono.dart';
 import 'package:gip/presentation/comun/resumen_movimiento.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
+import 'package:gip/presentation/comun/selector_filtro.dart';
 import 'package:gip/presentation/comun/tarjeta_accion.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
@@ -569,6 +570,78 @@ void main() {
       );
       expect(tester.widget<Text>(find.text('Surtido')).style?.fontSize, 30);
       expect(find.byIcon(Icons.add), findsOneWidget);
+    });
+  });
+
+  testWidgets('CampoGip resaltado: borde de alerta y texto a la derecha', (
+    tester,
+  ) async {
+    final controlador = TextEditingController(text: '78');
+    addTearDown(controlador.dispose);
+    await montar(
+      tester,
+      CampoGip(
+        etiqueta: '',
+        controlador: controlador,
+        campoKey: const Key('campo'),
+        alineacion: TextAlign.end,
+        resaltado: true,
+      ),
+    );
+    final campo = tester.widget<TextField>(find.byKey(const Key('campo')));
+    expect(campo.textAlign, TextAlign.end);
+    final borde = campo.decoration!.enabledBorder! as OutlineInputBorder;
+    expect(borde.borderSide.color, ColoresGip.alerta);
+    expect(find.text('78'), findsOneWidget);
+  });
+
+  group('SelectorFiltro', () {
+    Future<List<String>> montarFiltro(
+      WidgetTester tester, {
+      double ancho = 390,
+    }) async {
+      final elegidos = <String>[];
+      await montar(
+        tester,
+        SelectorFiltro<String>(
+          opciones: const [
+            (valor: 'todos', etiqueta: 'Todos'),
+            (valor: 'contados', etiqueta: 'Contados'),
+            (valor: 'sin', etiqueta: 'Sin contar'),
+            (valor: 'dif', etiqueta: 'Con diferencia · 2'),
+          ],
+          elegido: 'contados',
+          onElegir: elegidos.add,
+        ),
+        ancho: ancho,
+      );
+      return elegidos;
+    }
+
+    testWidgets('la elegida va rellena; tocar otra la elige', (tester) async {
+      final elegidos = await montarFiltro(tester);
+      final elegida = tester.widget<Material>(
+        find.byKey(const Key('filtro_1')),
+      );
+      final otra = tester.widget<Material>(find.byKey(const Key('filtro_0')));
+      expect(elegida.color, ColoresGip.navFondo);
+      expect(otra.color, ColoresGip.superficie);
+
+      await tester.tap(find.text('Sin contar'));
+      expect(elegidos, ['sin']);
+    });
+
+    testWidgets('píldoras de 44 px que bajan de línea sin desbordar', (
+      tester,
+    ) async {
+      await montarFiltro(tester, ancho: 360);
+      for (var i = 0; i < 4; i++) {
+        expect(
+          tester.getSize(find.byKey(Key('filtro_$i'))).height,
+          greaterThanOrEqualTo(44),
+        );
+      }
+      expect(tester.takeException(), isNull);
     });
   });
 }
