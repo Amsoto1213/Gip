@@ -89,7 +89,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 5);
+      expect(actual.schemaVersion, 6);
       expect(
         await tablas(actual),
         containsAll([
@@ -104,7 +104,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 5);
+      expect(version.read<int>('user_version'), 6);
       await actual.close();
     });
 
@@ -147,7 +147,15 @@ void main() {
                   .customSelect('PRAGMA table_info(movimientos_inventario)')
                   .get())
               .map((f) => f.read<String>('name'));
-      expect(columnas, containsAll(['venta_id', 'precio_unitario', 'motivo']));
+      expect(
+        columnas,
+        containsAll([
+          'venta_id',
+          'precio_unitario',
+          'motivo',
+          'cantidad_contada',
+        ]),
+      );
       await v4.close();
     });
     test(
@@ -159,6 +167,9 @@ void main() {
         final v4 = BaseLocalDrift(NativeDatabase(archivo));
         await v4.customStatement(
           'ALTER TABLE movimientos_inventario DROP COLUMN motivo',
+        );
+        await v4.customStatement(
+          'ALTER TABLE movimientos_inventario DROP COLUMN cantidad_contada',
         );
         await v4.customStatement('PRAGMA foreign_keys = OFF');
         await v4.customStatement(
@@ -184,5 +195,33 @@ void main() {
         await v5.close();
       },
     );
+    test('de la versión 5 a la 6 agrega cantidad_contada (AJUSTE_CONTEO) sin '
+        'perder filas', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      // Deja la base como estaba en la versión 5 (CUS-03), con una entrada.
+      final v5 = BaseLocalDrift(NativeDatabase(archivo));
+      await v5.customStatement(
+        'ALTER TABLE movimientos_inventario DROP COLUMN cantidad_contada',
+      );
+      await v5.customStatement('PRAGMA foreign_keys = OFF');
+      await v5.customStatement(
+        "INSERT INTO movimientos_inventario (id, tienda_id, item_id, tipo, "
+        "cantidad, fecha, estado, costo_unitario) VALUES ('e1', 't1', 'i1', "
+        "'ENTRADA', '24', '2026-11-14T10:00:00.000Z', 'VIGENTE', '8600')",
+      );
+      await v5.customStatement('PRAGMA user_version = 5');
+      await v5.close();
+
+      final v6 = BaseLocalDrift(NativeDatabase(archivo));
+      final fila = await v6
+          .customSelect(
+            'SELECT id, cantidad_contada FROM movimientos_inventario',
+          )
+          .getSingle();
+      expect(fila.read<String>('id'), 'e1');
+      expect(fila.read<String?>('cantidad_contada'), isNull);
+      await v6.close();
+    });
   });
 }

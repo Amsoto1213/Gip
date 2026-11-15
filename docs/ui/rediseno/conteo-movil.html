@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>GIP · Conteo físico (móvil)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0B6B4B}a:hover{color:#08523A}
+.buscar input{border:0;outline:0;background:transparent;font:inherit;color:#13201B;flex:1;min-width:0}
+.cant input{width:100%;border:0;outline:0;background:transparent;font:inherit;text-align:right}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F5F2; font-family: Inter, system-ui, sans-serif; color: #13201B; display: flex; flex-direction: column; overflow: hidden">
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 20px 16px 0; display: flex; flex-direction: column; gap: 14px">
+    <header style="display: flex; align-items: center; gap: 10px">
+      <button type="button" aria-label="Volver" style="width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; display: flex; align-items: center; justify-content: center">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#13201B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-size: 13px; color: #4A5852">Surtido</span>
+        <h1 style="margin: 0; font-family: Archivo, sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.02em">Conteo físico</h1>
+      </div>
+    </header>
+    <section style="background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 18px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(19,32,27,0.05); display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <span style="font-size: 14px; color: #4A5852"><span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 22px; color: #13201B">42</span> de 128 contados</span>
+        <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #FCE8E6; color: #B3261E">2 por revisar</span>
+      </div>
+      <div style="height: 8px; border-radius: 999px; background: #EEF1EF; overflow: hidden"><div style="width: 33%; height: 100%; border-radius: 999px; background: #0B6B4B"></div></div>
+    </section>
+    <label class="buscar" style="height: 50px; box-sizing: border-box; background: #FFFFFF; border: 1.5px solid #C7D0CB; border-radius: 14px; display: flex; align-items: center; gap: 10px; padding: 0 14px">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5852" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar producto</span>
+      <input type="search" placeholder="Buscar producto" style="font-size: 16px">
+    </label>
+    <div style="display: flex; gap: 8px">
+      <button type="button" aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #13201B; color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600">Todos</button>
+      <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #C7D0CB; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600">Sin contar · 86</button>
+      <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #C7D0CB; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600">Diferencia · 4</button>
+    </div>
+    <section style="background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 18px; box-shadow: 0 6px 20px rgba(19,32,27,0.06); overflow: hidden">
+      <sc-for list="{{ filas }}" as="f" hint-placeholder-count="4">
+        <div style="{{ f.filaEstilo }}">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+              <span style="font-weight: 700; font-size: 16px">{{ f.nombre }}</span>
+              <span style="font-size: 13px; color: #4A5852">Según el sistema: {{ f.sistema }}</span>
+            </div>
+            <label class="cant" style="{{ f.campoEstilo }}">
+              <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Contado de {{ f.nombre }}</span>
+              <input inputmode="decimal" value="{{ f.contado }}" placeholder="—" style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px; color: #13201B">
+            </label>
+            <span style="{{ f.difEstilo }}">{{ f.diferencia }}</span>
+          </div>
+          <sc-if value="{{ f.tieneMensaje }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+              <span style="{{ f.mensajeEstilo }}">{{ f.mensaje }}</span>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+  <div style="flex: none; background: #FFFFFF; border-top: 1px solid #DCE2DE; padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 -8px 24px rgba(19,32,27,0.06)">
+    <div style="display: flex; gap: 10px">
+      <button type="button" disabled style="flex: 1; height: 56px; border: 0; border-radius: 16px; background: #0B6B4B; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0.55">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Confirmar ajuste de 42</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const base = 'display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #EEF1EF;';
+const campo = (borde, fondo) => 'position: relative; width: 92px; height: 50px; box-sizing: border-box; border: 1.5px solid ' + borde + '; border-radius: 14px; background: ' + fondo + '; display: flex; align-items: center; padding: 0 12px; flex: none;';
+const dif = (color) => 'width: 52px; text-align: right; font-family: Archivo, sans-serif; font-weight: 800; font-size: 18px; color: ' + color + '; flex: none;';
+const msg = (color) => 'font-size: 13px; font-weight: 600; color: ' + color + ';';
+const tipos = {
+  cuadra: { filaEstilo: base + ' background: #FFFFFF;', campoEstilo: campo('#C7D0CB', '#FFFFFF'), difEstilo: dif('#0B6B4B') },
+  ajusta: { filaEstilo: base + ' background: #FFFFFF;', campoEstilo: campo('#C7D0CB', '#FFFFFF'), difEstilo: dif('#13201B') },
+  grande: { filaEstilo: base + ' background: #FFF5F4;', campoEstilo: campo('#B3261E', '#FFFFFF'), difEstilo: dif('#B3261E'), tieneMensaje: true, mensaje: 'Diferencia grande. Cuente otra vez.', mensajeEstilo: msg('#B3261E'), revisar: true },
+  error: { filaEstilo: base + ' background: #FFF5F4;', campoEstilo: campo('#B3261E', '#FFFFFF'), difEstilo: dif('#B3261E'), tieneMensaje: true, mensaje: 'La cantidad contada no puede ser negativa', mensajeEstilo: msg('#B3261E') }
+};
+const filas = [
+  { nombre: 'Arroz 500 g', sistema: '46', contado: '46', diferencia: '0', t: 'cuadra' },
+  { nombre: 'Huevo AA', sistema: '90', contado: '78', diferencia: '−12', t: 'grande' },
+  { nombre: 'Queso costeño', sistema: '5 lb', contado: '4,5', diferencia: '−0,5', t: 'ajusta' },
+  { nombre: 'Panela 500 g', sistema: '12', contado: '-1', diferencia: '—', t: 'error' }
+].map((f) => ({ tieneMensaje: false, revisar: false, ...f, ...tipos[f.t] }));
+return { filas };
+}
+}
+</script>
+</body>
+</html>

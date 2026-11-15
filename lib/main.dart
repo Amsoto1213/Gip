@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
@@ -43,6 +44,7 @@ Future<void> main() async {
       buscarProducto: inventario.buscarProducto,
       registrarEntradaMercancia: inventario.registrarEntradaMercancia,
       registrarPerdida: inventario.registrarPerdida,
+      registrarConteo: inventario.registrarConteo,
       registrarVenta: pagos.registrarVenta,
     ),
   );
@@ -56,6 +58,7 @@ class GipApp extends StatefulWidget {
     required this.buscarProducto,
     required this.registrarEntradaMercancia,
     required this.registrarPerdida,
+    required this.registrarConteo,
     required this.registrarVenta,
   });
 
@@ -64,6 +67,7 @@ class GipApp extends StatefulWidget {
   final BuscarProductoCoordinator buscarProducto;
   final RegistrarEntradaMercanciaCoordinator registrarEntradaMercancia;
   final RegistrarPerdidaCoordinator registrarPerdida;
+  final RegistrarConteoCoordinator registrarConteo;
   final RegistrarVentaCoordinator registrarVenta;
 
   @override
@@ -92,6 +96,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.buscarProducto),
         Provider.value(value: widget.registrarEntradaMercancia),
         Provider.value(value: widget.registrarPerdida),
+        Provider.value(value: widget.registrarConteo),
         Provider.value(value: widget.registrarVenta),
       ],
       child: MaterialApp.router(

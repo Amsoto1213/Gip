@@ -108,6 +108,7 @@ void main() {
         buscarProducto: inventario.buscarProducto,
         registrarEntradaMercancia: inventario.registrarEntradaMercancia,
         registrarPerdida: inventario.registrarPerdida,
+        registrarConteo: inventario.registrarConteo,
         registrarVenta: pagos.registrarVenta,
       ),
     );

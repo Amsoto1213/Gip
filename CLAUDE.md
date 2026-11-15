@@ -85,7 +85,7 @@ El aspecto de toda pantalla sigue `docs/ui/rediseno/README.md` y `docs/ui/tokens
   - `TarjetaGip` (tarjeta base), `SeccionNumerada` (paso "1 · Título" de un formulario), `TarjetaAccion` (acción de una sección).
   - `BotonPrimario` (acción principal, también con monto a la derecha), `BotonIconoPrimario` (cuadrado con ícono), `BotonSecundario` (contorno o solo texto).
   - `CampoGip` (campo con etiqueta, ícono, ayuda, error y variante contraseña), `BarraBusqueda` (búsqueda como botón o como campo).
-  - `ChipEstado` ("Poco", "Agotado"), `OpcionConIcono` (opción única con descripción), `ResumenMovimiento` + `FilaDetalle` (resumen oscuro), `LogoGip`.
+  - `ChipEstado` ("Poco", "Agotado"), `SelectorFiltro` (filtros de una lista en píldoras), `OpcionConIcono` (opción única con descripción), `ResumenMovimiento` + `FilaDetalle` (resumen oscuro), `LogoGip`.
   - Navegación: `MenuLateral` (web, desde 1024 px) y `BarraInferior` (móvil) dentro de `MarcoNavegacion`. Las subsecciones del menú se declaran en `rutas_<seccion>.dart` y solo se listan las que ya tienen pantalla.
 - **Formularios de movimiento** (entrada, pérdida, conteo…): el patrón de Pérdida, con `SeccionNumerada`, `ColumnasMovimiento` y `ResumenMovimiento` en la web, y tarjetas apiladas con el botón fijo abajo en el móvil (`presentation/surtido/widgets_movimiento.dart`).
 - **Nada de valores sueltos en los widgets**: colores de `Theme.of(context).colorScheme` o `ColoresExtraGip`; radios, sombras, alturas y el ancho web de `FormaGip`; letras del `textTheme` (montos con `.cifrasTabulares`). Un token nuevo va primero a `tema/` y a `docs/ui/tokens.md`.

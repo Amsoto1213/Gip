@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:gip/business/entidades/gestion_inventario/ajuste_conteo.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
@@ -13,9 +14,8 @@ import 'package:gip/data/local/base_local_drift.dart';
 
 /// [IMovimientoInventarioRepositorio] sobre la base local (drift), en la tabla
 /// única `movimientos_inventario` con columna `tipo` (DI-03). Los movimientos
-/// solo se agregan (RNF-15). Por ahora maneja ENTRADA (CUS-01), SALIDA_VENTA
-/// (CUS-02) y MERMA (CUS-03); AJUSTE_CONTEO llega con su caso de uso (DI-20,
-/// DI-21, DI-22).
+/// solo se agregan (RNF-15). Maneja ENTRADA (CUS-01), SALIDA_VENTA (CUS-02),
+/// MERMA (CUS-03) y AJUSTE_CONTEO (CUS-04) (DI-20, DI-21, DI-22, DI-24).
 class MovimientoInventarioRepositorioDrift
     implements IMovimientoInventarioRepositorio {
   MovimientoInventarioRepositorioDrift(this._base);
@@ -26,6 +26,7 @@ class MovimientoInventarioRepositorioDrift
   static const _tipoEntrada = 'ENTRADA';
   static const _tipoSalidaVenta = 'SALIDA_VENTA';
   static const _tipoMerma = 'MERMA';
+  static const _tipoAjusteConteo = 'AJUSTE_CONTEO';
 
   /// Nombres que comparte con el enum `motivo_merma` de Supabase.
   static const _motivos = {
@@ -80,6 +81,16 @@ class MovimientoInventarioRepositorioDrift
         fecha: movimiento.getFecha(),
         estado: _estados[movimiento.getEstado()]!,
         motivo: Value(_motivos[movimiento.getMotivo()]!),
+      ),
+      AjusteConteo() => MovimientosInventarioCompanion.insert(
+        id: movimiento.getId(),
+        tiendaId: tienda.getId(),
+        itemId: movimiento.getItem().getId(),
+        tipo: _tipoAjusteConteo,
+        cantidad: movimiento.getCantidad(),
+        fecha: movimiento.getFecha(),
+        estado: _estados[movimiento.getEstado()]!,
+        cantidadContada: Value(movimiento.getCantidadContada()),
       ),
       _ => throw UnsupportedError(
         'Tipo de movimiento no disponible todavía: ${movimiento.runtimeType}',

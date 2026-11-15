@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>GIP · Conteo físico (web)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0B6B4B}a:hover{color:#08523A}
+.nav a{color:#C9D3CE;text-decoration:none}.nav a:hover{background:rgba(255,255,255,0.06);color:#FFFFFF}
+.buscar input{border:0;outline:0;background:transparent;font:inherit;color:#13201B;flex:1;min-width:0}
+.cant input{width:100%;border:0;outline:0;background:transparent;font:inherit;text-align:right}
+.cant:focus-within{border-color:#0B6B4B !important;box-shadow:0 0 0 4px rgba(11,107,75,0.14)}
+</style>
+</helmet>
+<div style="min-height: 1040px; display: flex; flex-wrap: wrap; background: #F3F5F2; font-family: Inter, system-ui, sans-serif; color: #13201B">
+  <nav class="nav" aria-label="Secciones" style="flex: 1 1 264px; max-width: 280px; box-sizing: border-box; background: #13201B; padding: 24px 16px; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 12px; padding: 4px 8px 22px">
+      <div style="width: 44px; height: 44px; border-radius: 14px; background: #0B6B4B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: Archivo, sans-serif; font-weight: 800; font-size: 16px">GIP</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 16px; color: #FFFFFF">Granero El Porvenir</span>
+        <span style="font-size: 13px; color: #9FB0A8">Arjona, Bolívar</span>
+      </div>
+    </div>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Vender</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 700; background: #0B6B4B; color: #FFFFFF">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Surtido</a>
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 4px 0 8px 32px">
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px">Existencias</a>
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px">Entrada de mercancía</a>
+      <a href="#" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px">Pérdida o devolución</a>
+      <a href="#" aria-current="page" style="height: 38px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; font-size: 14px; background: rgba(255,255,255,0.08); color: #FFFFFF; font-weight: 600">Conteo físico</a>
+    </div>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path></svg>Fiados</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><path d="M2 10h20"></path></svg>Caja</a>
+    <a href="#" style="display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 500">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>Negocio</a>
+    <div style="flex: 1"></div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.05)">
+      <div style="width: 36px; height: 36px; border-radius: 999px; background: #E3F1EA; color: #0B6B4B; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">CR</div>
+      <div style="display: flex; flex-direction: column">
+        <span style="font-size: 14px; font-weight: 600; color: #FFFFFF">Carmen Ruiz</span>
+        <span style="font-size: 12px; color: #9FB0A8">Administradora</span>
+      </div>
+    </div>
+  </nav>
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px 44px 48px; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4A5852">
+        <a href="#" style="text-decoration: none; font-weight: 600">Surtido</a>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5852" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        <span>Conteo físico</span>
+      </div>
+      <h1 style="margin: 0; font-family: Archivo, sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -0.02em">Conteo físico</h1>
+      <p style="margin: 0; font-size: 16px; color: #4A5852">Escriba cuánto hay en el estante. Al confirmar, la existencia queda igual a lo contado.</p>
+    </header>
+    <div style="display: flex; flex-wrap: wrap; gap: 18px">
+      <section style="flex: 3 1 420px; background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 22px; padding: 22px 24px; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 8px 24px rgba(19,32,27,0.05); display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <h2 style="margin: 0; font-family: Archivo, sans-serif; font-weight: 700; font-size: 19px">Avance del conteo</h2>
+          <span style="font-size: 16px; color: #4A5852"><span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 30px; color: #13201B">42</span> de 128 contados</span>
+        </div>
+        <div style="height: 10px; border-radius: 999px; background: #EEF1EF; overflow: hidden"><div style="width: 33%; height: 100%; border-radius: 999px; background: #0B6B4B"></div></div>
+        <span style="font-size: 14px; color: #4A5852">Los productos sin contar no cambian.</span>
+      </section>
+      <section style="flex: 2 1 320px; background: #FCE8E6; border: 1px solid #F3C1BC; border-radius: 22px; padding: 22px 24px; display: flex; gap: 14px; align-items: flex-start">
+        <div style="width: 44px; height: 44px; border-radius: 14px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex: none">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3261E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; color: #8C1D18">
+          <span style="font-weight: 700; font-size: 16px">2 diferencias grandes</span>
+          <span style="font-size: 14px; line-height: 1.45">Superan las 5 unidades. Vuelva a contarlas antes de confirmar.</span>
+        </div>
+      </section>
+    </div>
+    <section style="background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 22px; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 10px 30px rgba(19,32,27,0.06); overflow: hidden">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid #EEF1EF">
+        <label class="buscar" style="flex: 1 1 320px; height: 52px; box-sizing: border-box; border: 1.5px solid #C7D0CB; border-radius: 14px; display: flex; align-items: center; gap: 12px; padding: 0 16px">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5852" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar producto</span>
+          <input type="search" placeholder="Buscar producto por nombre" style="font-size: 16px">
+        </label>
+        <div role="group" aria-label="Filtrar" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: #F3F5F2">
+          <button type="button" aria-pressed="true" style="height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(19,32,27,0.12); font: inherit; font-size: 14px; font-weight: 700; color: #13201B; cursor: pointer">Todos · 128</button>
+          <button type="button" aria-pressed="false" style="height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #4A5852; cursor: pointer">Contados · 42</button>
+          <button type="button" aria-pressed="false" style="height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #4A5852; cursor: pointer">Sin contar · 86</button>
+          <button type="button" aria-pressed="false" style="height: 44px; padding: 0 16px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #4A5852; cursor: pointer">Con diferencia · 4</button>
+        </div>
+      </div>
+      <div style="overflow-x: auto">
+        <div style="min-width: 780px">
+          <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 1fr 1.6fr; gap: 16px; padding: 12px 22px; font-size: 13px; font-weight: 600; color: #4A5852; text-transform: uppercase; letter-spacing: 0.04em; background: #F7F9F7">
+            <span>Producto</span><span style="text-align: right">Según el sistema</span><span style="text-align: right">Contado</span><span style="text-align: right">Diferencia</span><span>Estado</span>
+          </div>
+          <sc-for list="{{ filas }}" as="f" hint-placeholder-count="6">
+            <div style="{{ f.filaEstilo }}">
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 0">
+                <div style="width: 40px; height: 40px; border-radius: 12px; background: #F3F5F2; display: flex; align-items: center; justify-content: center; flex: none">
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5852" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+                </div>
+                <div style="display: flex; flex-direction: column; min-width: 0">
+                  <span style="font-weight: 600; font-size: 16px">{{ f.nombre }}</span>
+                  <span style="font-size: 13px; color: #4A5852">{{ f.unidad }}</span>
+                </div>
+              </div>
+              <span style="text-align: right; font-size: 17px; font-variant-numeric: tabular-nums; color: #4A5852">{{ f.sistema }}</span>
+              <div style="display: flex; justify-content: flex-end">
+                <label class="cant" style="{{ f.campoEstilo }}">
+                  <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Contado de {{ f.nombre }}</span>
+                  <input inputmode="decimal" value="{{ f.contado }}" placeholder="—" style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px; color: #13201B">
+                </label>
+              </div>
+              <span style="{{ f.difEstilo }}">{{ f.diferencia }}</span>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+                <span style="{{ f.estadoEstilo }}">{{ f.estado }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+    <section style="background: #FFFFFF; border: 1px solid #DCE2DE; border-radius: 22px; padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; box-shadow: 0 1px 2px rgba(19,32,27,0.04), 0 8px 24px rgba(19,32,27,0.05)">
+      <button type="button" disabled style="height: 56px; padding: 0 26px; border: 0; border-radius: 16px; background: #0B6B4B; color: #FFFFFF; font: inherit; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; opacity: 0.55; cursor: not-allowed; box-shadow: 0 6px 16px rgba(11,107,75,0.28)">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Confirmar ajuste de 42 productos</button>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+renderVals() {
+const base = 'display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 1fr 1.6fr; gap: 16px; align-items: center; padding: 12px 22px; border-top: 1px solid #EEF1EF;';
+const campo = (borde, fondo) => 'position: relative; width: 120px; height: 50px; box-sizing: border-box; border: 1.5px solid ' + borde + '; border-radius: 14px; background: ' + fondo + '; display: flex; align-items: center; padding: 0 14px;';
+const pill = (bg, color) => 'font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: ' + bg + '; color: ' + color + ';';
+const dif = (color) => 'text-align: right; font-family: Archivo, sans-serif; font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; color: ' + color + ';';
+const tipos = {
+  cuadra: { filaEstilo: base + ' background: #FFFFFF;', campoEstilo: campo('#C7D0CB', '#FFFFFF'), difEstilo: dif('#0B6B4B'), estadoEstilo: pill('#E3F1EA', '#08523A'), estado: 'Cuadra' },
+  ajusta: { filaEstilo: base + ' background: #FFFFFF;', campoEstilo: campo('#C7D0CB', '#FFFFFF'), difEstilo: dif('#13201B'), estadoEstilo: pill('#F3F5F2', '#4A5852'), estado: 'Se ajusta' },
+  grande: { filaEstilo: base + ' background: #FFF5F4;', campoEstilo: campo('#B3261E', '#FFFFFF'), difEstilo: dif('#B3261E'), estadoEstilo: pill('#FCE8E6', '#B3261E'), estado: 'Diferencia grande', revisar: true },
+  error: { filaEstilo: base + ' background: #FFF5F4;', campoEstilo: campo('#B3261E', '#FFFFFF'), difEstilo: dif('#B3261E'), estadoEstilo: pill('#FCE8E6', '#B3261E'), estado: 'No puede ser negativa' },
+  sin: { filaEstilo: base + ' background: #FFFFFF;', campoEstilo: campo('#DCE2DE', '#F7F9F7'), difEstilo: dif('#9AA6A0'), estadoEstilo: pill('#FFFFFF', '#4A5852') + ' border: 1px dashed #C7D0CB;', estado: 'Sin contar' }
+};
+const filas = [
+  { nombre: 'Arroz 500 g', unidad: 'Unidad', sistema: '46', contado: '46', diferencia: '0', t: 'cuadra' },
+  { nombre: 'Huevo AA', unidad: 'Unidad', sistema: '90', contado: '78', diferencia: '−12', t: 'grande' },
+  { nombre: 'Aceite 1 L', unidad: 'Unidad', sistema: '8', contado: '7', diferencia: '−1', t: 'ajusta' },
+  { nombre: 'Queso costeño', unidad: 'Libra', sistema: '5', contado: '4,5', diferencia: '−0,5', t: 'ajusta' },
+  { nombre: 'Panela 500 g', unidad: 'Unidad', sistema: '12', contado: '-1', diferencia: '—', t: 'error' },
+  { nombre: 'Café molido 250 g', unidad: 'Unidad', sistema: '21', contado: '', diferencia: '—', t: 'sin' }
+].map((f) => ({ revisar: false, ...f, ...tipos[f.t] }));
+return { filas };
+}
+}
+</script>
+</body>
+</html>

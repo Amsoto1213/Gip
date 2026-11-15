@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:gip/business/entidades/gestion_inventario/ajuste_conteo.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/merma.dart';
@@ -16,10 +17,8 @@ import 'package:uuid/uuid.dart';
 /// mantiene el stock con stock nuevo = stock anterior + cantidad con signo
 /// (ERS 3.2.1).
 ///
-/// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01) y la pérdida
-/// o devolución (CUS-03).
-/// `umbralRevisionConteo` está en el constructor de EA y lo usará CUS-04
-/// (DI-15).
+/// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01), la pérdida
+/// o devolución (CUS-03) y el conteo físico (CUS-04).
 class ServicioInventario {
   ServicioInventario(
     this._items,
@@ -30,8 +29,6 @@ class ServicioInventario {
 
   final IInventarioRepositorio _items;
   final IMovimientoInventarioRepositorio _movimientos;
-  // Pendiente (DI-15): CUS-04.
-  // ignore: unused_field
   final Decimal _umbralRevisionConteo;
   final IUnidadTrabajo _unidadTrabajo;
 
@@ -50,6 +47,51 @@ class ServicioInventario {
     final item = await _items.buscarItem(tienda, producto);
     if (item == null) throw const ExcepcionProductoSinInventario();
     return item;
+  }
+
+  /// Productos con su stock: delega en items.listarItems; cada ítem trae su
+  /// producto, ordenados por nombre (CUS-04, pasos 3 a 6).
+  Future<List<ItemInventario>> listarExistencias(Tienda tienda) =>
+      _items.listarItems(tienda);
+
+  /// Obtiene el ítem con [obtenerItem] y devuelve cantidadContada − stock
+  /// actual (IE-04). Positiva: sobra; negativa: falta; cero: cuadra.
+  Future<Decimal> calcularDiferencia(
+    Tienda tienda,
+    Producto producto,
+    Decimal cantidadContada,
+  ) async {
+    final item = await obtenerItem(tienda, producto);
+    return cantidadContada - item.getStockActual();
+  }
+
+  /// Verdadero si |diferencia| **supera** el umbral de revisión: justo en el
+  /// umbral no pide revisar (IE-04 b, DI-24). No bloquea.
+  bool requiereRevision(Decimal diferencia) =>
+      diferencia.abs() > _umbralRevisionConteo;
+
+  /// Valida cantidadContada >= 0 (IE-04 b), calcula la diferencia, crea el
+  /// [AjusteConteo] con la diferencia como cantidad y lo aplica con
+  /// [aplicarMovimiento]: el stock queda igual a lo contado (RF-04). Una
+  /// diferencia cero también se registra, como constancia del conteo (DI-24).
+  Future<AjusteConteo> registrarConteo(
+    Tienda tienda,
+    Producto producto,
+    Decimal cantidadContada,
+  ) async {
+    if (cantidadContada < Decimal.zero) {
+      throw const ExcepcionCantidadContadaNegativa();
+    }
+    final item = await obtenerItem(tienda, producto);
+    final ajuste = AjusteConteo(
+      const Uuid().v4(),
+      item,
+      cantidadContada - item.getStockActual(),
+      DateTime.now().toUtc(),
+      cantidadContada,
+    );
+    await aplicarMovimiento(tienda, ajuste);
+    return ajuste;
   }
 
   /// Verdadero si el stock del ítem alcanza para [cantidad] (RN-01).

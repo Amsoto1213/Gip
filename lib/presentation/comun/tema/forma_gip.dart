@@ -5,12 +5,22 @@ import 'package:flutter/material.dart';
 abstract final class FormaGip {
   // Radios.
   static const radioTarjeta = 22.0;
+
+  /// Tarjetas del móvil en listas densas (avance y filas del conteo).
+  static const radioTarjetaMovil = 18.0;
   static const radioTarjetaAccion = 20.0;
   static const radioCajaIcono = 16.0;
   static const radioCajaIconoPequena = 14.0;
+
+  /// Caja de 40 px con el ícono del producto en una fila de tabla.
+  static const radioCajaIconoTabla = 12.0;
   static const radioCampo = 14.0;
   static const radioBotonPrimario = 16.0;
   static const radioChip = 999.0;
+
+  /// Grupo de pestañas de filtro (14) y cada pestaña dentro (11).
+  static const radioPestanas = 14.0;
+  static const radioPestana = 11.0;
 
   /// Borde de campos y botones de contorno.
   static const grosorBordeCampo = 1.5;
@@ -47,6 +57,11 @@ abstract final class FormaGip {
   /// Logo sobre el panel verde: `0 24px 60px rgba(5,40,28,0.35)`.
   static const sombraLogo = [
     BoxShadow(color: Color(0x5905281C), offset: Offset(0, 24), blurRadius: 60),
+  ];
+
+  /// Pestaña de filtro elegida: `0 1px 3px rgba(19,32,27,0.12)`.
+  static const sombraPestana = [
+    BoxShadow(color: Color(0x1F13201B), offset: Offset(0, 1), blurRadius: 3),
   ];
 
   /// Halo de foco de los campos: 4 px de `rgba(11,107,75,0.14)`.

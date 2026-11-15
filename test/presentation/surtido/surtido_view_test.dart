@@ -28,11 +28,11 @@ void main() {
     expect(find.text('Buscar en el surtido…'), findsOneWidget);
     expect(find.text('Entrada'), findsOneWidget);
     expect(find.text('Pérdida'), findsOneWidget);
-    // El lector (CUS-17), Conteo (CUS-04) y la tabla (CUS-25) aún no están.
+    expect(find.text('Conteo'), findsOneWidget);
+    // El lector (CUS-17) y la tabla (CUS-25) aún no están.
     expect(find.byTooltip('Leer código con el lector'), findsNothing);
-    expect(find.textContaining('Conteo'), findsNothing);
     expect(find.text('Existencias'), findsNothing);
-    expect(find.byType(TarjetaAccion), findsNWidgets(2));
+    expect(find.byType(TarjetaAccion), findsNWidgets(3));
     expect(tester.takeException(), isNull);
   });
 
@@ -50,6 +50,8 @@ void main() {
     expect(find.text('Llegó mercancía del proveedor'), findsOneWidget);
     expect(find.text('Registrar pérdida'), findsOneWidget);
     expect(find.text('Vencido, dañado o devuelto'), findsOneWidget);
+    expect(find.text('Conteo físico'), findsOneWidget);
+    expect(find.text('Cuente y corrija la existencia'), findsOneWidget);
     expect(tester.getSize(find.byType(BarraBusqueda)).height, 58);
   });
 

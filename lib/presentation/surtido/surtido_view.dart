@@ -8,13 +8,14 @@ import 'package:gip/presentation/surtido/rutas_surtido.dart';
 
 /// Sección Surtido (`docs/ui/rediseno/surtido-web.html` y `surtido-movil.html`):
 /// "Producto nuevo" (CUS-18), la búsqueda (CUS-06) y las acciones Entrada de
-/// mercancía (CUS-01) y Pérdida o devolución (CUS-03). La tabla de existencias
-/// llega con CUS-25 y Conteo físico con CUS-04; mientras tanto la línea de
+/// mercancía (CUS-01), Pérdida o devolución (CUS-03) y Conteo físico (CUS-04).
+/// La tabla de existencias llega con CUS-25; mientras tanto la línea de
 /// contexto es un texto fijo sin cifras (DI-23).
 class SurtidoView extends StatelessWidget {
   const SurtidoView({super.key});
 
-  static const contexto = 'Entradas, pérdidas y productos de la tienda';
+  static const contexto =
+      'Entradas, pérdidas, conteos y productos de la tienda';
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +37,14 @@ class SurtidoView extends StatelessWidget {
         descripcion: 'Vencido, dañado o devuelto',
         vertical: !web,
         onTap: () => abrirPerdida(context),
+      ),
+      TarjetaAccion(
+        key: const Key('surtido_conteo'),
+        icono: Icons.fact_check_outlined,
+        titulo: web ? 'Conteo físico' : 'Conteo',
+        descripcion: 'Cuente y corrija la existencia',
+        vertical: !web,
+        onTap: () => abrirConteo(context),
       ),
     ];
     return Scaffold(

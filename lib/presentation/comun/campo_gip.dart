@@ -5,15 +5,21 @@ import 'package:gip/presentation/comun/tema/forma_gip.dart';
 /// Campo del rediseño: etiqueta arriba (14 px, peso 600), caja de 52–54 px con
 /// radio 14, borde 1,5 px `bordeFuerte` e [icono] a la izquierda en
 /// `textoSecundario`. Con foco: borde `primario` y halo de 4 px. Con
-/// [contrasena] oculta el texto y agrega el botón de ojo.
+/// [contrasena] oculta el texto y agrega el botón de ojo. Con [resaltado] el
+/// borde va en `error` (un valor que hay que revisar o que no es válido, con
+/// el mensaje fuera del campo, como en una fila del conteo) y [alineacion]
+/// permite cifras a la derecha (cantidades en una lista).
 ///
-/// [campoKey] va en el `TextField` para que las pruebas lo encuentren.
+/// [campoKey] va en el `TextField` para que las pruebas lo encuentren. Con
+/// [focusNode], el foco lo maneja quien crea el campo (una lista que se
+/// redibuja al escribir conserva así el campo enfocado).
 class CampoGip extends StatefulWidget {
   const CampoGip({
     super.key,
     required this.etiqueta,
     required this.controlador,
     this.campoKey,
+    this.focusNode,
     this.icono,
     this.pista,
     this.ayuda,
@@ -29,12 +35,16 @@ class CampoGip extends StatefulWidget {
     this.mayusculas = TextCapitalization.none,
     this.onChanged,
     this.onSubmitted,
+    this.alineacion = TextAlign.start,
+    this.resaltado = false,
+    this.estiloTexto,
   });
 
   /// Texto encima del campo. Vacío para un campo sin etiqueta.
   final String etiqueta;
   final TextEditingController controlador;
   final Key? campoKey;
+  final FocusNode? focusNode;
   final IconData? icono;
 
   /// Texto gris dentro del campo vacío ("nombre@tienda.com").
@@ -61,6 +71,16 @@ class CampoGip extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
+  /// Alineación del texto escrito; a la derecha para cifras en columna.
+  final TextAlign alineacion;
+
+  /// Borde en `error` para marcar un valor por revisar o no válido.
+  final bool resaltado;
+
+  /// Letra del valor escrito; por defecto `bodyLarge`. Para cantidades
+  /// importantes, Archivo 800 con cifras tabulares (fila del conteo).
+  final TextStyle? estiloTexto;
+
   @override
   State<CampoGip> createState() => _CampoGipState();
 }
@@ -74,6 +94,13 @@ class _CampoGipState extends State<CampoGip> {
     final tema = Theme.of(context);
     final esquema = tema.colorScheme;
     final icono = widget.icono;
+    final bordeResaltado = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+      borderSide: BorderSide(
+        color: esquema.error,
+        width: FormaGip.grosorBordeCampo,
+      ),
+    );
     final campo = Focus(
       canRequestFocus: false,
       skipTraversal: true,
@@ -87,6 +114,7 @@ class _CampoGipState extends State<CampoGip> {
         child: TextField(
           key: widget.campoKey,
           controller: widget.controlador,
+          focusNode: widget.focusNode,
           enabled: widget.habilitado,
           obscureText: widget.contrasena && _oculto,
           keyboardType: widget.tipoTeclado,
@@ -96,8 +124,11 @@ class _CampoGipState extends State<CampoGip> {
           textCapitalization: widget.mayusculas,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
-          style: tema.textTheme.bodyLarge,
+          textAlign: widget.alineacion,
+          style: widget.estiloTexto ?? tema.textTheme.bodyLarge,
           decoration: InputDecoration(
+            enabledBorder: widget.resaltado ? bordeResaltado : null,
+            focusedBorder: widget.resaltado ? bordeResaltado : null,
             hintText: widget.pista,
             errorText: widget.error,
             errorMaxLines: 2,

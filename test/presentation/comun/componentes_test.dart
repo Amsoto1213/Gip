@@ -8,9 +8,12 @@ import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/logo_gip.dart';
 import 'package:gip/presentation/comun/opcion_con_icono.dart';
+import 'package:gip/presentation/comun/pildora_estado.dart';
 import 'package:gip/presentation/comun/resumen_movimiento.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
+import 'package:gip/presentation/comun/selector_filtro.dart';
 import 'package:gip/presentation/comun/tarjeta_accion.dart';
+import 'package:gip/presentation/comun/tarjeta_aviso.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 
@@ -418,6 +421,60 @@ void main() {
     });
   });
 
+  testWidgets('PildoraEstado: verde, gris, rojo y punteada', (tester) async {
+    await montar(
+      tester,
+      const Wrap(
+        children: [
+          PildoraEstado('Cuadra', tono: TonoEstado.bien),
+          PildoraEstado('Se ajusta', tono: TonoEstado.neutro),
+          PildoraEstado('Diferencia grande', tono: TonoEstado.error),
+          PildoraEstado('Sin contar', tono: TonoEstado.pendiente),
+        ],
+      ),
+    );
+    Color? color(String texto) =>
+        tester.widget<Text>(find.text(texto)).style?.color;
+    expect(color('Cuadra'), ColoresGip.primarioOscuro);
+    expect(color('Se ajusta'), ColoresGip.textoSecundario);
+    expect(color('Diferencia grande'), ColoresGip.error);
+    expect(color('Sin contar'), ColoresGip.textoSecundario);
+    expect(
+      find.ancestor(
+        of: find.text('Sin contar'),
+        matching: find.byType(CustomPaint),
+      ),
+      findsWidgets,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TarjetaAviso: fondo y textos de error', (tester) async {
+    await montar(
+      tester,
+      const TarjetaAviso(
+        titulo: '2 diferencias grandes',
+        texto: 'Vuelva a contarlas antes de confirmar.',
+      ),
+    );
+    expect(
+      tester.widget<Text>(find.text('2 diferencias grandes')).style?.color,
+      ColoresGip.errorTexto,
+    );
+    final caja = tester.widget<Container>(
+      find
+          .ancestor(
+            of: find.text('2 diferencias grandes'),
+            matching: find.byType(Container),
+          )
+          .last,
+    );
+    final deco = caja.decoration! as BoxDecoration;
+    expect(deco.color, ColoresGip.errorFondo);
+    expect(deco.border, Border.all(color: ColoresGip.errorBorde));
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+  });
+
   testWidgets('ChipEstado: Poco en alerta y Agotado en error', (tester) async {
     await montar(
       tester,
@@ -569,6 +626,183 @@ void main() {
       );
       expect(tester.widget<Text>(find.text('Surtido')).style?.fontSize, 30);
       expect(find.byIcon(Icons.add), findsOneWidget);
+    });
+  });
+
+  testWidgets('CampoGip resaltado: borde de error y texto a la derecha', (
+    tester,
+  ) async {
+    final controlador = TextEditingController(text: '78');
+    addTearDown(controlador.dispose);
+    await montar(
+      tester,
+      CampoGip(
+        etiqueta: '',
+        controlador: controlador,
+        campoKey: const Key('campo'),
+        alineacion: TextAlign.end,
+        resaltado: true,
+      ),
+    );
+    final campo = tester.widget<TextField>(find.byKey(const Key('campo')));
+    expect(campo.textAlign, TextAlign.end);
+    final borde = campo.decoration!.enabledBorder! as OutlineInputBorder;
+    expect(borde.borderSide.color, ColoresGip.error);
+    expect(find.text('78'), findsOneWidget);
+  });
+
+  testWidgets('CampoGip con estiloTexto usa esa letra', (tester) async {
+    final controlador = TextEditingController(text: '46');
+    addTearDown(controlador.dispose);
+    const estilo = TextStyle(fontSize: 20, fontWeight: FontWeight.w800);
+    await montar(
+      tester,
+      CampoGip(
+        etiqueta: '',
+        controlador: controlador,
+        campoKey: const Key('campo'),
+        estiloTexto: estilo,
+      ),
+    );
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('campo'))).style,
+      estilo,
+    );
+  });
+
+  testWidgets('CampoGip usa el FocusNode que recibe', (tester) async {
+    final controlador = TextEditingController();
+    final foco = FocusNode();
+    addTearDown(controlador.dispose);
+    addTearDown(foco.dispose);
+    await montar(
+      tester,
+      CampoGip(
+        etiqueta: 'Contado',
+        controlador: controlador,
+        focusNode: foco,
+        campoKey: const Key('campo'),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('campo')));
+    await tester.pump();
+    expect(foco.hasFocus, isTrue);
+  });
+
+  group('SelectorFiltro', () {
+    Future<List<String>> montarFiltro(
+      WidgetTester tester, {
+      double ancho = 390,
+    }) async {
+      final elegidos = <String>[];
+      await montar(
+        tester,
+        SelectorFiltro<String>(
+          opciones: const [
+            (valor: 'todos', etiqueta: 'Todos'),
+            (valor: 'contados', etiqueta: 'Contados'),
+            (valor: 'sin', etiqueta: 'Sin contar'),
+            (valor: 'dif', etiqueta: 'Con diferencia · 2'),
+          ],
+          elegido: 'contados',
+          onElegir: elegidos.add,
+        ),
+        ancho: ancho,
+      );
+      return elegidos;
+    }
+
+    testWidgets('la elegida va rellena; tocar otra la elige', (tester) async {
+      final elegidos = await montarFiltro(tester);
+      final elegida = tester.widget<Material>(
+        find.byKey(const Key('filtro_1')),
+      );
+      final otra = tester.widget<Material>(find.byKey(const Key('filtro_0')));
+      expect(elegida.color, ColoresGip.navFondo);
+      expect(otra.color, ColoresGip.superficie);
+
+      await tester.tap(find.text('Sin contar'));
+      expect(elegidos, ['sin']);
+    });
+
+    testWidgets('tocar una píldora no le quita el foco a un campo', (
+      tester,
+    ) async {
+      final controlador = TextEditingController();
+      final foco = FocusNode();
+      addTearDown(controlador.dispose);
+      addTearDown(foco.dispose);
+      await montar(
+        tester,
+        Column(
+          children: [
+            TextField(controller: controlador, focusNode: foco),
+            SelectorFiltro<String>(
+              opciones: const [
+                (valor: 'todos', etiqueta: 'Todos'),
+                (valor: 'sin', etiqueta: 'Sin contar'),
+              ],
+              elegido: 'todos',
+              onElegir: (_) {},
+            ),
+          ],
+        ),
+      );
+      foco.requestFocus();
+      await tester.pump();
+      await tester.tap(find.text('Sin contar'));
+      await tester.pump();
+      expect(foco.hasFocus, isTrue);
+    });
+
+    testWidgets('pestañas: la elegida en blanco con sombra; 44 px', (
+      tester,
+    ) async {
+      final elegidos = <String>[];
+      await montar(
+        tester,
+        SelectorFiltro<String>(
+          estilo: EstiloFiltro.pestanas,
+          opciones: const [
+            (valor: 'todos', etiqueta: 'Todos · 4'),
+            (valor: 'sin', etiqueta: 'Sin contar · 3'),
+          ],
+          elegido: 'todos',
+          onElegir: elegidos.add,
+        ),
+        ancho: 1280,
+      );
+      final elegida = tester.widget<Container>(
+        find.byKey(const Key('filtro_0')),
+      );
+      final otra = tester.widget<Container>(find.byKey(const Key('filtro_1')));
+      final decoElegida = elegida.decoration! as BoxDecoration;
+      expect(decoElegida.color, ColoresGip.superficie);
+      expect(decoElegida.boxShadow, FormaGip.sombraPestana);
+      expect((otra.decoration! as BoxDecoration).color, isNull);
+      expect(
+        tester.widget<Text>(find.text('Sin contar · 3')).style?.color,
+        ColoresGip.textoSecundario,
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('filtro_1'))).height,
+        greaterThanOrEqualTo(44),
+      );
+      await tester.tap(find.text('Sin contar · 3'));
+      expect(elegidos, ['sin']);
+    });
+
+    testWidgets('píldoras de 44 px que bajan de línea sin desbordar', (
+      tester,
+    ) async {
+      await montarFiltro(tester, ancho: 360);
+      for (var i = 0; i < 4; i++) {
+        expect(
+          tester.getSize(find.byKey(Key('filtro_$i'))).height,
+          greaterThanOrEqualTo(44),
+        );
+      }
+      expect(tester.takeException(), isNull);
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/ajuste_conteo.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
 import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
@@ -463,6 +464,147 @@ void main() {
 
     test('falso si pide más de lo que hay', () {
       expect(servicio.hayExistencia(itemAceite, d('8.5')), isFalse);
+    });
+  });
+  group('listarExistencias (CUS-04)', () {
+    test('devuelve los ítems de la tienda con su producto', () async {
+      final lista = await servicio.listarExistencias(tienda);
+      expect(lista.map((i) => i.getProducto().getNombre()), ['Aceite 1 L']);
+      expect(lista.single.getStockActual(), d('8'));
+    });
+  });
+
+  group('calcularDiferencia (IE-04)', () {
+    test('positiva: se contó más de lo que dice el sistema', () async {
+      expect(
+        await servicio.calcularDiferencia(tienda, aceite, d('10')),
+        d('2'),
+      );
+    });
+
+    test('negativa: se contó menos', () async {
+      expect(
+        await servicio.calcularDiferencia(tienda, aceite, d('5')),
+        d('-3'),
+      );
+    });
+
+    test('cero: el conteo cuadra', () async {
+      expect(await servicio.calcularDiferencia(tienda, aceite, d('8')), d('0'));
+    });
+
+    test('con decimales (kilos, libras)', () async {
+      expect(
+        await servicio.calcularDiferencia(tienda, aceite, d('7.25')),
+        d('-0.75'),
+      );
+    });
+
+    test('no guarda nada', () async {
+      await servicio.calcularDiferencia(tienda, aceite, d('1'));
+      expect(movimientos.de(tienda), isEmpty);
+      expect(await stockGuardado(), d('8'));
+    });
+
+    test('rechaza un producto sin ítem', () async {
+      await expectLater(
+        servicio.calcularDiferencia(tienda, sinItem(), d('1')),
+        throwsA(isA<ExcepcionProductoSinInventario>()),
+      );
+    });
+  });
+
+  group('requiereRevision (umbral 5, IE-04 b)', () {
+    for (final diferencia in ['0', '4', '5', '-5', '4.999']) {
+      test('$diferencia no supera el umbral: no pide revisar', () {
+        expect(servicio.requiereRevision(d(diferencia)), isFalse);
+      });
+    }
+
+    for (final diferencia in ['5.001', '6', '-6', '-12']) {
+      test('$diferencia supera el umbral: pide revisar', () {
+        expect(servicio.requiereRevision(d(diferencia)), isTrue);
+      });
+    }
+  });
+
+  group('registrarConteo (CUS-04)', () {
+    for (final (contada, diferencia) in [
+      ('11', '3'),
+      ('2', '-6'),
+      ('8', '0'),
+      ('0', '-8'),
+    ]) {
+      test('contada $contada: el stock queda igual a lo contado', () async {
+        final ajuste = await servicio.registrarConteo(
+          tienda,
+          aceite,
+          d(contada),
+        );
+        expect(await stockGuardado(), d(contada));
+        expect(ajuste.getItem().getStockActual(), d(contada));
+        expect(ajuste.getCantidad(), d(diferencia));
+        expect(ajuste.getCantidadContada(), d(contada));
+        expect(movimientos.de(tienda).single, same(ajuste));
+      });
+    }
+
+    test('la diferencia cero también queda registrada (DI-24)', () async {
+      await servicio.registrarConteo(tienda, aceite, d('8'));
+      expect(movimientos.de(tienda).single, isA<AjusteConteo>());
+    });
+
+    test('ajuste con id uuid v4, VIGENTE y fecha en UTC', () async {
+      final ajuste = await servicio.registrarConteo(tienda, aceite, d('9'));
+      expect(ajuste.getId(), matches(uuidV4));
+      expect(ajuste.getEstado(), EstadoMovimiento.vigente);
+      expect(ajuste.getFecha().isUtc, isTrue);
+    });
+
+    test('acepta decimales (kilos, libras)', () async {
+      await servicio.registrarConteo(tienda, aceite, d('7.5'));
+      expect(await stockGuardado(), d('7.5'));
+    });
+
+    test('movimiento e ítem se guardan en una sola transacción', () async {
+      await servicio.registrarConteo(tienda, aceite, d('3'));
+      expect(movimientos.guardadosEnTransaccion, [true]);
+      expect(items.guardadosEnTransaccion, [true]);
+    });
+
+    test('rechaza una cantidad negativa y no guarda nada', () async {
+      await expectLater(
+        servicio.registrarConteo(tienda, aceite, d('-1')),
+        throwsA(
+          isA<ExcepcionCantidadContadaNegativa>().having(
+            (e) => e.mensaje,
+            'mensaje',
+            'La cantidad contada no puede ser negativa',
+          ),
+        ),
+      );
+      expect(movimientos.de(tienda), isEmpty);
+      expect(await stockGuardado(), d('8'));
+    });
+
+    test('rechaza un producto sin ítem de inventario', () async {
+      await expectLater(
+        servicio.registrarConteo(tienda, sinItem(), d('1')),
+        throwsA(isA<ExcepcionProductoSinInventario>()),
+      );
+      expect(movimientos.de(tienda), isEmpty);
+    });
+
+    test('si falla el guardado no se guarda nada (rollback)', () async {
+      items.fallar = true;
+      await expectLater(
+        servicio.registrarConteo(tienda, aceite, d('20')),
+        throwsA(isA<StateError>()),
+      );
+      items.fallar = false;
+      expect(movimientos.de(tienda), isEmpty);
+      expect(await stockGuardado(), d('8'));
+      expect(itemAceite.getStockActual(), d('8'));
     });
   });
 }
