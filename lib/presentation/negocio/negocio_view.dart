@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:provider/provider.dart';
 
@@ -13,11 +14,15 @@ class NegocioView extends StatelessWidget {
     titulo: 'Negocio',
     hijos: [
       const SizedBox(height: 24),
-      OutlinedButton.icon(
-        onPressed: () => context.read<IniciarSesionViewModel>().cerrarSesion(),
-        style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-        icon: const Icon(Icons.logout),
-        label: const Text('Cerrar sesión'),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: BotonSecundario(
+          key: const Key('negocio_cerrar_sesion'),
+          texto: 'Cerrar sesión',
+          icono: Icons.logout,
+          onPressed: () =>
+              context.read<IniciarSesionViewModel>().cerrarSesion(),
+        ),
       ),
     ],
   );
