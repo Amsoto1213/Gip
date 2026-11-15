@@ -4,18 +4,18 @@ import 'package:gip/presentation/comun/tema/forma_gip.dart';
 
 /// Tarjeta de aviso en rojo (`conteo-web.html`): fondo `errorFondo`, borde
 /// `errorBorde`, radio 22, caja blanca de 44 px con el ícono en `error`, y
-/// [titulo] (16 px, 700) y [texto] (14 px) en `errorTexto`. Marca un estado
-/// que hay que revisar; no es una acción. Se anuncia al aparecer.
+/// [titulo] (16 px, 700) y [texto] (14 px, opcional) en `errorTexto`. Marca
+/// un estado que hay que revisar; no es una acción. Se anuncia al aparecer.
 class TarjetaAviso extends StatelessWidget {
   const TarjetaAviso({
     super.key,
     required this.titulo,
-    required this.texto,
+    this.texto,
     this.icono = Icons.warning_amber_rounded,
   });
 
   final String titulo;
-  final String texto;
+  final String? texto;
   final IconData icono;
 
   @override
@@ -33,7 +33,9 @@ class TarjetaAviso extends StatelessWidget {
           border: Border.all(color: extra.errorBorde),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: texto == null
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.start,
           children: [
             Container(
               width: 44,
@@ -59,15 +61,17 @@ class TarjetaAviso extends StatelessWidget {
                       color: extra.errorTexto,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    texto,
-                    style: tema.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                      height: 1.45,
-                      color: extra.errorTexto,
+                  if (texto case final texto?) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      texto,
+                      style: tema.textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        height: 1.45,
+                        color: extra.errorTexto,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

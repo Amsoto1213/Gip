@@ -2,28 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/pantalla_seccion.dart';
+import 'package:gip/presentation/comun/tarjeta_accion.dart';
+import 'package:gip/presentation/comun/tema/forma_gip.dart';
+import 'package:gip/presentation/negocio/rutas_negocio.dart';
 import 'package:provider/provider.dart';
 
-/// Sección Negocio (pendiente: ver `docs/ui/pantallas.md`). Por ahora solo
-/// tiene "Cerrar sesión" (DI-05); al salir, el router vuelve al acceso.
+/// Sección Negocio (pendiente: ver `docs/ui/pantallas.md`). Por ahora tiene
+/// Alertas de surtido (CUS-05) y "Cerrar sesión" (DI-05); al salir, el router
+/// vuelve al acceso.
 class NegocioView extends StatelessWidget {
   const NegocioView({super.key});
 
   @override
-  Widget build(BuildContext context) => PantallaSeccion(
-    titulo: 'Negocio',
-    hijos: [
-      const SizedBox(height: 24),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: BotonSecundario(
-          key: const Key('negocio_cerrar_sesion'),
-          texto: 'Cerrar sesión',
-          icono: Icons.logout,
-          onPressed: () =>
-              context.read<IniciarSesionViewModel>().cerrarSesion(),
+  Widget build(BuildContext context) {
+    final web = FormaGip.esWeb(context);
+    return PantallaSeccion(
+      titulo: 'Negocio',
+      hijos: [
+        SizedBox(height: web ? 24 : 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: TarjetaAccion(
+              key: const Key('negocio_alertas'),
+              icono: Icons.notifications_none,
+              titulo: 'Alertas de surtido',
+              descripcion: 'Lo que está por agotarse',
+              onTap: () => abrirAlertas(context),
+            ),
+          ),
         ),
-      ),
-    ],
-  );
+        const SizedBox(height: 24),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: BotonSecundario(
+            key: const Key('negocio_cerrar_sesion'),
+            texto: 'Cerrar sesión',
+            icono: Icons.logout,
+            onPressed: () =>
+                context.read<IniciarSesionViewModel>().cerrarSesion(),
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/presentation/comun/tema/colores_gip.dart';
 import 'package:gip/presentation/comun/tema/forma_gip.dart';
 
 /// Tono de una [PildoraEstado].
@@ -14,6 +15,10 @@ enum TonoEstado {
 
   /// Blanco con borde punteado: todavía no tiene valor ("Sin contar").
   pendiente,
+
+  /// Azul (`info`, `infoTexto`): dato que hay que tomar con cuidado, sin ser
+  /// un problema ("Provisional", alertas de surtido).
+  informativo,
 }
 
 /// Píldora con el estado de una fila (13 px, peso 700, radio 999). Solo marca
@@ -29,6 +34,7 @@ class PildoraEstado extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final esquema = tema.colorScheme;
+    final extra = tema.extension<ColoresExtraGip>()!;
     final (fondo, color) = switch (tono) {
       TonoEstado.bien => (esquema.primaryContainer, esquema.onPrimaryContainer),
       TonoEstado.neutro => (
@@ -37,6 +43,7 @@ class PildoraEstado extends StatelessWidget {
       ),
       TonoEstado.error => (esquema.errorContainer, esquema.error),
       TonoEstado.pendiente => (esquema.surface, esquema.onSurfaceVariant),
+      TonoEstado.informativo => (extra.info, extra.infoTexto),
     };
     final pildora = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),

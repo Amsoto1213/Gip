@@ -4,6 +4,7 @@ import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
+import 'package:gip/presentation/negocio/rutas_negocio.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -43,7 +44,7 @@ class MarcoNavegacion extends StatelessWidget {
     (
       etiqueta: 'Negocio',
       icono: (t) => Icon(Icons.show_chart, size: t),
-      subsecciones: const [],
+      subsecciones: subseccionesNegocio,
     ),
   ];
 
