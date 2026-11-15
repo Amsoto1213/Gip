@@ -6,7 +6,7 @@ import 'package:gip/business/entidades/pagos/fiado.dart';
 /// (RNF-16). No se edita: se registra y se elimina cuando ya no debe (DA-59).
 /// El teléfono vacío ('') significa que no lo dio (DI-26).
 ///
-/// `obtenerHistorial` y `puedeEliminarse` llegan con CUS-19 y CUS-21.
+/// `obtenerHistorial` llega con CUS-19 completo.
 class Cliente {
   Cliente(this._id, this._nombre, this._telefono);
 
@@ -33,6 +33,10 @@ class Cliente {
     Decimal.zero,
     (s, f) => s + f.getSaldoPendiente(),
   );
+
+  /// Information Expert: verdadero si no tiene fiados pendientes (CUS-21,
+  /// DA-69).
+  bool puedeEliminarse() => obtenerFiadosPendientes().isEmpty;
 
   /// Agrega el fiado a su lista; así la lista no se modifica desde afuera.
   void agregarFiado(Fiado fiado) => _fiados.add(fiado);
