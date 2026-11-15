@@ -20,6 +20,8 @@ import 'package:gip/presentation/comun/pantalla_seccion.dart';
 import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'presentation/negocio/alertas_falsos.dart';
+
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
 class SesionLocalFalsa extends Mock implements ISesionLocal {}
@@ -70,6 +72,8 @@ void main() {
     registrarPerdida: RegistrarPerdidaFalso(),
     registrarConteo: RegistrarConteoFalso(),
     registrarVenta: RegistrarVentaFalso(),
+    generarAlertas: GenerarAlertasFalso(),
+    consultarAlertas: ConsultarAlertasFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).

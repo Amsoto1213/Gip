@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
@@ -7,6 +9,7 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coord
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/composition_root/registrar_acceso.dart';
+import 'package:gip/composition_root/registrar_alertas.dart';
 import 'package:gip/composition_root/registrar_caja.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/composition_root/registrar_pagos.dart';
@@ -16,6 +19,7 @@ import 'package:gip/data/service_agents/cliente_supabase.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/router.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
+import 'package:gip/presentation/negocio/disparador_alertas_diarias.dart';
 import 'package:gip/transversal/configuracion/configuracion_supabase.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -37,15 +41,19 @@ Future<void> main() async {
     inventario.servicioInventario,
     caja.servicioCaja,
   );
+  final acceso = registrarAcceso(cliente);
+  final alertas = registrarAlertas(base, acceso.servicioAcceso);
   runApp(
     GipApp(
-      iniciarSesion: registrarAcceso(cliente),
+      iniciarSesion: acceso.iniciarSesion,
       gestionarProducto: inventario.gestionarProducto,
       buscarProducto: inventario.buscarProducto,
       registrarEntradaMercancia: inventario.registrarEntradaMercancia,
       registrarPerdida: inventario.registrarPerdida,
       registrarConteo: inventario.registrarConteo,
       registrarVenta: pagos.registrarVenta,
+      generarAlertas: alertas.generarAlertas,
+      consultarAlertas: alertas.consultarAlertas,
     ),
   );
 }
@@ -60,6 +68,8 @@ class GipApp extends StatefulWidget {
     required this.registrarPerdida,
     required this.registrarConteo,
     required this.registrarVenta,
+    required this.generarAlertas,
+    required this.consultarAlertas,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -69,6 +79,8 @@ class GipApp extends StatefulWidget {
   final RegistrarPerdidaCoordinator registrarPerdida;
   final RegistrarConteoCoordinator registrarConteo;
   final RegistrarVentaCoordinator registrarVenta;
+  final GenerarAlertasDiariasCoordinator generarAlertas;
+  final ConsultarAlertasCoordinator consultarAlertas;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -80,8 +92,18 @@ class _GipAppState extends State<GipApp> {
   )..verificarSesionGuardada();
   late final GoRouter _router = crearRouter(_sesion);
 
+  /// CUS-24 en cada arranque con usuario activo, sin bloquear (DI-25).
+  late final DisparadorAlertasDiarias _alertasDiarias;
+
+  @override
+  void initState() {
+    super.initState();
+    _alertasDiarias = DisparadorAlertasDiarias(_sesion, widget.generarAlertas);
+  }
+
   @override
   void dispose() {
+    _alertasDiarias.dispose();
     _router.dispose();
     _sesion.dispose();
     super.dispose();
@@ -98,6 +120,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarPerdida),
         Provider.value(value: widget.registrarConteo),
         Provider.value(value: widget.registrarVenta),
+        Provider.value(value: widget.consultarAlertas),
       ],
       child: MaterialApp.router(
         title: 'GIP',

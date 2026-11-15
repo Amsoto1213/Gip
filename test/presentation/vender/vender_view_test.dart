@@ -20,6 +20,8 @@ import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../negocio/alertas_falsos.dart';
+
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
 class SesionLocalFalsa extends Mock implements ISesionLocal {}
@@ -110,6 +112,8 @@ void main() {
         registrarPerdida: inventario.registrarPerdida,
         registrarConteo: inventario.registrarConteo,
         registrarVenta: pagos.registrarVenta,
+        generarAlertas: GenerarAlertasFalso(),
+        consultarAlertas: ConsultarAlertasFalso(),
       ),
     );
     await tester.pumpAndSettle();

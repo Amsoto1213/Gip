@@ -24,6 +24,8 @@ import 'package:gip/presentation/surtido/perdida_view.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../negocio/alertas_falsos.dart';
+
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
 class SesionLocalFalsa extends Mock implements ISesionLocal {}
@@ -73,6 +75,8 @@ void main() {
         registrarPerdida: RegistrarPerdidaFalso(),
         registrarConteo: RegistrarConteoFalso(),
         registrarVenta: RegistrarVentaFalso(),
+        generarAlertas: GenerarAlertasFalso(),
+        consultarAlertas: ConsultarAlertasFalso(),
       ),
     );
     await tester.pumpAndSettle();
