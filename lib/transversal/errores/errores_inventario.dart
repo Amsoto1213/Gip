@@ -48,3 +48,10 @@ class ExcepcionCantidadSuperaExistencia extends ExcepcionNegocio {
   const ExcepcionCantidadSuperaExistencia()
     : super('La cantidad supera la existencia');
 }
+
+/// Cantidad contada negativa en un conteo físico (CUS-04, break "Cantidad no
+/// válida", IE-04 b). El texto es el que ve el tendero (paso 30).
+class ExcepcionCantidadContadaNegativa extends ExcepcionNegocio {
+  const ExcepcionCantidadContadaNegativa()
+    : super('La cantidad contada no puede ser negativa');
+}
