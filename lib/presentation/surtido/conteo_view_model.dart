@@ -7,6 +7,7 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/surtido/perdida_view_model.dart';
+import 'package:gip/transversal/errores/errores_inventario.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
 import 'package:gip/transversal/texto/normalizar_texto.dart';
 
@@ -87,6 +88,8 @@ class ConteoViewModel extends ChangeNotifier {
   static const mensajeErrorCargar =
       'No se pudieron cargar los productos. Intente de nuevo';
   static const mensajeSoloEnteros = PerdidaViewModel.mensajeSoloEnteros;
+  static final mensajeNegativa =
+      const ExcepcionCantidadContadaNegativa().mensaje;
 
   final RegistrarConteoCoordinator _coordinator;
   final Tienda _tienda;
@@ -157,12 +160,14 @@ class ConteoViewModel extends ChangeNotifier {
   /// Productos cuya diferencia supera el umbral.
   int get porRevisar => _filas.where((f) => f.revisar).length;
 
-  /// Hay algo contado, nada escrito que no sea un número válido y no se está
-  /// guardando.
+  /// Hay algo contado, ninguna fila con error, nada escrito que no sea un
+  /// número válido y no se está guardando.
   bool get puedeConfirmar =>
       contados > 0 &&
       !_registrando &&
-      !_filas.any((f) => f.texto.trim().isNotEmpty && !f.contado);
+      !_filas.any(
+        (f) => f.error != null || (f.texto.trim().isNotEmpty && !f.contado),
+      );
 
   static bool _conDiferencia(FilaConteo f) =>
       f.diferencia != null && f.diferencia != Decimal.zero;
@@ -204,23 +209,26 @@ class ConteoViewModel extends ChangeNotifier {
   /// Cantidad contada de [producto] como la escribe el tendero (paso 9);
   /// acepta coma o punto decimal en kilos y libras. Pide la diferencia y si
   /// requiere revisión (pasos 10 a 22).
+  ///
+  /// Una cantidad negativa se marca al escribirla con el mensaje del paso 30,
+  /// sin diferencia ni aviso del umbral, y no deja confirmar; el servicio la
+  /// sigue rechazando al guardar (paso 28, DI-24).
   Future<void> cambiarCantidad(Producto producto, String texto) async {
     final i = _indice(producto);
     if (i < 0) return;
     final fila = _filas[i];
     final valor = PerdidaViewModel.leerCantidad(texto);
+    final negativa = valor != null && valor < Decimal.zero;
     final fraccionEnUnidades =
         valor != null && !fila.admiteDecimales && !valor.isInteger;
-    final contada = fraccionEnUnidades ? null : valor;
+    final error = negativa
+        ? mensajeNegativa
+        : fraccionEnUnidades
+        ? mensajeSoloEnteros
+        : null;
+    final contada = error == null ? valor : null;
     _aviso = null;
-    _reemplazar(
-      i,
-      fila._con(
-        texto: texto,
-        contada: contada,
-        error: fraccionEnUnidades ? mensajeSoloEnteros : null,
-      ),
-    );
+    _reemplazar(i, fila._con(texto: texto, contada: contada, error: error));
     notifyListeners();
     if (contada == null) {
       _ultimaConsulta[producto.getId()] =

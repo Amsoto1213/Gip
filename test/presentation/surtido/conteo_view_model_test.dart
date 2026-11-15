@@ -143,6 +143,34 @@ void main() {
       verifyNever(() => coordinador.calcularDiferencia(any(), any(), any()));
     });
 
+    test('negativa: error en la fila, sin diferencia ni aviso, no deja '
+        'confirmar', () async {
+      await vm.cambiarCantidad(arroz, '45');
+      await vm.cambiarCantidad(huevo, '-1');
+      expect(fila(huevo).error, 'La cantidad contada no puede ser negativa');
+      expect(fila(huevo).contado, isFalse);
+      expect(fila(huevo).diferencia, isNull);
+      expect(fila(huevo).revisar, isFalse);
+      expect(vm.porRevisar, 0);
+      expect(vm.puedeConfirmar, isFalse);
+      verifyNever(() => coordinador.calcularDiferencia(any(), huevo, any()));
+
+      // Se corrige en el mismo campo.
+      await vm.cambiarCantidad(huevo, '89');
+      expect(fila(huevo).error, isNull);
+      expect(fila(huevo).diferencia, d('-1'));
+      expect(vm.puedeConfirmar, isTrue);
+    });
+
+    test('negativa: confirmar no llama al coordinador', () async {
+      ajusteResponde();
+      await vm.cambiarCantidad(arroz, '40');
+      await vm.cambiarCantidad(cafe, '-3');
+      await vm.confirmar();
+      verifyNever(() => coordinador.confirmarAjuste(any(), any(), any()));
+      expect(fila(arroz).contado, isTrue);
+    });
+
     test('descarta la respuesta de una consulta vieja', () async {
       final lenta = Completer<Decimal>();
       when(() => coordinador.calcularDiferencia(tienda, cafe, d('1')))
@@ -222,24 +250,24 @@ void main() {
       expect(vm.aviso, 'Ajuste registrado en 2 productos');
     });
 
-    test(
-      'cantidad negativa: el mensaje del servicio queda en la fila',
-      () async {
-        ajusteResponde();
-        when(() => coordinador.confirmarAjuste(tienda, cafe, d('-1')))
-            .thenAnswer(
-              (_) async => throw const ExcepcionCantidadContadaNegativa(),
-            );
-        await vm.cambiarCantidad(cafe, '-1');
-        await vm.cambiarCantidad(arroz, '40');
-        await vm.confirmar();
+    test('si el servicio rechaza uno, su mensaje queda en la fila y no deja '
+        'confirmar hasta corregirlo', () async {
+      ajusteResponde();
+      when(
+        () => coordinador.confirmarAjuste(tienda, cafe, d('20')),
+      ).thenAnswer((_) async => throw const ExcepcionCantidadContadaNegativa());
+      await vm.cambiarCantidad(cafe, '20');
+      await vm.cambiarCantidad(arroz, '40');
+      await vm.confirmar();
 
-        expect(fila(cafe).error, 'La cantidad contada no puede ser negativa');
-        expect(fila(cafe).contada, d('-1'));
-        expect(fila(arroz).contado, isFalse);
-        expect(vm.aviso, 'Ajuste registrado. Nuevo stock: 40');
-      },
-    );
+      expect(fila(cafe).error, 'La cantidad contada no puede ser negativa');
+      expect(fila(cafe).contada, d('20'));
+      expect(fila(arroz).contado, isFalse);
+      expect(vm.aviso, 'Ajuste registrado. Nuevo stock: 40');
+      expect(vm.puedeConfirmar, isFalse);
+      await vm.cambiarCantidad(cafe, '21');
+      expect(vm.puedeConfirmar, isTrue);
+    });
 
     test('error al guardar: mensaje del diagrama y la fila sigue', () async {
       when(() => coordinador.confirmarAjuste(tienda, any(), any()))

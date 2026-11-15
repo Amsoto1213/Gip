@@ -147,6 +147,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// El botón de confirmar; en la web está al final de la lista.
+  Future<FilledButton> botonConfirmar(WidgetTester tester) async {
+    final boton = find.byKey(const Key('conteo_confirmar'));
+    await tester.scrollUntilVisible(boton, 300, scrollable: lista());
+    await tester.pumpAndSettle();
+    return tester.widget<FilledButton>(
+      find.descendant(of: boton, matching: find.byType(FilledButton)),
+    );
+  }
+
   Future<void> confirmar(WidgetTester tester) async {
     FocusManager.instance.primaryFocus?.unfocus();
     final boton = find.byKey(const Key('conteo_confirmar'));
@@ -235,19 +245,32 @@ void main() {
     expect(await stock(tester, 'Queso costeño'), Decimal.parse('2.5'));
   });
 
-  testWidgets('cantidad negativa: el mensaje del servicio y no se guarda', (
-    tester,
-  ) async {
-    await abrir(tester, const Size(360, 640));
+  for (final tamano in const [Size(360, 640), Size(1280, 800)]) {
+    testWidgets('${tamano.width.toInt()}×${tamano.height.toInt()}: cantidad '
+        'negativa en rojo al escribir, sin diferencia ni aviso y sin '
+        'confirmar', (tester) async {
+      await abrir(tester, tamano);
 
-    await contar(tester, 'Huevo AA', '-1');
-    await confirmar(tester);
-    expect(
-      find.text('La cantidad contada no puede ser negativa'),
-      findsOneWidget,
-    );
-    expect(await stock(tester, 'Huevo AA'), Decimal.fromInt(90));
-  });
+      await contar(tester, 'Arroz 500 g', '45');
+      await contar(tester, 'Huevo AA', '-1');
+      final mensaje = find.text('La cantidad contada no puede ser negativa');
+      expect(mensaje, findsOneWidget);
+      expect(tester.widget<Text>(mensaje).style?.color, ColoresGip.error);
+      expect(textoDe(tester, diferencia('Huevo AA')), '');
+      expect(find.text(ConteoViewModel.mensajeRevisar), findsNothing);
+      await irArriba(tester);
+      expect(find.byKey(const Key('conteo_aviso_revisar')), findsNothing);
+      expect(find.text('1 de 4 contados'), findsOneWidget);
+      expect((await botonConfirmar(tester)).onPressed, isNull);
+
+      // Se corrige en el mismo campo y se puede confirmar.
+      await contar(tester, 'Huevo AA', '88');
+      expect(mensaje, findsNothing);
+      expect((await botonConfirmar(tester)).onPressed, isNotNull);
+      expect(await stock(tester, 'Huevo AA'), Decimal.fromInt(90));
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('web 1280×800: tabla, filtro por nombre y ajuste de varios', (
     tester,
