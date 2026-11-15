@@ -29,6 +29,7 @@ import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../negocio/alertas_falsos.dart';
+import '../negocio/margen_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -96,6 +97,7 @@ void main() {
         consultarCliente: clientes,
         generarAlertas: GenerarAlertasFalso(),
         consultarAlertas: ConsultarAlertasVacio(),
+        consultarMargen: ConsultarMargenFalso(),
       ),
     );
     await tester.pumpAndSettle();

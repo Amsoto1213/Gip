@@ -1,9 +1,12 @@
 import 'package:flutter/widgets.dart';
+import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/negocio/alertas_view.dart';
 import 'package:gip/presentation/negocio/alertas_view_model.dart';
+import 'package:gip/presentation/negocio/margen_view.dart';
+import 'package:gip/presentation/negocio/margen_view_model.dart';
 import 'package:gip/presentation/negocio/negocio_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -13,11 +16,15 @@ const rutaPrincipalNegocio = '/negocio';
 /// Pantalla Alertas de surtido (CUS-05).
 const rutaAlertas = '$rutaPrincipalNegocio/alertas';
 
+/// Pantalla Ganancia por producto (CUS-09).
+const rutaMargen = '$rutaPrincipalNegocio/ganancia';
+
 /// Subsecciones de Negocio en el menú lateral: solo las que ya tienen
 /// pantalla (DI-23). Se listan para todos; al empleado la pantalla le dice que
 /// la consulta es solo para el propietario (CUS-05, paso 7).
 const subseccionesNegocio = <Subseccion>[
   (etiqueta: 'Alertas de surtido', ruta: rutaAlertas),
+  (etiqueta: 'Ganancia por producto', ruta: rutaMargen),
 ];
 
 /// Rama de la sección Negocio en la navegación principal. Las pantallas de la
@@ -38,6 +45,16 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
             child: const AlertasView(),
           ),
         ),
+        GoRoute(
+          path: 'ganancia',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => MargenViewModel(
+              context.read<ConsultarMargenCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!,
+            )..cargar(),
+            child: const MargenView(),
+          ),
+        ),
       ],
     ),
   ],
@@ -45,3 +62,6 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
 
 /// Abre la pantalla Alertas de surtido.
 void abrirAlertas(BuildContext context) => context.push(rutaAlertas);
+
+/// Abre la pantalla Ganancia por producto.
+void abrirMargen(BuildContext context) => context.push(rutaMargen);

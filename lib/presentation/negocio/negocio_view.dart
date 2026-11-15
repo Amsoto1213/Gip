@@ -8,7 +8,7 @@ import 'package:gip/presentation/negocio/rutas_negocio.dart';
 import 'package:provider/provider.dart';
 
 /// Sección Negocio (pendiente: ver `docs/ui/pantallas.md`). Por ahora tiene
-/// Alertas de surtido (CUS-05) y "Cerrar sesión" (DI-05); al salir, el router
+/// Alertas de surtido (CUS-05), Ganancia por producto (CUS-09) y "Cerrar sesión" (DI-05); al salir, el router
 /// vuelve al acceso.
 class NegocioView extends StatelessWidget {
   const NegocioView({super.key});
@@ -30,6 +30,20 @@ class NegocioView extends StatelessWidget {
               titulo: 'Alertas de surtido',
               descripcion: 'Lo que está por agotarse',
               onTap: () => abrirAlertas(context),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: TarjetaAccion(
+              key: const Key('negocio_ganancia'),
+              icono: Icons.trending_up,
+              titulo: 'Ganancia por producto',
+              descripcion: 'Cuánto deja cada producto',
+              onTap: () => abrirMargen(context),
             ),
           ),
         ),
