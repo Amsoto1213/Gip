@@ -56,6 +56,22 @@ class MovimientoRepositorioFalso
       .expand((l) => l)
       .where((m) => m.getItem().getId() == item.getId());
 
+  /// Todos los del ítem, en cualquier estado, con fecha en `[desde, hasta)`,
+  /// del más reciente al más antiguo (CUS-25).
+  @override
+  Future<List<MovimientoInventario>> listarPorItem(
+    ItemInventario item,
+    DateTime desde,
+    DateTime hasta,
+  ) async =>
+      _delItem(item)
+          .where(
+            (m) =>
+                !m.getFecha().isBefore(desde) && m.getFecha().isBefore(hasta),
+          )
+          .toList()
+        ..sort((a, b) => b.getFecha().compareTo(a.getFecha()));
+
   /// VIGENTES del ítem con fecha en `[desde, hasta)` (DI-25).
   @override
   Future<List<SalidaVenta>> listarSalidas(
