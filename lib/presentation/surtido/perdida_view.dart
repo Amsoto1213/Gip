@@ -233,14 +233,6 @@ class _PerdidaViewState extends State<PerdidaView> {
   );
 }
 
-/// Nombre del motivo como lo ve el tendero.
-String _nombreMotivo(MotivoMerma motivo) => switch (motivo) {
-  MotivoMerma.vencido => 'Vencido',
-  MotivoMerma.danado => 'Dañado',
-  MotivoMerma.devueltoProveedor => 'Devuelto al proveedor',
-  MotivoMerma.otro => 'Otro',
-};
-
 /// Descripción del motivo (`docs/ui/rediseno/README.md`).
 String _descripcionMotivo(MotivoMerma motivo) => switch (motivo) {
   MotivoMerma.vencido => 'Pasó la fecha de vencimiento',
@@ -319,7 +311,7 @@ class _SelectorMotivo extends StatelessWidget {
                     child: OpcionConIcono(
                       key: Key('perdida_motivo_${motivos[j].name}'),
                       icono: _iconoMotivo(motivos[j]),
-                      titulo: _nombreMotivo(motivos[j]),
+                      titulo: nombreMotivo(motivos[j]),
                       descripcion: _descripcionMotivo(motivos[j]),
                       elegida: motivos[j] == seleccionado,
                       onTap: habilitado ? () => onElegir(motivos[j]) : null,
@@ -381,7 +373,7 @@ class _Resumen extends StatelessWidget {
           cantidad == null ? '—' : '− ${mostrarCantidad(cantidad)}$unidad',
           resta: cantidad != null,
         ),
-        FilaDetalle('Motivo', motivo == null ? '—' : _nombreMotivo(motivo)),
+        FilaDetalle('Motivo', motivo == null ? '—' : nombreMotivo(motivo)),
       ],
       pie: [
         MensajesMovimiento(error: vm.error, aviso: vm.aviso),

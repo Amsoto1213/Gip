@@ -11,6 +11,7 @@ import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/conteo_view.dart';
 import 'package:gip/presentation/surtido/conteo_view_model.dart';
+import 'package:gip/presentation/surtido/existencias_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:gip/presentation/surtido/surtido_view.dart';
 import 'package:go_router/go_router.dart';
@@ -87,7 +88,12 @@ void main() {
       routes: [
         GoRoute(
           path: rutaPrincipalSurtido,
-          builder: (_, _) => const SurtidoView(),
+          builder: (_, _) => ChangeNotifierProvider(
+            create: (_) =>
+                ExistenciasViewModel(inventario.consultarExistencias, tienda)
+                  ..cargar(),
+            child: const SurtidoView(),
+          ),
           routes: [
             GoRoute(
               path: 'conteo',
@@ -106,7 +112,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(theme: TemaGip.claro(), routerConfig: router),
     );
-    await tester.pumpAndSettle();
+    // La lista de existencias carga de drift (CUS-25).
+    await esperarBase(tester);
     await tester.tap(find.byKey(const Key('surtido_conteo')));
     await esperarBase(tester);
   }

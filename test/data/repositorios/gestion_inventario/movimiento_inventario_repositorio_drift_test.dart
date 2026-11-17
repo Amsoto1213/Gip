@@ -9,8 +9,10 @@ import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_inventario_repositorio.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
@@ -453,5 +455,166 @@ void main() {
         );
       },
     );
+  });
+  group('listarPorItem (CUS-25)', () {
+    final desde = DateTime.utc(2026, 11, 1);
+    final hasta = DateTime.utc(2026, 11, 8);
+
+    Future<void> venta(String id, DateTime fecha) async {
+      await base
+          .into(base.ventas)
+          .insert(
+            VentasCompanion.insert(
+              id: 'v$id',
+              tiendaId: tienda.getId(),
+              fecha: fecha,
+              total: d('22000'),
+            ),
+          );
+      await movimientos.guardar(
+        tienda,
+        SalidaVenta(
+          id,
+          item,
+          d('-2'),
+          fecha,
+          Venta('v$id', const [], d('22000'), fecha),
+          d('11000'),
+          d('8600'),
+        ),
+      );
+    }
+
+    test('lee los cuatro tipos con sus datos, del más reciente al más '
+        'antiguo', () async {
+      await movimientos.guardar(
+        tienda,
+        entrada('e1', DateTime.utc(2026, 11, 2), factura: 'FV-10231'),
+      );
+      await venta('s1', DateTime.utc(2026, 11, 3));
+      await movimientos.guardar(
+        tienda,
+        Merma(
+          'm1',
+          item,
+          d('-1'),
+          DateTime.utc(2026, 11, 4),
+          MotivoMerma.devueltoProveedor,
+        ),
+      );
+      await movimientos.guardar(
+        tienda,
+        AjusteConteo(
+          'a1',
+          item,
+          d('-0.5'),
+          DateTime.utc(2026, 11, 5),
+          d('28.5'),
+        ),
+      );
+
+      final lista = await movimientos.listarPorItem(item, desde, hasta);
+
+      expect(lista.map((m) => m.getId()), ['a1', 'm1', 's1', 'e1']);
+      final ajuste = lista[0] as AjusteConteo;
+      expect(ajuste.getCantidad(), d('-0.5'));
+      expect(ajuste.getCantidadContada(), d('28.5'));
+      expect((lista[1] as Merma).getMotivo(), MotivoMerma.devueltoProveedor);
+      final salida = lista[2] as SalidaVenta;
+      expect(salida.getCantidad(), d('-2'));
+      expect(salida.getVenta().getId(), 'vs1');
+      expect(salida.getPrecioUnitario(), d('11000'));
+      final e = lista[3] as EntradaMercancia;
+      expect(e.getCantidad(), d('24'));
+      expect(e.getNumeroFactura(), 'FV-10231');
+      expect(e.getFecha(), DateTime.utc(2026, 11, 2));
+      expect(e.getFecha().isUtc, isTrue);
+      expect(lista.every((m) => identical(m.getItem(), item)), isTrue);
+    });
+
+    test('trae cada movimiento con su estado guardado', () async {
+      await movimientos.guardar(
+        tienda,
+        entrada('vig', DateTime.utc(2026, 11, 2)),
+      );
+      await movimientos.guardar(
+        tienda,
+        entrada('rev', DateTime.utc(2026, 11, 3)),
+      );
+      await movimientos.guardar(
+        tienda,
+        entrada('anu', DateTime.utc(2026, 11, 4)),
+      );
+      await cambiarEstado('rev', 'EN_REVISION');
+      await cambiarEstado('anu', 'ANULADO');
+
+      final lista = await movimientos.listarPorItem(item, desde, hasta);
+
+      expect(
+        {for (final m in lista) m.getId(): m.getEstado()},
+        {
+          'anu': EstadoMovimiento.anulado,
+          'rev': EstadoMovimiento.enRevision,
+          'vig': EstadoMovimiento.vigente,
+        },
+      );
+    });
+
+    test('el periodo incluye "desde" y excluye "hasta"', () async {
+      await movimientos.guardar(tienda, entrada('desde', desde));
+      await movimientos.guardar(tienda, entrada('hasta', hasta));
+      await movimientos.guardar(
+        tienda,
+        entrada('antes', desde.subtract(const Duration(seconds: 1))),
+      );
+
+      final lista = await movimientos.listarPorItem(item, desde, hasta);
+
+      expect(lista.map((m) => m.getId()), ['desde']);
+    });
+
+    test('compara en UTC aunque el periodo llegue en hora local', () async {
+      await movimientos.guardar(
+        tienda,
+        entrada('e1', DateTime.utc(2026, 11, 3)),
+      );
+
+      final lista = await movimientos.listarPorItem(
+        item,
+        desde.toLocal(),
+        hasta.toLocal(),
+      );
+
+      expect(lista.map((m) => m.getId()), ['e1']);
+    });
+
+    test('no mezcla ítems ni tiendas', () async {
+      final arroz = Producto(
+        'p2',
+        'ARR-1',
+        'Arroz 500 g',
+        UnidadMedida.unidad,
+        null,
+        d('2800'),
+      );
+      await ProductoRepositorioDrift(base).guardar(tienda, arroz);
+      final itemArroz = ItemInventario('i2', arroz, d('5'));
+      await items.guardarItem(tienda, itemArroz);
+      await movimientos.guardar(
+        tienda,
+        EntradaMercancia('de-arroz', itemArroz, d('5'), desde, d('2000'), null),
+      );
+      await movimientos.guardar(tienda, entrada('del-aceite', desde));
+      // Una fila con el mismo ítem pero de otra tienda no es de este ítem.
+      await movimientos.guardar(otraTienda, entrada('otra-tienda', desde));
+
+      final lista = await movimientos.listarPorItem(item, desde, hasta);
+
+      expect(lista.map((m) => m.getId()), ['del-aceite']);
+    });
+
+    test('sin movimientos en el periodo devuelve una lista vacía', () async {
+      expect(await movimientos.listarPorItem(item, desde, hasta), isEmpty);
+    });
   });
 }

@@ -4,22 +4,65 @@ import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/tarjeta_accion.dart';
 import 'package:gip/presentation/comun/tema/forma_gip.dart';
+import 'package:gip/presentation/surtido/existencias_view_model.dart';
+import 'package:gip/presentation/surtido/lista_existencias.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
+import 'package:provider/provider.dart';
 
 /// Sección Surtido (`docs/ui/rediseno/surtido-web.html` y `surtido-movil.html`):
-/// "Producto nuevo" (CUS-18), la búsqueda (CUS-06) y las acciones Entrada de
-/// mercancía (CUS-01), Pérdida o devolución (CUS-03) y Conteo físico (CUS-04).
-/// La tabla de existencias llega con CUS-25; mientras tanto la línea de
-/// contexto es un texto fijo sin cifras (DI-23).
-class SurtidoView extends StatelessWidget {
-  const SurtidoView({super.key});
+/// "Producto nuevo" (CUS-18), la búsqueda (CUS-06), las acciones Entrada de
+/// mercancía (CUS-01), Pérdida o devolución (CUS-03) y Conteo físico (CUS-04),
+/// y las existencias (CUS-25) con [ExistenciasViewModel].
+///
+/// La lista se recarga al volver de una acción y al volver a la pestaña
+/// (DI-32): una venta en Vender cambia las existencias.
+class SurtidoView extends StatefulWidget {
+  const SurtidoView({super.key, this.reloj});
 
+  /// Línea de contexto mientras la lista no ha cargado.
   static const contexto =
       'Entradas, pérdidas, conteos y productos de la tienda';
 
+  /// Para las pruebas: el momento de "Hoy" y "Ayer".
+  final DateTime Function()? reloj;
+
+  /// "128 productos" (sin el valor del inventario, DI-32).
+  static String contextoConProductos(int total) =>
+      total == 1 ? '1 producto' : '$total productos';
+
+  @override
+  State<SurtidoView> createState() => _SurtidoViewState();
+}
+
+class _SurtidoViewState extends State<SurtidoView> {
+  bool? _visible;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // La pestaña inactiva queda con TickerMode apagado (StatefulShellRoute).
+    final visible = TickerMode.valuesOf(context).enabled;
+    if (_visible == false && visible) {
+      // Se está construyendo: cargar() notifica, así que va después del cuadro.
+      final vm = context.read<ExistenciasViewModel>();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) vm.cargar();
+      });
+    }
+    _visible = visible;
+  }
+
+  /// Abre la pantalla y, al volver, recarga las existencias.
+  Future<void> _abrir(Future<void> Function(BuildContext) abrir) async {
+    await abrir(context);
+    if (mounted) await context.read<ExistenciasViewModel>().cargar();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<ExistenciasViewModel>();
     final web = FormaGip.esWeb(context);
+    final ahora = (widget.reloj ?? DateTime.now)();
     final separacion = SizedBox(height: web ? 24 : 16);
     final acciones = [
       TarjetaAccion(
@@ -28,7 +71,7 @@ class SurtidoView extends StatelessWidget {
         titulo: web ? 'Registrar entrada' : 'Entrada',
         descripcion: 'Llegó mercancía del proveedor',
         vertical: !web,
-        onTap: () => abrirEntradaMercancia(context),
+        onTap: () => _abrir(abrirEntradaMercancia),
       ),
       TarjetaAccion(
         key: const Key('surtido_registrar_perdida'),
@@ -36,7 +79,7 @@ class SurtidoView extends StatelessWidget {
         titulo: web ? 'Registrar pérdida' : 'Pérdida',
         descripcion: 'Vencido, dañado o devuelto',
         vertical: !web,
-        onTap: () => abrirPerdida(context),
+        onTap: () => _abrir(abrirPerdida),
       ),
       TarjetaAccion(
         key: const Key('surtido_conteo'),
@@ -44,7 +87,7 @@ class SurtidoView extends StatelessWidget {
         titulo: web ? 'Conteo físico' : 'Conteo',
         descripcion: 'Cuente y corrija la existencia',
         vertical: !web,
-        onTap: () => abrirConteo(context),
+        onTap: () => _abrir(abrirConteo),
       ),
     ];
     return Scaffold(
@@ -60,18 +103,20 @@ class SurtidoView extends StatelessWidget {
               children: [
                 EncabezadoPantalla(
                   titulo: 'Surtido',
-                  contexto: contexto,
+                  contexto: vm.cargado
+                      ? SurtidoView.contextoConProductos(vm.total)
+                      : SurtidoView.contexto,
                   accion: web
                       ? BotonPrimario(
                           texto: 'Producto nuevo',
                           icono: Icons.add,
                           compacto: true,
-                          onPressed: () => abrirProductoNuevo(context),
+                          onPressed: () => _abrir(abrirProductoNuevo),
                         )
                       : BotonIconoPrimario(
                           icono: Icons.add,
                           tooltip: 'Producto nuevo',
-                          onPressed: () => abrirProductoNuevo(context),
+                          onPressed: () => _abrir(abrirProductoNuevo),
                         ),
                 ),
                 separacion,
@@ -80,7 +125,7 @@ class SurtidoView extends StatelessWidget {
                   pista: web
                       ? 'Buscar producto por nombre…'
                       : 'Buscar en el surtido…',
-                  onTap: () => abrirBuscarProducto(context),
+                  onTap: () => _abrir(abrirBuscarProducto),
                 ),
                 separacion,
                 Row(
@@ -92,6 +137,12 @@ class SurtidoView extends StatelessWidget {
                     ],
                   ],
                 ),
+                separacion,
+                if (!web && vm.cargado) ...[
+                  FiltrosExistencias(vm: vm),
+                  const SizedBox(height: 12),
+                ],
+                ListaExistencias(vm: vm, web: web, ahora: ahora),
               ],
             ),
           ),

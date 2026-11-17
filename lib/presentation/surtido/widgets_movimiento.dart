@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
@@ -28,6 +29,14 @@ String nombreUnidad(UnidadMedida unidad) => switch (unidad) {
   UnidadMedida.unidad => 'Unidad',
   UnidadMedida.kilogramo => 'Kilogramo',
   UnidadMedida.libra => 'Libra',
+};
+
+/// Nombre del motivo de una pérdida como lo ve el tendero (CUS-03, CUS-25).
+String nombreMotivo(MotivoMerma motivo) => switch (motivo) {
+  MotivoMerma.vencido => 'Vencido',
+  MotivoMerma.danado => 'Dañado',
+  MotivoMerma.devueltoProveedor => 'Devuelto al proveedor',
+  MotivoMerma.otro => 'Otro',
 };
 
 /// Etiqueta en mayúsculas de cada panel ("PRODUCTO", "¿CUÁNTAS SALEN…?").

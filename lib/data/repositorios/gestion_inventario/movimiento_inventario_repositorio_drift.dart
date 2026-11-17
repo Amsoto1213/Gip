@@ -18,7 +18,8 @@ import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 /// [IMovimientoInventarioRepositorio] sobre la base local (drift), en la tabla
 /// única `movimientos_inventario` con columna `tipo` (DI-03). Los movimientos
 /// solo se agregan (RNF-15). Maneja ENTRADA (CUS-01), SALIDA_VENTA (CUS-02),
-/// MERMA (CUS-03) y AJUSTE_CONTEO (CUS-04) (DI-20, DI-21, DI-22, DI-24).
+/// MERMA (CUS-03) y AJUSTE_CONTEO (CUS-04) (DI-20, DI-21, DI-22, DI-24); el
+/// historial de un ítem los lee todos (CUS-25, DI-32).
 class MovimientoInventarioRepositorioDrift
     implements IMovimientoInventarioRepositorio {
   MovimientoInventarioRepositorioDrift(this._base);
@@ -294,6 +295,77 @@ class MovimientoInventarioRepositorioDrift
           r.readTable(m).numeroFactura,
         )..setEstado(EstadoMovimiento.vigente),
     ];
+  }
+
+  /// Historial del ítem con fecha en `[desde, hasta)`, del más reciente al más
+  /// antiguo, de los cuatro tipos y en cualquier estado (CUS-25, DI-32). La
+  /// tienda sale del ítem, como en [buscarUltimaEntrada]. La venta de cada
+  /// salida trae solo id, fecha y total, como en [listarSalidas].
+  @override
+  Future<List<MovimientoInventario>> listarPorItem(
+    ItemInventario item,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final v = _base.ventas;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+              useColumns: false,
+            ),
+            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
+          ])
+          ..where(
+            m.itemId.equals(item.getId()) &
+                m.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                m.fecha.isSmallerThanValue(hasta.toUtc()),
+          )
+          ..orderBy([OrderingTerm.desc(m.fecha), OrderingTerm.desc(m.id)]);
+    return [
+      for (final r in await consulta.get())
+        _movimiento(r.readTable(m), r.readTableOrNull(v), item),
+    ];
+  }
+
+  /// Arma la subclase según `tipo` y le pone el estado guardado.
+  MovimientoInventario _movimiento(
+    FilaMovimientoInventario fila,
+    FilaVenta? venta,
+    ItemInventario item,
+  ) {
+    final MovimientoInventario movimiento = switch (fila.tipo) {
+      _tipoEntrada => EntradaMercancia(
+        fila.id,
+        item,
+        fila.cantidad,
+        fila.fecha,
+        fila.costoUnitario ?? Decimal.zero,
+        fila.numeroFactura,
+      ),
+      _tipoSalidaVenta => _salida(fila, venta, item),
+      _tipoMerma => Merma(
+        fila.id,
+        item,
+        fila.cantidad,
+        fila.fecha,
+        _motivos.entries.firstWhere((e) => e.value == fila.motivo).key,
+      ),
+      _tipoAjusteConteo => AjusteConteo(
+        fila.id,
+        item,
+        fila.cantidad,
+        fila.fecha,
+        fila.cantidadContada ?? Decimal.zero,
+      ),
+      _ => throw StateError('Tipo de movimiento desconocido: ${fila.tipo}'),
+    };
+    return movimiento..setEstado(
+      _estados.entries.firstWhere((e) => e.value == fila.estado).key,
+    );
   }
 
   /// Fecha del primer movimiento del ítem, de cualquier tipo y estado (DI-25).

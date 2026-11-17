@@ -33,6 +33,42 @@ Future<void> montar(WidgetTester tester, Widget hijo, Size tamano) async {
 }
 
 void main() {
+  group('MenuLateral.subseccionActiva', () {
+    const existencias = (etiqueta: 'Existencias', ruta: '/surtido');
+    const entrada = (
+      etiqueta: 'Entrada de mercancía',
+      ruta: '/surtido/entrada',
+    );
+    const subsecciones = [existencias, entrada];
+
+    test('la ruta exacta marca su subsección', () {
+      expect(
+        MenuLateral.subseccionActiva(subsecciones, '/surtido'),
+        existencias,
+      );
+      expect(
+        MenuLateral.subseccionActiva(subsecciones, '/surtido/entrada'),
+        entrada,
+      );
+    });
+
+    test('si varias la contienen gana la de ruta más larga (CUS-25)', () {
+      expect(
+        MenuLateral.subseccionActiva(subsecciones, '/surtido/entrada/x'),
+        entrada,
+      );
+      expect(
+        MenuLateral.subseccionActiva(subsecciones, '/surtido/conteo'),
+        existencias,
+      );
+    });
+
+    test('una ruta que solo empieza igual no cuenta', () {
+      expect(MenuLateral.subseccionActiva(subsecciones, '/surtidos'), isNull);
+      expect(MenuLateral.subseccionActiva(subsecciones, '/vender'), isNull);
+    });
+  });
+
   group('MenuLateral', () {
     Widget menu({
       int activo = 1,

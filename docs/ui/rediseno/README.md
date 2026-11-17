@@ -103,8 +103,9 @@ ignora; lo que importa son los estilos y la estructura.
   encima. Debajo del botón, los dos avisos: abre sin internet y la contraseña la cambia el administrador.
 - **Surtido:** título con la línea de contexto, botón "Producto nuevo" arriba a la derecha (en móvil, botón
   cuadrado con +), la BarraBusqueda (abre Buscar producto) y las TarjetaAccion de Entrada, Pérdida y
-  Conteo físico. La tabla de existencias con filtros y ChipEstado llega con CUS-25: no mostrar
-  datos inventados mientras tanto.
+  Conteo físico. Debajo, las existencias (CUS-25, DI-32): filtros "Todos · N", "Agotados · N" y "Por peso";
+  en el móvil una tarjeta con un producto por fila y, en la web, una tarjeta con la tabla (Producto, Unidad,
+  Precio, Hay y Último movimiento). ChipEstado solo "Agotado". Tocar un producto despliega "Últimos movimientos".
 - **Pérdida o devolución:** sección 1 "Producto y cantidad" (producto a la izquierda, cantidad a la derecha,
   separados por una línea; solo el atajo "Todas (N)"); sección 2 "Motivo" con OpcionConIcono en 2×2 y las
   descripciones "Pasó la fecha de vencimiento", "Roto, mojado o abierto", "Se lo lleva el proveedor" y
