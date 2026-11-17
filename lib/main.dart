@@ -6,6 +6,7 @@ import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coord
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
+import 'package:gip/business/workflow/gestion_inventario/consultar_existencias_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
@@ -59,6 +60,7 @@ Future<void> main() async {
       registrarEntradaMercancia: inventario.registrarEntradaMercancia,
       registrarPerdida: inventario.registrarPerdida,
       registrarConteo: inventario.registrarConteo,
+      consultarExistencias: inventario.consultarExistencias,
       registrarVenta: pagos.registrarVenta,
       registrarFiado: pagos.registrarFiado,
       registrarAbono: pagos.registrarAbono,
@@ -81,6 +83,7 @@ class GipApp extends StatefulWidget {
     required this.registrarEntradaMercancia,
     required this.registrarPerdida,
     required this.registrarConteo,
+    required this.consultarExistencias,
     required this.registrarVenta,
     required this.registrarFiado,
     required this.registrarAbono,
@@ -98,6 +101,7 @@ class GipApp extends StatefulWidget {
   final RegistrarEntradaMercanciaCoordinator registrarEntradaMercancia;
   final RegistrarPerdidaCoordinator registrarPerdida;
   final RegistrarConteoCoordinator registrarConteo;
+  final ConsultarExistenciasCoordinator consultarExistencias;
   final RegistrarVentaCoordinator registrarVenta;
   final RegistrarFiadoCoordinator registrarFiado;
   final RegistrarAbonoCoordinator registrarAbono;
@@ -145,6 +149,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarEntradaMercancia),
         Provider.value(value: widget.registrarPerdida),
         Provider.value(value: widget.registrarConteo),
+        Provider.value(value: widget.consultarExistencias),
         Provider.value(value: widget.registrarVenta),
         Provider.value(value: widget.registrarFiado),
         Provider.value(value: widget.registrarAbono),

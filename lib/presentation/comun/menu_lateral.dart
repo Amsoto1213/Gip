@@ -37,8 +37,29 @@ class MenuLateral extends StatelessWidget {
   final List<SeccionNavegacion> secciones;
   final int indiceActivo;
 
-  /// Ruta abierta: marca la subsección activa.
+  /// Ruta abierta: marca la subsección activa ([subseccionActiva]).
   final String rutaActual;
+
+  /// La subsección de [subsecciones] cuya ruta es [rutaActual] o la contiene
+  /// (`/surtido/entrada` está dentro de `/surtido`). Si varias la contienen,
+  /// gana la de ruta más larga: en `/surtido/entrada` se marca "Entrada de
+  /// mercancía" y no "Existencias" (`/surtido`, CUS-25). Null si ninguna.
+  static Subseccion? subseccionActiva(
+    List<Subseccion> subsecciones,
+    String rutaActual,
+  ) {
+    Subseccion? activa;
+    for (final sub in subsecciones) {
+      final contiene =
+          rutaActual == sub.ruta || rutaActual.startsWith('${sub.ruta}/');
+      if (contiene &&
+          (activa == null || sub.ruta.length > activa.ruta.length)) {
+        activa = sub;
+      }
+    }
+    return activa;
+  }
+
   final ValueChanged<int> onSeccion;
   final ValueChanged<Subseccion> onSubseccion;
   final String tienda;
@@ -102,8 +123,11 @@ class MenuLateral extends StatelessWidget {
                   _ItemSubseccion(
                     etiqueta: sub.etiqueta,
                     activa:
-                        rutaActual == sub.ruta ||
-                        rutaActual.startsWith('${sub.ruta}/'),
+                        subseccionActiva(
+                          secciones[i].subsecciones,
+                          rutaActual,
+                        ) ==
+                        sub,
                     onTap: () => onSubseccion(sub),
                   ),
               ],

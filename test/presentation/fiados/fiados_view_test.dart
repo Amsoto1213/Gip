@@ -25,6 +25,7 @@ import 'package:mocktail/mocktail.dart';
 import '../negocio/alertas_falsos.dart';
 import '../negocio/margen_falsos.dart';
 import '../negocio/reporte_falsos.dart';
+import '../surtido/existencias_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -124,6 +125,7 @@ void main() {
         registrarEntradaMercancia: inventario.registrarEntradaMercancia,
         registrarPerdida: inventario.registrarPerdida,
         registrarConteo: inventario.registrarConteo,
+        consultarExistencias: ConsultarExistenciasFalso(),
         registrarVenta: pagos.registrarVenta,
         registrarFiado: pagos.registrarFiado,
         registrarAbono: pagos.registrarAbono,

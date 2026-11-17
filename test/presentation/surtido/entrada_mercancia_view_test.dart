@@ -13,6 +13,7 @@ import 'package:gip/presentation/surtido/buscar_producto_view.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view.dart';
 import 'package:gip/presentation/surtido/entrada_mercancia_view_model.dart';
+import 'package:gip/presentation/surtido/existencias_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:gip/presentation/surtido/surtido_view.dart';
 import 'package:go_router/go_router.dart';
@@ -66,7 +67,12 @@ void main() {
       routes: [
         GoRoute(
           path: rutaPrincipalSurtido,
-          builder: (_, _) => const SurtidoView(),
+          builder: (_, _) => ChangeNotifierProvider(
+            create: (_) =>
+                ExistenciasViewModel(inventario.consultarExistencias, tienda)
+                  ..cargar(),
+            child: const SurtidoView(),
+          ),
           routes: [
             GoRoute(
               path: 'buscar',
@@ -98,7 +104,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp.router(theme: TemaGip.claro(), routerConfig: router),
     );
-    await tester.pumpAndSettle();
+    // La lista de existencias carga de drift (CUS-25).
+    await esperarBase(tester);
   }
 
   /// Desde Surtido: "Registrar entrada" abre la búsqueda y se elige el aceite.
