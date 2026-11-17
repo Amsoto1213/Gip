@@ -18,7 +18,8 @@ import 'package:uuid/uuid.dart';
 /// (ERS 3.2.1).
 ///
 /// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01), la pérdida
-/// o devolución (CUS-03) y el conteo físico (CUS-04).
+/// o devolución (CUS-03), el conteo físico (CUS-04) y la consulta de
+/// existencias e historial (CUS-25).
 class ServicioInventario {
   ServicioInventario(
     this._items,
@@ -50,9 +51,25 @@ class ServicioInventario {
   }
 
   /// Productos con su stock: delega en items.listarItems; cada ítem trae su
-  /// producto, ordenados por nombre (CUS-04, pasos 3 a 6).
+  /// producto, ordenados por nombre (CUS-04, pasos 3 a 6; CUS-25, pasos 3 a 6).
   Future<List<ItemInventario>> listarExistencias(Tienda tienda) =>
       _items.listarItems(tienda);
+
+  /// Historial del producto con fecha en `[desde, hasta)`: busca su ítem con
+  /// items.buscarItem y devuelve movimientos.listarPorItem (entradas, salidas,
+  /// mermas y ajustes, en cualquier estado, del más reciente al más antiguo).
+  /// Un producto sin ítem no tiene historial: lista vacía, sin error, porque
+  /// el diagrama no tiene ese caso (CUS-25, pasos 11 a 16; DI-32).
+  Future<List<MovimientoInventario>> consultarMovimientos(
+    Tienda tienda,
+    Producto producto,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final item = await _items.buscarItem(tienda, producto);
+    if (item == null) return const [];
+    return _movimientos.listarPorItem(item, desde, hasta);
+  }
 
   /// Obtiene el ítem con [obtenerItem] y devuelve cantidadContada − stock
   /// actual (IE-04). Positiva: sobra; negativa: falta; cero: cuadra.

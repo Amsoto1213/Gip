@@ -7,6 +7,7 @@ import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
+import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -471,6 +472,141 @@ void main() {
       final lista = await servicio.listarExistencias(tienda);
       expect(lista.map((i) => i.getProducto().getNombre()), ['Aceite 1 L']);
       expect(lista.single.getStockActual(), d('8'));
+    });
+  });
+
+  group('consultarMovimientos (CUS-25)', () {
+    final desde = DateTime.utc(2026, 11, 1);
+    final hasta = DateTime.utc(2026, 11, 8);
+
+    void agregar(MovimientoInventario m) => movimientos.de(tienda).add(m);
+
+    test(
+      'trae entradas, salidas, mermas y ajustes del periodo, del más reciente '
+      'al más antiguo y en cualquier estado',
+      () async {
+        agregar(
+          EntradaMercancia(
+            'e1',
+            itemAceite,
+            d('10'),
+            DateTime.utc(2026, 11, 2),
+            d('8600'),
+            'FV-1',
+          ),
+        );
+        agregar(
+          Merma(
+            'm1',
+            itemAceite,
+            d('-1'),
+            DateTime.utc(2026, 11, 4),
+            MotivoMerma.danado,
+          )..setEstado(EstadoMovimiento.anulado),
+        );
+        agregar(
+          AjusteConteo(
+            'a1',
+            itemAceite,
+            d('-1'),
+            DateTime.utc(2026, 11, 3),
+            d('8'),
+          )..setEstado(EstadoMovimiento.enRevision),
+        );
+
+        final lista = await servicio.consultarMovimientos(
+          tienda,
+          aceite,
+          desde,
+          hasta,
+        );
+
+        expect(lista.map((m) => m.getId()), ['m1', 'a1', 'e1']);
+        expect(lista.map((m) => m.getEstado()), [
+          EstadoMovimiento.anulado,
+          EstadoMovimiento.enRevision,
+          EstadoMovimiento.vigente,
+        ]);
+      },
+    );
+
+    test('el periodo incluye "desde" y excluye "hasta"', () async {
+      agregar(
+        Merma('justo-desde', itemAceite, d('-1'), desde, MotivoMerma.otro),
+      );
+      agregar(
+        Merma('justo-hasta', itemAceite, d('-1'), hasta, MotivoMerma.otro),
+      );
+      agregar(
+        Merma(
+          'antes',
+          itemAceite,
+          d('-1'),
+          desde.subtract(const Duration(milliseconds: 1)),
+          MotivoMerma.otro,
+        ),
+      );
+
+      final lista = await servicio.consultarMovimientos(
+        tienda,
+        aceite,
+        desde,
+        hasta,
+      );
+
+      expect(lista.map((m) => m.getId()), ['justo-desde']);
+    });
+
+    test('solo trae los movimientos del producto pedido', () async {
+      final arroz = Producto(
+        'p2',
+        'ARR-1',
+        'Arroz 500 g',
+        UnidadMedida.unidad,
+        null,
+        d('2800'),
+      );
+      final itemArroz = ItemInventario('i2', arroz, d('5'));
+      await items.guardarItem(tienda, itemArroz);
+      agregar(Merma('del-arroz', itemArroz, d('-1'), desde, MotivoMerma.otro));
+      agregar(
+        Merma('del-aceite', itemAceite, d('-1'), desde, MotivoMerma.otro),
+      );
+
+      final lista = await servicio.consultarMovimientos(
+        tienda,
+        aceite,
+        desde,
+        hasta,
+      );
+
+      expect(lista.map((m) => m.getId()), ['del-aceite']);
+    });
+
+    test(
+      'un producto sin movimientos en el periodo da una lista vacía',
+      () async {
+        expect(
+          await servicio.consultarMovimientos(tienda, aceite, desde, hasta),
+          isEmpty,
+        );
+      },
+    );
+
+    test('un producto sin ítem de inventario da una lista vacía', () async {
+      expect(
+        await servicio.consultarMovimientos(tienda, sinItem(), desde, hasta),
+        isEmpty,
+      );
+    });
+
+    test('solo consulta: no abre transacción ni guarda nada', () async {
+      agregar(Merma('m', itemAceite, d('-1'), desde, MotivoMerma.otro));
+
+      await servicio.consultarMovimientos(tienda, aceite, desde, hasta);
+
+      expect(movimientos.guardadosEnTransaccion, isEmpty);
+      expect(items.guardadosEnTransaccion, isEmpty);
     });
   });
 
