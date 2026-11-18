@@ -5,6 +5,7 @@ Exportado del modelo de Enterprise Architect (`ProyectoUML_XX.qea`). Claude Code
 - [Arquitectura](arquitectura.md)
 - [Clases de la Business Layer](clases.md)
 - [Casos de uso](casos-de-uso.md)
+- [Cambios pendientes en EA](cambios-pendientes-ea.md): lo que el código ya tiene y el modelo todavía no
 
 ## Diagramas de secuencia
 
