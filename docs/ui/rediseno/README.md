@@ -97,6 +97,9 @@ ignora; lo que importa son los estilos y la estructura.
 19. **ContadorEntero**: número entero con "−" y "+" (BotonIconoSecundario de 48 px) a los lados y el valor
     en `headlineSmall` con cifras tabulares; los botones se desactivan en el mínimo y el máximo (copias
     de etiquetas en Producto).
+20. **MensajeResultado**: mensaje del resultado de guardar, en una caja de 14 px de radio: en rojo
+    (`errorContainer` y ícono de advertencia) si es un error y en verde (`primaryContainer` y ícono de
+    check) si salió bien ("Producto creado", "Movimiento registrado"). Se anuncia al aparecer.
 
 ## Pantallas
 

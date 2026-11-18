@@ -27,6 +27,7 @@ import 'presentation/negocio/alertas_falsos.dart';
 import 'presentation/negocio/margen_falsos.dart';
 import 'presentation/negocio/reporte_falsos.dart';
 import 'presentation/surtido/existencias_falsos.dart';
+import 'presentation/caja/caja_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -94,6 +95,7 @@ void main() {
     registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
     consultarMargen: ConsultarMargenFalso(),
     generarReporteDiario: GenerarReporteDiarioFalso(),
+    registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).

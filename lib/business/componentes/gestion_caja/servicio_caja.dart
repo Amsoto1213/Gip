@@ -11,8 +11,8 @@ import 'package:uuid/uuid.dart';
 /// Pure Fabrication de la caja: abre la caja del día y crea los movimientos;
 /// las cuentas las hace [Caja] (Information Expert) (RF-10).
 ///
-/// Por ahora solo el ingreso de una venta de contado (CUS-02): el movimiento
-/// manual, el saldo y el cierre llegan con CUS-11 y CUS-14 (DI-21).
+/// Tiene el ingreso de una venta de contado (CUS-02) y el movimiento manual del
+/// propietario (CUS-11); el saldo y el cierre llegan con CUS-14 (DI-21).
 class ServicioCaja {
   ServicioCaja(this._cajas);
 
@@ -65,6 +65,22 @@ class ServicioCaja {
     );
     await _cajas.registrarMovimiento(tienda, caja, movimiento);
     return movimiento;
+  }
+
+  /// Movimiento que anota el propietario (CUS-11, RF-10): rechaza la
+  /// clasificación ANULACION, que solo usa la anulación de ventas, y llama a
+  /// [registrarMovimiento].
+  Future<MovimientoCaja> registrarMovimientoManual(
+    Tienda tienda,
+    TipoMovimientoCaja tipo,
+    ClasificacionMovimiento clasificacion,
+    Decimal valor,
+    String descripcion,
+  ) async {
+    if (clasificacion == ClasificacionMovimiento.anulacion) {
+      throw const ExcepcionClasificacionNoPermitida();
+    }
+    return registrarMovimiento(tienda, tipo, clasificacion, valor, descripcion);
   }
 
   /// Ingreso del NEGOCIO: venta de contado (y, más adelante, abonos en
