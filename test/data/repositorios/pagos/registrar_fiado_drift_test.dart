@@ -99,6 +99,7 @@ void main() {
       MovimientoInventarioRepositorioDrift(base),
       d('5'),
       unidad,
+      ProductoRepositorioDrift(base),
     );
     clientes = ClienteRepositorioDrift(base);
     servicioClientes = ServicioClientes(clientes);

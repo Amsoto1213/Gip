@@ -9,6 +9,7 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
+import 'package:gip/business/interfaces/gestion_inventario/i_producto_repositorio.dart';
 import 'package:gip/business/interfaces/i_unidad_trabajo.dart';
 import 'package:gip/transversal/errores/errores_inventario.dart';
 import 'package:uuid/uuid.dart';
@@ -20,18 +21,23 @@ import 'package:uuid/uuid.dart';
 /// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01), la pérdida
 /// o devolución (CUS-03), el conteo físico (CUS-04) y la consulta de
 /// existencias e historial (CUS-25).
+///
+/// [_productos] no está en EA: la entrada actualiza el precio de compra del
+/// producto con su costo (DI-33).
 class ServicioInventario {
   ServicioInventario(
     this._items,
     this._movimientos,
     this._umbralRevisionConteo,
     this._unidadTrabajo,
+    this._productos,
   );
 
   final IInventarioRepositorio _items;
   final IMovimientoInventarioRepositorio _movimientos;
   final Decimal _umbralRevisionConteo;
   final IUnidadTrabajo _unidadTrabajo;
+  final IProductoRepositorio _productos;
 
   /// Creator: crea el [ItemInventario] con id nuevo y stock cero y lo guarda
   /// con items.guardarItem. Lo llama `ServicioCatalogo.crearProducto` dentro de
@@ -132,6 +138,12 @@ class ServicioInventario {
   /// y la aplica con [aplicarMovimiento] (RF-01). Un número de factura vacío se
   /// guarda como nulo (IE-02). El nuevo stock se lee en
   /// `entrada.getItem().getStockActual()`.
+  ///
+  /// En la misma transacción, el costo de la entrada pasa a ser el precio de
+  /// compra de [producto] (último costo), que las ventas siguientes guardan
+  /// en su salida (DA-61). Un costo cero (bonificación del proveedor) o igual
+  /// al que ya tiene no lo cambia. Si algo falla no se guarda nada y
+  /// [producto] conserva su precio de compra (DI-33).
   Future<EntradaMercancia> registrarEntrada(
     Tienda tienda,
     Producto producto,
@@ -152,7 +164,31 @@ class ServicioInventario {
       costoUnitario,
       (factura == null || factura.isEmpty) ? null : factura,
     );
-    await aplicarMovimiento(tienda, entrada);
+    final cambiaCosto =
+        costoUnitario > Decimal.zero &&
+        producto.getPrecioCompra() != costoUnitario;
+    if (!cambiaCosto) {
+      await aplicarMovimiento(tienda, entrada);
+      return entrada;
+    }
+    final precioAnterior = producto.getPrecioCompra();
+    final actualizadoAnterior = producto.getActualizadoEn();
+    try {
+      // aplicarMovimiento se une a esta transacción (DA-44) y, si falla,
+      // devuelve el stock del ítem; el producto se devuelve aquí.
+      await _unidadTrabajo.ejecutar(() async {
+        producto
+          ..setPrecioCompra(costoUnitario)
+          ..setActualizadoEn(DateTime.now().toUtc());
+        await _productos.guardar(tienda, producto);
+        await aplicarMovimiento(tienda, entrada);
+      });
+    } catch (_) {
+      producto
+        ..setPrecioCompra(precioAnterior)
+        ..setActualizadoEn(actualizadoAnterior);
+      rethrow;
+    }
     return entrada;
   }
 

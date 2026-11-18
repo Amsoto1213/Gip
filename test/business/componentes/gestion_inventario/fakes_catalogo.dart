@@ -51,6 +51,9 @@ class ProductoRepositorioFalso implements IProductoRepositorio, Restaurable {
   final List<bool> guardadosEnTransaccion = [];
   UnidadTrabajoFalsa? unidad;
 
+  /// Si es verdadero, guardar falla (para probar el rollback).
+  bool fallar = false;
+
   Map<String, Producto> _de(Tienda t) => datos.putIfAbsent(t.getId(), () => {});
 
   @override
@@ -73,6 +76,7 @@ class ProductoRepositorioFalso implements IProductoRepositorio, Restaurable {
   @override
   Future<void> guardar(Tienda tienda, Producto producto) async {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    if (fallar) throw StateError('falla del disco');
     _de(tienda)[producto.getId()] = producto;
   }
 

@@ -274,6 +274,7 @@ void main() {
         movimientos,
         d('5'),
         UnidadTrabajoDrift(base),
+        ProductoRepositorioDrift(base),
       );
 
       final merma = await servicio.registrarMerma(
@@ -305,6 +306,7 @@ void main() {
         movimientos,
         d('5'),
         UnidadTrabajoDrift(base),
+        ProductoRepositorioDrift(base),
       );
 
       await expectLater(
@@ -326,6 +328,7 @@ void main() {
         movimientos,
         d('5'),
         UnidadTrabajoDrift(base),
+        ProductoRepositorioDrift(base),
       );
 
       final nueva = await servicio.registrarEntrada(
@@ -342,10 +345,39 @@ void main() {
         d('32'),
       );
       expect((await filas()).single.id, nueva.getId());
+      // El costo pasa a ser el precio de compra del producto (DI-33).
       expect((await cola()).map((c) => (c.tabla, c.operacion)), [
+        ('productos', 'ACTUALIZAR'),
         ('movimientos_inventario', 'INSERTAR'),
         ('items_inventario', 'ACTUALIZAR'),
       ]);
+      final guardado = await ProductoRepositorioDrift(base)
+          .buscarPorId(tienda, aceite.getId());
+      expect(guardado!.getPrecioCompra(), d('9400'));
+      expect(guardado.getActualizadoEn(), aceite.getActualizadoEn());
+    });
+
+    test('una entrada con costo cero no cambia el precio de compra', () async {
+      final servicio = ServicioInventario(
+        items,
+        movimientos,
+        d('5'),
+        UnidadTrabajoDrift(base),
+        ProductoRepositorioDrift(base),
+      );
+
+      await servicio.registrarEntrada(tienda, aceite, d('2'), d('0'), null);
+
+      expect((await cola()).map((c) => c.tabla), [
+        'movimientos_inventario',
+        'items_inventario',
+      ]);
+      expect(
+        (await ProductoRepositorioDrift(
+          base,
+        ).buscarPorId(tienda, aceite.getId()))!.getPrecioCompra(),
+        isNull,
+      );
     });
 
     test(
@@ -356,6 +388,7 @@ void main() {
           movimientos,
           d('5'),
           UnidadTrabajoDrift(base),
+          ProductoRepositorioDrift(base),
         );
 
         await expectLater(
@@ -369,6 +402,14 @@ void main() {
           (await items.buscarItem(tienda, aceite))!.getStockActual(),
           d('8'),
         );
+        // El producto tampoco cambia, ni en la base ni en memoria (DI-33).
+        expect(aceite.getPrecioCompra(), isNull);
+        expect(
+          (await ProductoRepositorioDrift(
+            base,
+          ).buscarPorId(tienda, aceite.getId()))!.getPrecioCompra(),
+          isNull,
+        );
       },
     );
   });
@@ -379,6 +420,7 @@ void main() {
           movimientos,
           d('5'),
           UnidadTrabajoDrift(base),
+          ProductoRepositorioDrift(base),
         );
 
     test('guarda AJUSTE_CONTEO con la diferencia y lo contado', () async {

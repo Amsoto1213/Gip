@@ -74,7 +74,13 @@ class VentaDePrueba {
       fiados,
     ]);
     final servicioFiados = ServicioFiados(fiados);
-    final inventario = ServicioInventario(items, movimientos, d('5'), unidad);
+    final inventario = ServicioInventario(
+      items,
+      movimientos,
+      d('5'),
+      unidad,
+      ProductoRepositorioFalso(),
+    );
     final servicio = ServicioVentas(
       inventario,
       [
