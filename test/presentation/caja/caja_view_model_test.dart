@@ -17,6 +17,7 @@ void main() {
   final propietario = Administrador('2222', 'Carmen', '1000000001');
 
   late RegistrarMovimientoCajaFalso coordinador;
+  late RegistrarCierreCajaFalso cierre;
   late CajaViewModel vm;
 
   MovimientoCaja movimiento(String valor, String descripcion) => MovimientoCaja(
@@ -49,7 +50,11 @@ void main() {
 
   setUp(() {
     coordinador = RegistrarMovimientoCajaFalso();
-    vm = CajaViewModel(coordinador, (usuario: propietario, tienda: tienda));
+    cierre = RegistrarCierreCajaFalso();
+    vm = CajaViewModel(coordinador, cierre, (
+      usuario: propietario,
+      tienda: tienda,
+    ));
   });
 
   test('empieza en "Sale dinero" y "Del negocio", como el mockup', () {
@@ -142,5 +147,50 @@ void main() {
   test('ANULACION no se puede elegir', () {
     vm.elegirClasificacion(ClasificacionMovimiento.anulacion);
     expect(vm.clasificacion, ClasificacionMovimiento.negocio);
+  });
+
+  group('saldo esperado (CUS-14)', () {
+    When<Future<Decimal>> cuandoConsulta() =>
+        when(() => cierre.consultarSaldoEsperado(any(), any()));
+
+    test('cargarSaldo guarda lo que debe haber en caja', () async {
+      cuandoConsulta().thenAnswer((_) async => Decimal.parse('318500'));
+      expect(vm.saldoEsperado, isNull);
+
+      await vm.cargarSaldo();
+
+      expect(vm.saldoEsperado, Decimal.parse('318500'));
+      verify(() => cierre.consultarSaldoEsperado(tienda, propietario))
+          .called(1);
+    });
+
+    test(
+      'si no se puede consultar (p. ej. un empleado), no hay saldo',
+      () async {
+        cuandoConsulta().thenThrow(const ExcepcionSoloPropietario());
+
+        await vm.cargarSaldo();
+
+        expect(vm.saldoEsperado, isNull);
+        expect(vm.error, isNull);
+      },
+    );
+
+    test('al anotar un movimiento vuelve a consultar el saldo', () async {
+      cuandoRegistra().thenAnswer((_) async => movimiento('1000', 'a'));
+      cuandoConsulta().thenAnswer((_) async => Decimal.parse('99000'));
+
+      await vm.anotar(valor: '1.000', descripcion: 'a');
+
+      expect(vm.saldoEsperado, Decimal.parse('99000'));
+    });
+
+    test('si el movimiento se rechaza no vuelve a consultar', () async {
+      cuandoRegistra().thenThrow(const ExcepcionCajaCerrada());
+
+      await vm.anotar(valor: '1.000', descripcion: 'a');
+
+      verifyNever(() => cierre.consultarSaldoEsperado(any(), any()));
+    });
   });
 }

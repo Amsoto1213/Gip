@@ -96,6 +96,7 @@ void main() {
     consultarMargen: ConsultarMargenFalso(),
     generarReporteDiario: GenerarReporteDiarioFalso(),
     registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
+    registrarCierreCaja: RegistrarCierreCajaFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).

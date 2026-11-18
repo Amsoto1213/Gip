@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/caja/rutas_caja.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
@@ -39,7 +40,7 @@ class MarcoNavegacion extends StatelessWidget {
     (
       etiqueta: 'Caja',
       icono: (t) => Icon(Icons.credit_card_outlined, size: t),
-      subsecciones: const [],
+      subsecciones: subseccionesCaja,
     ),
     (
       etiqueta: 'Negocio',

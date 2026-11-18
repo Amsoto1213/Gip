@@ -39,6 +39,9 @@ class CajaQueFalla implements ICajaRepositorio {
   Future<void> crear(Tienda tienda, Caja caja) => _real.crear(tienda, caja);
 
   @override
+  Future<void> cerrar(Tienda tienda, Caja caja) => _real.cerrar(tienda, caja);
+
+  @override
   Future<void> registrarMovimiento(
     Tienda tienda,
     Caja caja,

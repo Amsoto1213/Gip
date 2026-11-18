@@ -100,6 +100,10 @@ ignora; lo que importa son los estilos y la estructura.
 20. **MensajeResultado**: mensaje del resultado de guardar, en una caja de 14 px de radio: en rojo
     (`errorContainer` y ícono de advertencia) si es un error y en verde (`primaryContainer` y ícono de
     check) si salió bien ("Producto creado", "Movimiento registrado"). Se anuncia al aparecer.
+21. **TarjetaDiferencia**: resultado de contar la caja (Cierre de caja): título a la izquierda ("Faltan",
+    "Sobran", "La caja cuadra") y monto grande con cifras tabulares a la derecha, radio 14. El faltante va
+    en amarillo (`alertaFondo`, `alertaBorde`, `alertaTexto`); el sobrante y el cuadre, en verde suave. Se
+    anuncia al aparecer.
 
 ## Pantallas
 

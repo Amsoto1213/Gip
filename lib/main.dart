@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
+import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
@@ -76,6 +77,7 @@ Future<void> main() async {
       consultarMargen: reportes.consultarMargen,
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
+      registrarCierreCaja: cajaPropietario.registrarCierreCaja,
     ),
   );
 }
@@ -100,6 +102,7 @@ class GipApp extends StatefulWidget {
     required this.consultarMargen,
     required this.generarReporteDiario,
     required this.registrarMovimientoCaja,
+    required this.registrarCierreCaja,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -119,6 +122,7 @@ class GipApp extends StatefulWidget {
   final ConsultarMargenCoordinator consultarMargen;
   final GenerarReporteDiarioCoordinator generarReporteDiario;
   final RegistrarMovimientoCajaCoordinator registrarMovimientoCaja;
+  final RegistrarCierreCajaCoordinator registrarCierreCaja;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -167,6 +171,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.consultarMargen),
         Provider.value(value: widget.generarReporteDiario),
         Provider.value(value: widget.registrarMovimientoCaja),
+        Provider.value(value: widget.registrarCierreCaja),
       ],
       child: MaterialApp.router(
         title: 'GIP',

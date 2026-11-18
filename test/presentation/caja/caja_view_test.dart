@@ -48,10 +48,14 @@ void main() {
       MaterialApp(
         theme: TemaGip.claro(),
         home: ChangeNotifierProvider(
-          create: (_) => CajaViewModel(coordinadores.registrarMovimientoCaja, (
-            usuario: usuario ?? Administrador('2222', 'Carmen', '1'),
-            tienda: tienda,
-          )),
+          create: (_) => CajaViewModel(
+            coordinadores.registrarMovimientoCaja,
+            coordinadores.registrarCierreCaja,
+            (
+              usuario: usuario ?? Administrador('2222', 'Carmen', '1'),
+              tienda: tienda,
+            ),
+          )..cargarSaldo(),
           child: const CajaView(),
         ),
       ),
@@ -194,5 +198,34 @@ void main() {
       greaterThanOrEqualTo(44),
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('muestra lo que debe haber en caja y se actualiza al anotar', (
+    tester,
+  ) async {
+    await abrir(tester);
+    await esperarBase(tester);
+    expect(find.text('Debe haber en caja'), findsOneWidget);
+    expect(find.text('\$ 0'), findsOneWidget);
+    expect(find.byKey(const Key('caja_cerrar')), findsOneWidget);
+
+    await tester.tap(find.text('Entra dinero'));
+    await tester.pump();
+    await escribir(tester, 'valor', '100.000');
+    await escribir(tester, 'descripcion', 'Base de apertura');
+    await anotar(tester);
+    await esperarBase(tester);
+
+    expect(find.text('\$ 100.000'), findsOneWidget);
+  });
+
+  testWidgets('el empleado no ve el saldo ni el botón de cerrar', (
+    tester,
+  ) async {
+    await abrir(tester, usuario: Empleado('3333', 'Luis', '2'));
+    await esperarBase(tester);
+
+    expect(find.text('Debe haber en caja'), findsNothing);
+    expect(find.byKey(const Key('caja_cerrar')), findsNothing);
   });
 }

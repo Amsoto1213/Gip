@@ -16,6 +16,7 @@ import 'package:gip/presentation/comun/pildora_estado.dart';
 import 'package:gip/presentation/comun/resumen_movimiento.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
 import 'package:gip/presentation/comun/selector_filtro.dart';
+import 'package:gip/presentation/comun/tarjeta_diferencia.dart';
 import 'package:gip/presentation/comun/tarjeta_accion.dart';
 import 'package:gip/presentation/comun/tarjeta_aviso.dart';
 import 'package:gip/presentation/comun/tarjeta_cifra.dart';
@@ -1146,6 +1147,48 @@ void main() {
       expect(find.text('Movimiento registrado'), findsOneWidget);
       expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    });
+  });
+
+  group('TarjetaDiferencia', () {
+    testWidgets('el faltante va en amarillo con el monto', (tester) async {
+      await montar(
+        tester,
+        const TarjetaDiferencia(
+          tono: TonoDiferencia.faltante,
+          titulo: 'Faltan',
+          valor: r'$ 3.500',
+        ),
+      );
+
+      expect(find.text('Faltan'), findsOneWidget);
+      expect(find.text(r'$ 3.500'), findsOneWidget);
+      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+    });
+
+    testWidgets('el sobrante y el cuadre van en verde; sin monto no lo '
+        'muestra', (tester) async {
+      await montar(
+        tester,
+        const Column(
+          children: [
+            TarjetaDiferencia(
+              tono: TonoDiferencia.sobrante,
+              titulo: 'Sobran',
+              valor: r'$ 1.500',
+            ),
+            TarjetaDiferencia(
+              tono: TonoDiferencia.cuadra,
+              titulo: 'La caja cuadra',
+            ),
+          ],
+        ),
+      );
+
+      expect(find.text('Sobran'), findsOneWidget);
+      expect(find.text('La caja cuadra'), findsOneWidget);
+      expect(find.byKey(const Key('diferencia_valor')), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_outline), findsNWidgets(2));
     });
   });
 }

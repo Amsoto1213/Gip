@@ -183,4 +183,95 @@ void main() {
       expect(cajas.movimientos, isEmpty);
     });
   });
+
+  group('consultarSaldoEsperado y cerrarCaja (CUS-14)', () {
+    Future<void> anotar(String tipo, String valor) async {
+      if (tipo == 'ingreso') {
+        await servicio.registrarIngreso(tienda, d(valor), 'x');
+      } else {
+        await servicio.registrarMovimientoManual(
+          tienda,
+          TipoMovimientoCaja.egreso,
+          ClasificacionMovimiento.personal,
+          d(valor),
+          'x',
+        );
+      }
+    }
+
+    test('el saldo esperado suma ingresos y resta egresos de hoy', () async {
+      await anotar('ingreso', '100000');
+      await anotar('ingreso', '268000');
+      await anotar('egreso', '40000');
+
+      expect(await servicio.consultarSaldoEsperado(tienda), d('328000'));
+    });
+
+    test('sin movimientos el saldo es cero y se abre la caja de hoy '
+        '(paso 6)', () async {
+      expect(await servicio.consultarSaldoEsperado(tienda), Decimal.zero);
+      expect(cajas.cajas[tienda.getId()], hasLength(1));
+    });
+
+    test('cerrarCaja devuelve el faltante y guarda solo el cierre', () async {
+      await anotar('ingreso', '318500');
+
+      final diferencia = await servicio.cerrarCaja(tienda, d('315000'));
+
+      expect(diferencia, d('-3500'));
+      expect(cajas.cierres, hasLength(1));
+      final caja = await cajas.buscarPorFecha(
+        tienda,
+        ServicioCaja.diaLocal(DateTime.now()),
+      );
+      expect(caja!.isCerrada(), isTrue);
+      expect(caja.getEfectivoContado(), d('315000'));
+      expect(caja.getDiferencia(), d('-3500'));
+      // Los movimientos no se reescriben (DA-48, DA-62).
+      expect(cajas.movimientosDe(tienda), hasLength(1));
+    });
+
+    test('cerrarCaja devuelve el sobrante', () async {
+      await anotar('ingreso', '1000');
+      expect(await servicio.cerrarCaja(tienda, d('1500')), d('500'));
+    });
+
+    test('una caja sin movimientos también se cierra', () async {
+      expect(await servicio.cerrarCaja(tienda, d('2000')), d('2000'));
+    });
+
+    test('rechaza un segundo cierre del día sin guardar otro', () async {
+      await servicio.cerrarCaja(tienda, d('0'));
+
+      await expectLater(
+        servicio.cerrarCaja(tienda, d('5')),
+        throwsA(
+          isA<ExcepcionCajaCerrada>().having(
+            (e) => e.mensaje,
+            'mensaje',
+            'La caja de hoy ya está cerrada',
+          ),
+        ),
+      );
+      expect(cajas.cierres, hasLength(1));
+    });
+
+    test('después del cierre rechaza nuevos movimientos', () async {
+      await servicio.cerrarCaja(tienda, d('0'));
+
+      await expectLater(
+        servicio.registrarIngreso(tienda, d('1000'), 'Venta'),
+        throwsA(isA<ExcepcionCajaCerrada>()),
+      );
+      expect(cajas.movimientos, isEmpty);
+    });
+
+    test('el saldo esperado se sigue pudiendo consultar con la caja '
+        'cerrada', () async {
+      await anotar('ingreso', '1000');
+      await servicio.cerrarCaja(tienda, d('1000'));
+
+      expect(await servicio.consultarSaldoEsperado(tienda), d('1000'));
+    });
+  });
 }

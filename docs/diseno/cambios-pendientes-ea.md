@@ -127,6 +127,11 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - El cliente nuevo se guarda en su propia transacción: queda aunque la venta no se confirme.
 - [ ] **CUS-10**: nota de que el periodo es el día local `[00:00, 00:00 del día siguiente)` (DI-29 a).
 - [ ] **CUS-13**: nota de que `VistaVenta` usa dos coordinadores (`RegistrarVentaCoordinator` y `RegistrarVentaPerdidaCoordinator`), única excepción a "una vista, un coordinador" (DI-30 c).
+- [ ] **CUS-14** (DI-37 a, c, d):
+  - `Caja`: el constructor acepta, como opcionales, los movimientos y los datos del cierre para armar una caja guardada.
+  - Entre los pasos 12 y 13, la vista muestra la diferencia que quedaría con el efectivo escrito (solo para mostrar).
+  - Break "Efectivo no válido" ("Escribe cuánto efectivo contó") para un efectivo vacío, no numérico o negativo.
+  - Nota: la diferencia cero se muestra como "La caja cuadra".
 - [ ] **CUS-17** (DI-34 b, d): nota de que `buscarPorLectura` quita los espacios y que una lectura vacía devuelve null sin buscar; en el alt "Lectura fallida", el lector desconectado no se puede detectar en modo teclado. Si el código no está registrado y hay resultados por nombre (se escribió un nombre y se oprimió Enter), quedan esos resultados.
 - [ ] **CUS-18**, opt "Asociar código" (DI-34 b, f): break "Código vacío" ("Escriba o lea el código") antes del paso 21; si `otro` es el mismo producto, devuelve el código que ya tiene sin crear otro; en un producto nuevo el código se asocia después de `crearProducto`.
 - [ ] **CUS-18**, opt "Etiquetas" (DI-35 a, b):

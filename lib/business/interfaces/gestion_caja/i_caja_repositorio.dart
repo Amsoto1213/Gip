@@ -5,9 +5,9 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 /// Indirection, Protected Variations y DIP: contrato de acceso a la caja; la
 /// Data Layer lo implementa (RNF-08).
 ///
-/// Por ahora las operaciones que usa el ingreso de una venta (CUS-02) y
-/// [listarMovimientos] (CUS-10); el cierre y buscarPorId llegan con su caso de
-/// uso (DI-21, DI-29).
+/// Tiene las operaciones del ingreso de una venta (CUS-02), [listarMovimientos]
+/// (CUS-10) y [cerrar] (CUS-14); buscarPorId llega con CUS-23 (DI-21, DI-29,
+/// DI-37).
 abstract interface class ICajaRepositorio {
   /// Caja de la jornada con sus movimientos, o null si todavía no se ha
   /// abierto. [fecha] es el día local, sin hora (DI-21).
@@ -24,6 +24,10 @@ abstract interface class ICajaRepositorio {
     Caja caja,
     MovimientoCaja movimiento,
   );
+
+  /// Guarda solo el cierre de la caja: cerrada, efectivoContado, diferencia y
+  /// fechaCierre; no reescribe la caja ni los movimientos (RF-13, DA-48).
+  Future<void> cerrar(Tienda tienda, Caja caja);
 
   /// Movimientos de caja de la tienda, de todas sus cajas, con fecha en
   /// `[desde, hasta)` (CUS-10, DI-29).

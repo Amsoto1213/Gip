@@ -137,6 +137,7 @@ void main() {
         consultarMargen: ConsultarMargenFalso(),
         generarReporteDiario: GenerarReporteDiarioFalso(),
         registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
+        registrarCierreCaja: RegistrarCierreCajaFalso(),
       ),
     );
     await tester.pumpAndSettle();

@@ -3,18 +3,20 @@ import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dar
 import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
+import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
 import 'package:decimal/decimal.dart';
 
-/// Estado de la pantalla Caja (CUS-11): el formulario "Anotar movimiento".
-/// Llama solo a [RegistrarMovimientoCajaCoordinator].
-///
-/// Por ahora solo anota movimientos: el saldo, la lista de hoy, "Ventas de hoy"
-/// y "Cerrar caja" llegan con CUS-14 y CUS-20 (DI-36).
+/// Estado de la pantalla Caja: el formulario "Anotar movimiento" (CUS-11) y lo
+/// que debe haber en caja con la entrada a "Cerrar caja" (CUS-14).
+/// Llama a [RegistrarMovimientoCajaCoordinator] y, para el saldo esperado, a
+/// [RegistrarCierreCajaCoordinator]: es la segunda pantalla con dos
+/// coordinadores (DI-37). La lista de hoy y "Ventas de hoy" llegan con CUS-20
+/// (DI-36).
 class CajaViewModel extends ChangeNotifier {
-  CajaViewModel(this._coordinador, this._usuarioActivo);
+  CajaViewModel(this._coordinador, this._cierre, this._usuarioActivo);
 
   /// Mensaje del diagrama para un valor cero, negativo o que no es un número
   /// (CUS-11, paso 12).
@@ -24,6 +26,7 @@ class CajaViewModel extends ChangeNotifier {
       'No se pudo anotar el movimiento. Inténtalo de nuevo';
 
   final RegistrarMovimientoCajaCoordinator _coordinador;
+  final RegistrarCierreCajaCoordinator _cierre;
   final UsuarioActivo _usuarioActivo;
 
   TipoMovimientoCaja _tipo = TipoMovimientoCaja.egreso;
@@ -31,6 +34,7 @@ class CajaViewModel extends ChangeNotifier {
   bool _guardando = false;
   String? _error;
   MovimientoCaja? _registrado;
+  Decimal? _saldoEsperado;
 
   /// "Sale dinero" (egreso) o "Entra dinero" (ingreso). Empieza en egreso,
   /// como el mockup.
@@ -47,6 +51,24 @@ class CajaViewModel extends ChangeNotifier {
 
   /// Último movimiento anotado, para confirmarlo en pantalla, o null.
   MovimientoCaja? get registrado => _registrado;
+
+  /// Lo que debe haber en caja hoy, o null si todavía no se consulta o no se
+  /// pudo (por ejemplo, un empleado no lo ve).
+  Decimal? get saldoEsperado => _saldoEsperado;
+
+  /// Consulta lo que debe haber en caja (CUS-14, pasos 2 a 11). Si falla, la
+  /// tarjeta simplemente no se muestra.
+  Future<void> cargarSaldo() async {
+    try {
+      _saldoEsperado = await _cierre.consultarSaldoEsperado(
+        _usuarioActivo.tienda,
+        _usuarioActivo.usuario,
+      );
+    } catch (_) {
+      _saldoEsperado = null;
+    }
+    notifyListeners();
+  }
 
   void elegirTipo(TipoMovimientoCaja tipo) {
     if (_guardando) return;
@@ -100,6 +122,7 @@ class CajaViewModel extends ChangeNotifier {
       _guardando = false;
       notifyListeners();
     }
+    if (registrado) await cargarSaldo();
     return registrado;
   }
 }

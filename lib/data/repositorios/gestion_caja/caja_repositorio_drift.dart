@@ -51,7 +51,6 @@ class CajaRepositorioDrift implements ICajaRepositorio {
             .getSingleOrNull();
     if (fila == null) return null;
 
-    final caja = Caja(fila.id, _leerDia(fila.fecha));
     final movimientos =
         await (_base.select(_base.movimientosCaja)
               ..where(
@@ -63,20 +62,50 @@ class CajaRepositorioDrift implements ICajaRepositorio {
             .get();
     final tipos = _tipos.map((k, v) => MapEntry(v, k));
     final clasificaciones = _clasificaciones.map((k, v) => MapEntry(v, k));
-    for (final m in movimientos) {
-      caja.registrarMovimiento(
-        MovimientoCaja(
-          m.id,
-          m.valor,
-          m.descripcion,
-          clasificaciones[m.clasificacion]!,
-          tipos[m.tipo]!,
-          m.fecha,
-        ),
-      );
-    }
-    return caja;
+    return Caja(
+      fila.id,
+      _leerDia(fila.fecha),
+      movimientos: [
+        for (final m in movimientos)
+          MovimientoCaja(
+            m.id,
+            m.valor,
+            m.descripcion,
+            clasificaciones[m.clasificacion]!,
+            tipos[m.tipo]!,
+            m.fecha,
+          ),
+      ],
+      efectivoContado: fila.cerrada ? fila.efectivoContado : null,
+      diferencia: fila.cerrada ? fila.diferencia : null,
+      fechaCierre: fila.cerrada ? fila.fechaCierre : null,
+    );
   }
+
+  /// Guarda solo el cierre de la caja y lo anota en `cola_pendientes` como
+  /// ACTUALIZAR en la misma transacción (DA-33, RF-13). No toca los
+  /// movimientos. Se une a la transacción abierta.
+  @override
+  Future<void> cerrar(Tienda tienda, Caja caja) => _base.transaction(() async {
+    await (_base.update(_base.cajas)..where(
+          (c) => c.id.equals(caja.getId()) & c.tiendaId.equals(tienda.getId()),
+        ))
+        .write(
+          CajasCompanion(
+            cerrada: const Value(true),
+            efectivoContado: Value(caja.getEfectivoContado()),
+            diferencia: Value(caja.getDiferencia()),
+            fechaCierre: Value(caja.getFechaCierre()),
+          ),
+        );
+    await anotarEnCola(
+      _base,
+      tiendaId: tienda.getId(),
+      tabla: _tablaCajas,
+      registroId: caja.getId(),
+      operacion: OperacionCola.actualizar,
+    );
+  });
 
   /// Inserta la caja si su id no existe y, solo entonces, la anota en
   /// `cola_pendientes` (DA-33, DA-62). Se une a la transacción abierta.

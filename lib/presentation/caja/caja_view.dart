@@ -3,23 +3,27 @@ import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dar
 import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/presentation/caja/caja_view_model.dart';
+import 'package:gip/presentation/caja/rutas_caja.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/mensaje_resultado.dart';
 import 'package:gip/presentation/comun/nota_info.dart';
+import 'package:gip/presentation/comun/tarjeta_cifra.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// Pantalla Caja (CUS-11, mockups `mCaja` y `wCaja`, con los componentes del
-/// rediseño): el formulario "Anotar movimiento" del propietario.
+/// Pantalla Caja (CUS-11 y CUS-14, mockups `mCaja` y `wCaja`, con los
+/// componentes del rediseño): lo que debe haber en caja con "Cerrar caja" y el
+/// formulario "Anotar movimiento" del propietario.
 ///
-/// No se muestran "Debe haber en caja", "Entró hoy", "Gastos del negocio",
-/// "Para la casa", "Movimientos de hoy", "Ventas de hoy", "Cerrar caja" ni
-/// "Abierta desde": el caso de uso no los entrega (llegan con CUS-14 y CUS-20,
-/// DI-36).
+/// No se muestran "Entró hoy", "Gastos del negocio", "Para la casa",
+/// "Movimientos de hoy", "Ventas de hoy" ni "Abierta desde": ningún caso de uso
+/// implementado los entrega (la lista de hoy y "Ventas de hoy" llegan con
+/// CUS-20, DI-36 y DI-37).
 class CajaView extends StatefulWidget {
   const CajaView({super.key});
 
@@ -71,7 +75,16 @@ class _CajaViewState extends State<CajaView> {
                   alignment: Alignment.topLeft,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 560),
-                    child: _tarjetaAnotar(vm, web),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (vm.saldoEsperado != null) ...[
+                          _tarjetaSaldo(vm),
+                          const SizedBox(height: 16),
+                        ],
+                        _tarjetaAnotar(vm, web),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -79,6 +92,29 @@ class _CajaViewState extends State<CajaView> {
           ),
         ),
       ),
+    );
+  }
+
+  /// "Debe haber en caja" con la entrada a Cierre de caja (CUS-14).
+  Widget _tarjetaSaldo(CajaViewModel vm) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TarjetaCifra(
+          etiqueta: 'Debe haber en caja',
+          valor: '\$ ${mostrarPrecio(vm.saldoEsperado!)}',
+          valorKey: const Key('caja_saldo_esperado'),
+          detalle: 'efectivo',
+        ),
+        const SizedBox(height: 12),
+        BotonSecundario(
+          key: const Key('caja_cerrar'),
+          texto: 'Cerrar caja',
+          icono: Icons.lock_outline,
+          expandido: true,
+          onPressed: () => context.go(rutaCierreCaja),
+        ),
+      ],
     );
   }
 
