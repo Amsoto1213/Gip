@@ -4,8 +4,8 @@ import 'package:gip/presentation/comun/tema/forma_gip.dart';
 
 /// Campo grande de búsqueda (58 px en la web, 52 en el móvil) con la lupa a
 /// la izquierda y, si hay [onLeerCodigo], el botón oscuro del lector al lado.
-/// Mientras no exista CUS-17 las pantallas no pasan [onLeerCodigo] y el botón
-/// no se muestra.
+/// Las pantallas lo pasan solo en la app Android, donde abre la cámara
+/// (CUS-17); en la web el lector 2D escribe en el campo de Buscar producto.
 ///
 /// Tiene dos usos:
 /// - **Botón** (sin [controlador]): muestra la [pista] y al tocarlo llama a
@@ -153,7 +153,7 @@ class _BarraBusquedaState extends State<BarraBusqueda> {
         SizedBox(width: web ? 12 : 10),
         IconButton(
           onPressed: onLeerCodigo,
-          tooltip: 'Leer código con el lector',
+          tooltip: 'Leer código con la cámara',
           style: IconButton.styleFrom(
             backgroundColor: extra.navFondo,
             foregroundColor: esquema.onPrimary,

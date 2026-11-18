@@ -1,5 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -165,5 +167,154 @@ void main() {
     await guardar(vm);
 
     expect(vm.error, 'No se pudo guardar el producto. Inténtalo de nuevo');
+  });
+
+  group('códigos (CUS-17, CUS-18 Asociar código)', () {
+    CodigoProducto ean() =>
+        CodigoProducto('c1', FormatoCodigo.ean13, '7701234567897');
+
+    test('asocia el código al producto guardado', () async {
+      final producto = Producto(
+        'p9',
+        'LEC-1',
+        'Leche',
+        UnidadMedida.unidad,
+        null,
+        Decimal.parse('4200'),
+      );
+      when(() => coordinator.asociarCodigo(tienda, producto, '7701234567897'))
+          .thenAnswer((_) async {
+            final c = ean();
+            producto.agregarCodigo(c);
+            return c;
+          });
+      final vm = ProductoViewModel(coordinator, tienda, producto: producto);
+
+      await vm.asociarCodigo('7701234567897');
+
+      expect(vm.aviso, 'Código asociado');
+      expect(vm.error, isNull);
+      expect(vm.codigos.map((c) => c.getValor()), ['7701234567897']);
+      expect(vm.guardando, isFalse);
+    });
+
+    test('muestra el rechazo del código repetido (paso 25)', () async {
+      when(() => coordinator.asociarCodigo(any(), any(), any()))
+          .thenThrow(const ExcepcionCodigoRepetido());
+      final vm = ProductoViewModel(coordinator, tienda, producto: galletas);
+
+      await vm.asociarCodigo('7701234567897');
+
+      expect(vm.error, 'Ese código ya está asociado a otro producto');
+      expect(vm.aviso, isNull);
+    });
+
+    test('un error inesperado muestra un mensaje para el tendero', () async {
+      when(() => coordinator.asociarCodigo(any(), any(), any()))
+          .thenThrow(StateError('disco'));
+      final vm = ProductoViewModel(coordinator, tienda, producto: galletas);
+
+      await vm.asociarCodigo('7701234567897');
+
+      expect(vm.error, 'No se pudo asociar el código. Inténtalo de nuevo');
+    });
+
+    test('en un producto nuevo el código queda pendiente', () async {
+      final vm = ProductoViewModel(coordinator, tienda);
+
+      await vm.asociarCodigo(' 7701234567897 ');
+
+      expect(vm.codigoPendiente, '7701234567897');
+      verifyNever(() => coordinator.asociarCodigo(any(), any(), any()));
+    });
+
+    test('en un producto nuevo rechaza el código vacío', () async {
+      final vm = ProductoViewModel(coordinator, tienda);
+
+      await vm.asociarCodigo('  ');
+
+      expect(vm.error, 'Escriba o lea el código');
+      expect(vm.codigoPendiente, isNull);
+    });
+
+    test('el código leído en Buscar queda pendiente y se puede descartar', () {
+      final vm = ProductoViewModel(
+        coordinator,
+        tienda,
+        codigoLeido: '7701234567897',
+      );
+      expect(vm.codigoPendiente, '7701234567897');
+
+      vm.descartarCodigoPendiente();
+      expect(vm.codigoPendiente, isNull);
+    });
+
+    test('al editar no hay código pendiente aunque llegue uno', () {
+      final vm = ProductoViewModel(
+        coordinator,
+        tienda,
+        producto: galletas,
+        codigoLeido: '7701234567897',
+      );
+      expect(vm.codigoPendiente, isNull);
+    });
+
+    test('al crear asocia el código pendiente', () async {
+      when(
+        () =>
+            coordinator.crearProducto(any(), any(), any(), any(), any(), any()),
+      ).thenAnswer((_) async => galletas);
+      when(() => coordinator.asociarCodigo(tienda, galletas, '7701234567897'))
+          .thenAnswer((_) async => ean());
+      final vm = ProductoViewModel(
+        coordinator,
+        tienda,
+        codigoLeido: '7701234567897',
+      );
+
+      await guardar(vm);
+
+      expect(vm.aviso, 'Producto creado. Código asociado');
+      expect(vm.codigoPendiente, isNull);
+      expect(vm.esNuevo, isFalse);
+    });
+
+    test('si el código pendiente falla, el producto queda creado', () async {
+      when(
+        () =>
+            coordinator.crearProducto(any(), any(), any(), any(), any(), any()),
+      ).thenAnswer((_) async => galletas);
+      when(() => coordinator.asociarCodigo(any(), any(), any()))
+          .thenThrow(const ExcepcionCodigoRepetido());
+      final vm = ProductoViewModel(
+        coordinator,
+        tienda,
+        codigoLeido: '7701234567897',
+      );
+
+      await guardar(vm);
+
+      expect(vm.aviso, 'Producto creado');
+      expect(vm.error, 'Ese código ya está asociado a otro producto');
+      expect(vm.producto, galletas);
+      expect(vm.codigoPendiente, isNull);
+    });
+
+    test('si crear falla, el código sigue pendiente', () async {
+      when(
+        () =>
+            coordinator.crearProducto(any(), any(), any(), any(), any(), any()),
+      ).thenThrow(const ExcepcionDatosProductoNoValidos.alCrear());
+      final vm = ProductoViewModel(
+        coordinator,
+        tienda,
+        codigoLeido: '7701234567897',
+      );
+
+      await guardar(vm);
+
+      expect(vm.codigoPendiente, '7701234567897');
+      verifyNever(() => coordinator.asociarCodigo(any(), any(), any()));
+    });
   });
 }

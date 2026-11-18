@@ -6,12 +6,21 @@ import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
+import 'package:gip/presentation/comun/leer_codigo.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+/// Agrega a la ruta de Buscar producto (de Surtido o de Vender) el pedido de
+/// abrir la cámara al entrar (atajo del botón del lector, CUS-17).
+String conCamara(String rutaBuscar) => '$rutaBuscar?camara=1';
+
+/// Verdadero si la ruta de Buscar producto pide abrir la cámara.
+bool pideCamara(GoRouterState state) =>
+    state.uri.queryParameters['camara'] == '1';
 
 /// Qué pasa al tocar un resultado de la búsqueda.
 enum ModoBusqueda {
@@ -23,16 +32,20 @@ enum ModoBusqueda {
   seleccionar,
 }
 
-/// Pantalla Buscar producto (CUS-06, mockup `mBuscar`), solo la búsqueda por
-/// nombre. Por ahora vive en Surtido. Según [modo], al tocar un resultado abre
-/// el producto para editarlo (CUS-18) o lo devuelve con `pop` (CUS-01, DI-20).
-/// Las existencias, "Agregar", "Anotar que se fue sin él" y el botón del
-/// lector llegan con CUS-25, CUS-02, CUS-13 y CUS-17 (DI-19).
+/// Pantalla Buscar producto (CUS-06, mockup `mBuscar`): por nombre y por
+/// lectura de código (CUS-17). Por ahora vive en Surtido. Según [modo], al
+/// tocar un resultado, o al leer el código de un producto, abre el producto
+/// para editarlo (CUS-18) o lo devuelve con `pop` (CUS-01, DI-20).
+///
+/// El lector 2D en modo teclado escribe en el campo y oprime Enter; en la app
+/// Android el botón del lector abre la cámara (DI-34). Las existencias,
+/// "Agregar" y "Anotar que se fue sin él" no están aquí (DI-19).
 class BuscarProductoView extends StatefulWidget {
   const BuscarProductoView({
     super.key,
     this.modo = ModoBusqueda.editar,
     this.seccion = 'Surtido',
+    this.abrirCamara = false,
   });
 
   final ModoBusqueda modo;
@@ -40,12 +53,24 @@ class BuscarProductoView extends StatefulWidget {
   /// Sección desde la que se abrió, para la miga y el botón de volver.
   final String seccion;
 
+  /// Si es verdadero, la cámara se abre al entrar (atajo del botón del lector
+  /// de Vender y Surtido).
+  final bool abrirCamara;
+
   @override
   State<BuscarProductoView> createState() => _BuscarProductoViewState();
 }
 
 class _BuscarProductoViewState extends State<BuscarProductoView> {
   final _texto = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.abrirCamara && camaraDisponible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _leerConCamara());
+    }
+  }
 
   @override
   void dispose() {
@@ -68,10 +93,51 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
     await vm.repetirBusqueda();
   }
 
-  Future<void> _crear() async {
+  /// Lectura del lector 2D en modo teclado (o un código escrito) al oprimir
+  /// Enter (CUS-17, pasos 1, 2 y 7).
+  Future<void> _leer(String lectura) async {
+    final producto = await context
+        .read<BuscarProductoViewModel>()
+        .buscarPorLectura(lectura);
+    if (producto != null && mounted) await _tocarResultado(producto);
+  }
+
+  /// Lectura con la cámara del celular (CUS-17, pasos 3 a 5 y 7).
+  Future<void> _leerConCamara() async {
     final vm = context.read<BuscarProductoViewModel>();
-    await abrirProductoNuevo(context);
-    await vm.repetirBusqueda();
+    final resultado = await leerCodigoConCamara(context);
+    if (!mounted) return;
+    switch (resultado) {
+      case null:
+        return;
+      case LecturaFallida():
+        vm.lecturaFallida();
+      case LecturaLeida(:final texto):
+        _texto.text = texto.trim();
+        final producto = await vm.buscarPorLectura(texto, desdeCamara: true);
+        if (producto != null && mounted) await _tocarResultado(producto);
+    }
+  }
+
+  /// Abre Producto para crear uno nuevo. Con [codigo] (leído y no
+  /// registrado) el producto nuevo lo lleva asociado (CUS-17 → CUS-18); al
+  /// volver se busca otra vez ese código y, si quien abrió la búsqueda espera
+  /// un producto, se le devuelve el recién creado.
+  Future<void> _crear({String? codigo}) async {
+    final vm = context.read<BuscarProductoViewModel>();
+    await abrirProductoNuevo(context, codigoLeido: codigo);
+    if (!mounted) return;
+    if (codigo == null) {
+      await vm.repetirBusqueda();
+      return;
+    }
+    _texto.text = codigo;
+    final producto = await vm.buscarPorLectura(codigo, desdeCamara: true);
+    if (producto != null &&
+        mounted &&
+        widget.modo == ModoBusqueda.seleccionar) {
+      context.pop(producto);
+    }
   }
 
   void _volver() {
@@ -143,6 +209,8 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
       campoKey: const Key('buscar_texto'),
       autofocus: true,
       onChanged: context.read<BuscarProductoViewModel>().buscar,
+      onSubmitted: _leer,
+      onLeerCodigo: camaraDisponible ? _leerConCamara : null,
       sufijo: valor.text.isEmpty
           ? null
           : IconButton(
@@ -163,12 +231,27 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
     if (vm.error != null) {
       return [_Aviso(texto: vm.error!, esError: true)];
     }
+    final avisoLectura = vm.avisoLectura;
+    return [
+      if (avisoLectura != null) ...[
+        _Aviso(
+          key: const Key('buscar_aviso_lectura'),
+          texto: avisoLectura,
+          esError: true,
+        ),
+        const SizedBox(height: 16),
+      ],
+      ..._resultados(vm, secundario),
+    ];
+  }
+
+  List<Widget> _resultados(BuscarProductoViewModel vm, TextStyle? secundario) {
     switch (vm.estado) {
       case EstadoBusqueda.inicial:
         return [
           Text(
-            'Escriba el nombre del producto · sin tildes ni mayúsculas · '
-            'funciona sin internet',
+            'Escriba el nombre del producto o lea su código · sin tildes ni '
+            'mayúsculas · funciona sin internet',
             style: secundario,
           ),
         ];
@@ -180,16 +263,20 @@ class _BuscarProductoViewState extends State<BuscarProductoView> {
           ),
         ];
       case EstadoBusqueda.sinCoincidencias:
+        final codigo = vm.codigoNoRegistrado;
         return [
           _Aviso(
             texto: BuscarProductoViewModel.mensajeSinCoincidencias,
+            detalle: codigo == null ? null : 'Código leído: $codigo',
             esError: false,
             accion: BotonPrimario(
               key: const Key('buscar_crear_sin_coincidencias'),
-              texto: 'Crear producto',
+              texto: codigo == null
+                  ? 'Crear producto'
+                  : 'Crear producto con este código',
               icono: Icons.add,
               compacto: true,
-              onPressed: _crear,
+              onPressed: () => _crear(codigo: codigo),
             ),
           ),
         ];
@@ -327,10 +414,19 @@ class _FilaProducto extends StatelessWidget {
 }
 
 class _Aviso extends StatelessWidget {
-  const _Aviso({required this.texto, required this.esError, this.accion});
+  const _Aviso({
+    super.key,
+    required this.texto,
+    required this.esError,
+    this.detalle,
+    this.accion,
+  });
 
   final String texto;
   final bool esError;
+
+  /// Línea debajo del texto (p. ej. el código leído).
+  final String? detalle;
   final Widget? accion;
 
   @override
@@ -365,6 +461,18 @@ class _Aviso extends StatelessWidget {
                 ),
               ],
             ),
+            if (detalle != null) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 36),
+                child: Text(
+                  detalle!,
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: color)
+                      .cifrasTabulares,
+                ),
+              ),
+            ],
             if (accion != null) ...[
               const SizedBox(height: 12),
               Align(alignment: Alignment.centerRight, child: accion),

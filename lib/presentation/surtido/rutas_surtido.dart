@@ -26,12 +26,14 @@ import 'package:provider/provider.dart';
 const rutaPrincipalSurtido = '/surtido';
 
 /// Pantalla Producto (CUS-18). Sin `extra` crea un producto nuevo; con un
-/// [Producto] en `extra` lo edita (así la abrirá CUS-06, DI-16).
+/// [Producto] en `extra` lo edita (así la abrirá CUS-06, DI-16). Con un texto
+/// en `extra` crea uno nuevo que lleva asociado ese código leído (CUS-17).
 const rutaProducto = '$rutaPrincipalSurtido/producto';
 
 /// Pantalla Buscar producto (CUS-06, por nombre). Con [ModoBusqueda] en
 /// `extra` decide si al tocar un resultado abre [rutaProducto] para editar
-/// (por defecto) o lo devuelve (seleccionar, DI-20).
+/// (por defecto) o lo devuelve (seleccionar, DI-20). Con [conCamara] abre la
+/// cámara al entrar (CUS-17).
 const rutaBuscarProducto = '$rutaPrincipalSurtido/buscar';
 
 /// Pantalla Entrada de mercancía (CUS-01).
@@ -78,6 +80,7 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
               modo: state.extra is ModoBusqueda
                   ? state.extra! as ModoBusqueda
                   : ModoBusqueda.editar,
+              abrirCamara: pideCamara(state),
             ),
           ),
         ),
@@ -120,6 +123,9 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
               producto: state.extra is Producto
                   ? state.extra! as Producto
                   : null,
+              codigoLeido: state.extra is String
+                  ? state.extra! as String
+                  : null,
             ),
             child: const ProductoView(),
           ),
@@ -133,9 +139,15 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
 Future<void> abrirBuscarProducto(BuildContext context) =>
     context.push<void>(rutaBuscarProducto);
 
-/// Abre la pantalla Producto para crear uno nuevo. Termina al volver.
-Future<void> abrirProductoNuevo(BuildContext context) =>
-    context.push<void>(rutaProducto);
+/// Abre Buscar producto con la cámara abierta (botón del lector, CUS-17).
+/// Termina al volver.
+Future<void> leerCodigoEnSurtido(BuildContext context) =>
+    context.push<void>(conCamara(rutaBuscarProducto));
+
+/// Abre la pantalla Producto para crear uno nuevo; con [codigoLeido], el
+/// producto nuevo lo lleva asociado (CUS-17 → CUS-18). Termina al volver.
+Future<void> abrirProductoNuevo(BuildContext context, {String? codigoLeido}) =>
+    context.push<void>(rutaProducto, extra: codigoLeido);
 
 /// Abre la pantalla Producto para editar [producto] (CUS-06 → CUS-18). Termina
 /// al volver.
