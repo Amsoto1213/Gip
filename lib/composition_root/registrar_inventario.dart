@@ -34,14 +34,16 @@ CoordinadoresInventario registrarInventario(
   BaseLocalDrift base,
   UnidadTrabajoDrift unidadTrabajo,
 ) {
+  final productos = ProductoRepositorioDrift(base);
   final servicioInventario = ServicioInventario(
     InventarioRepositorioDrift(base),
     MovimientoInventarioRepositorioDrift(base),
     ConfiguracionInventario.umbralRevisionConteo,
     unidadTrabajo,
+    productos,
   );
   final servicioCatalogo = ServicioCatalogo(
-    ProductoRepositorioDrift(base),
+    productos,
     const [],
     servicioInventario,
     const ImpresionEtiquetasPendiente(),

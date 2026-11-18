@@ -59,6 +59,7 @@ void main() {
       movimientos,
       Decimal.fromInt(5),
       unidad,
+      productos,
     );
     servicio = ServicioCatalogo(
       productos,

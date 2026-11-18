@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
@@ -88,6 +89,7 @@ void main() {
       MovimientoInventarioRepositorioDrift(base),
       d('5'),
       unidad,
+      ProductoRepositorioDrift(base),
     );
     final productos = ProductoRepositorioDrift(base);
     arroz = Producto(
@@ -205,6 +207,37 @@ void main() {
     ]);
 
     expect(await stock(arroz), d('13'));
+  });
+
+  test('la venta guarda el costo de la última entrada; las anteriores no '
+      'cambian (DI-33)', () async {
+    final ventas = servicioVentas();
+    Future<void> venderUnCafe() async {
+      final lineas = <LineaVenta>[];
+      await ventas.agregarLinea(tienda, lineas, cafe, d('1'));
+      await ventas.confirmar(tienda, lineas, [
+        ventas.crearPagoContado(d('8900'), d('10000')),
+      ]);
+    }
+
+    Future<List<Decimal?>> costosVendidos() async {
+      final consulta = base.select(base.movimientosInventario)
+        ..where((m) => m.tipo.equals('SALIDA_VENTA'))
+        ..orderBy([(m) => OrderingTerm.asc(m.fecha)]);
+      return [for (final s in await consulta.get()) s.costoUnitario];
+    }
+
+    // El café se creó sin precio de compra: esa venta queda sin costo.
+    await venderUnCafe();
+    await inventario.registrarEntrada(tienda, cafe, d('10'), d('6000'), null);
+    await venderUnCafe();
+    await inventario.registrarEntrada(tienda, cafe, d('5'), d('6500'), null);
+    await venderUnCafe();
+
+    expect(await costosVendidos(), [null, d('6000'), d('6500')]);
+    final guardado = await ProductoRepositorioDrift(base)
+        .buscarPorId(tienda, cafe.getId());
+    expect(guardado!.getPrecioCompra(), d('6500'));
   });
 
   test('si el stock quedaría negativo no se guarda nada', () async {

@@ -30,6 +30,7 @@ void main() {
 
   late InventarioRepositorioFalso items;
   late MovimientoRepositorioFalso movimientos;
+  late ProductoRepositorioFalso productos;
   late UnidadTrabajoFalsa unidad;
   late ServicioInventario servicio;
   late Producto aceite;
@@ -38,10 +39,18 @@ void main() {
   setUp(() async {
     items = InventarioRepositorioFalso();
     movimientos = MovimientoRepositorioFalso();
-    unidad = UnidadTrabajoFalsa([items, movimientos]);
+    productos = ProductoRepositorioFalso();
+    unidad = UnidadTrabajoFalsa([items, movimientos, productos]);
     items.unidad = unidad;
     movimientos.unidad = unidad;
-    servicio = ServicioInventario(items, movimientos, d('5'), unidad);
+    productos.unidad = unidad;
+    servicio = ServicioInventario(
+      items,
+      movimientos,
+      d('5'),
+      unidad,
+      productos,
+    );
     aceite = Producto(
       'p1',
       'ACE-1',
@@ -52,7 +61,9 @@ void main() {
     );
     itemAceite = ItemInventario('i1', aceite, d('8'));
     await items.guardarItem(tienda, itemAceite);
+    await productos.guardar(tienda, aceite);
     items.guardadosEnTransaccion.clear();
+    productos.guardadosEnTransaccion.clear();
   });
 
   Future<Decimal> stockGuardado() async =>
@@ -208,6 +219,112 @@ void main() {
       expect(movimientos.de(tienda), isEmpty);
       items.fallar = false;
       expect(await stockGuardado(), d('8'));
+    });
+  });
+
+  group('registrarEntrada: costo del producto (DI-33)', () {
+    Future<Decimal?> precioCompraGuardado() async =>
+        (await productos.buscarPorId(
+          tienda,
+          aceite.getId(),
+        ))!.getPrecioCompra();
+
+    test('el costo de la entrada pasa a ser el precio de compra', () async {
+      final antes = aceite.getActualizadoEn();
+
+      await servicio.registrarEntrada(tienda, aceite, d('24'), d('9400'), null);
+
+      expect(aceite.getPrecioCompra(), d('9400'));
+      expect(await precioCompraGuardado(), d('9400'));
+      expect(aceite.getActualizadoEn().isBefore(antes), isFalse);
+      expect(aceite.getActualizadoEn().isUtc, isTrue);
+    });
+
+    test('un producto sin precio de compra lo toma de la entrada', () async {
+      aceite.setPrecioCompra(null);
+
+      await servicio.registrarEntrada(tienda, aceite, d('1'), d('8800'), null);
+
+      expect(await precioCompraGuardado(), d('8800'));
+    });
+
+    test('producto, movimiento e ítem en una sola transacción', () async {
+      await servicio.registrarEntrada(tienda, aceite, d('1'), d('9400'), null);
+
+      expect(unidad.transacciones, 1);
+      expect(productos.guardadosEnTransaccion, [true]);
+      expect(movimientos.guardadosEnTransaccion, [true]);
+      expect(items.guardadosEnTransaccion, [true]);
+    });
+
+    test('costo cero (bonificación) no cambia el precio de compra', () async {
+      await servicio.registrarEntrada(
+        tienda,
+        aceite,
+        d('2'),
+        Decimal.zero,
+        null,
+      );
+
+      expect(aceite.getPrecioCompra(), d('8600'));
+      expect(productos.guardadosEnTransaccion, isEmpty);
+      expect(movimientos.de(tienda), hasLength(1));
+    });
+
+    test('el mismo costo no vuelve a guardar el producto', () async {
+      final antes = aceite.getActualizadoEn();
+
+      await servicio.registrarEntrada(tienda, aceite, d('1'), d('8600'), null);
+
+      expect(productos.guardadosEnTransaccion, isEmpty);
+      expect(aceite.getActualizadoEn(), antes);
+    });
+
+    test(
+      'si falla el producto no se guarda nada y queda como estaba',
+      () async {
+        final antes = aceite.getActualizadoEn();
+        productos.fallar = true;
+
+        await expectLater(
+          servicio.registrarEntrada(tienda, aceite, d('24'), d('9400'), null),
+          throwsStateError,
+        );
+
+        expect(aceite.getPrecioCompra(), d('8600'));
+        expect(aceite.getActualizadoEn(), antes);
+        expect(movimientos.de(tienda), isEmpty);
+        expect(await stockGuardado(), d('8'));
+        expect(itemAceite.getStockActual(), d('8'));
+      },
+    );
+
+    test(
+      'si falla el stock el producto conserva su precio de compra',
+      () async {
+        final antes = aceite.getActualizadoEn();
+        items.fallar = true;
+
+        await expectLater(
+          servicio.registrarEntrada(tienda, aceite, d('24'), d('9400'), null),
+          throwsStateError,
+        );
+
+        expect(aceite.getPrecioCompra(), d('8600'));
+        expect(aceite.getActualizadoEn(), antes);
+        items.fallar = false;
+        expect(await precioCompraGuardado(), d('8600'));
+      },
+    );
+
+    test('un error de datos no toca el producto', () async {
+      await expectLater(
+        servicio.registrarEntrada(tienda, aceite, d('0'), d('9400'), null),
+        throwsA(isA<ExcepcionDatosEntradaNoValidos>()),
+      );
+
+      expect(aceite.getPrecioCompra(), d('8600'));
+      expect(productos.guardadosEnTransaccion, isEmpty);
     });
   });
 

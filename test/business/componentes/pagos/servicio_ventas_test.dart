@@ -71,7 +71,13 @@ void main() {
     movimientos.unidad = unidad;
     ventas.unidad = unidad;
     cajas.unidad = unidad;
-    inventario = ServicioInventario(items, movimientos, d('5'), unidad);
+    inventario = ServicioInventario(
+      items,
+      movimientos,
+      d('5'),
+      unidad,
+      ProductoRepositorioFalso(),
+    );
     servicio = ServicioVentas(
       inventario,
       [

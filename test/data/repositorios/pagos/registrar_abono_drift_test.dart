@@ -101,6 +101,7 @@ void main() {
       MovimientoInventarioRepositorioDrift(base),
       d('5'),
       unidad,
+      ProductoRepositorioDrift(base),
     );
     clientes = ClienteRepositorioDrift(base);
     final arroz = Producto(
