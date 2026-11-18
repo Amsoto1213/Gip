@@ -13,7 +13,7 @@ import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/inventario_repositorio_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/movimiento_inventario_repositorio_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/producto_repositorio_drift.dart';
-import 'package:gip/data/service_agents/impresion_etiquetas_pendiente.dart';
+import 'package:gip/data/service_agents/impresion_etiquetas_pdf.dart';
 import 'package:gip/transversal/configuracion/configuracion_inventario.dart';
 
 /// Coordinadores del módulo gestion_inventario y el [ServicioInventario], que
@@ -31,8 +31,7 @@ typedef CoordinadoresInventario = ({
 /// Arma el módulo de inventario con sus implementaciones concretas.
 ///
 /// Los intérpretes van en orden: código de barras primero y QR de último,
-/// porque QR reconoce cualquier otro texto (CUS-17). Pieza de relleno (DI-15),
-/// que ningún flujo actual llama: impresión de etiquetas (iteración 4).
+/// porque QR reconoce cualquier otro texto (CUS-17).
 CoordinadoresInventario registrarInventario(
   BaseLocalDrift base,
   UnidadTrabajoDrift unidadTrabajo,
@@ -49,7 +48,7 @@ CoordinadoresInventario registrarInventario(
     productos,
     [InterpreteCodigoBarras(productos), InterpreteCodigoQR(productos)],
     servicioInventario,
-    const ImpresionEtiquetasPendiente(),
+    ImpresionEtiquetasPdf(),
     unidadTrabajo,
   );
   return (
