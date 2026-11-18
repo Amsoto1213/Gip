@@ -4,7 +4,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 **Cómo usarla:** quien actualice EA marca cada casilla al hacerlo. Al terminar se regenera el texto con `python3 tool/export_qea.py <ruta.qea> docs/diseno` y se borra lo que ya quedó en `clases.md` y en `secuencias/`. Cada DI nueva que diga "pasar a EA" se agrega aquí en el mismo PR.
 
-**Qué no hay que cambiar:** las operaciones y clases de EA que todavía no están en el código (por ejemplo `AnulacionVenta`, `Caja.cerrar`, `ServicioConciliacion` o `buscarPorLectura`) son de casos de uso que faltan (CUS-11, 12, 14, 15, 16, 17, 20, 22 y 23). Se quedan en EA tal como están.
+**Qué no hay que cambiar:** las operaciones y clases de EA que todavía no están en el código (por ejemplo `AnulacionVenta`, `Caja.cerrar`, `ServicioConciliacion` o `listarCodigosRepetidos`) son de casos de uso que faltan (CUS-11, 12, 14, 15, 16, 20, 22 y 23). Se quedan en EA tal como están.
 
 ## 1. Clases nuevas
 
@@ -66,6 +66,11 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - el periodo es `[día − 30 días, día)`: los 30 días completos anteriores, sin el día en curso;
   - los días con datos van del primer registro del ítem (`buscarFechaPrimerMovimiento` o su primera venta perdida) al día, con tope de 30; con menos de 30 la alerta es provisional;
   - si el consumo es 0 no hay alerta; con existencia cero o negativa la cobertura es 0; la cobertura se redondea a 2 decimales.
+- [ ] **`InterpreteCodigoBarras`**: `+ esCodigoBarrasValido(lectura: String): bool` (estática): 8, 12 o 13 dígitos con dígito de control GS1 válido. La usan `reconoce` y también `InterpreteCodigoQR.reconoce`, que reconoce lo que no es un EAN ni un UPC (DI-34 a).
+- [ ] **`ServicioCatalogo`** (DI-34 b):
+  - Descripción de `buscarPorLectura`: quita los espacios del inicio y del final de la lectura; una lectura vacía devuelve null sin buscar.
+  - Descripción de `asociarCodigo`: quita los espacios; rechaza el valor vacío ("Escriba o lea el código"); si el código ya es de este mismo producto lo devuelve sin repetirlo; si el guardado falla, quita el código del producto en memoria.
+- [ ] **`IProductoRepositorio.guardar`**, descripción: agrega los códigos nuevos del producto y nunca borra los que ya están guardados; quitar un código llega con CUS-22 (DI-34 c).
 - [ ] **`ConsumoPromedioSimple`**, descripción de `calcularConsumoDiario(salidas, perdidas, dias)`: unidades vendidas más una por venta perdida, divididas entre `dias`; con `dias` en 0 devuelve 0, y el resultado se redondea a 4 decimales (DI-25 b).
 
 ### Workflow/GestionInventario
@@ -122,6 +127,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - El cliente nuevo se guarda en su propia transacción: queda aunque la venta no se confirme.
 - [ ] **CUS-10**: nota de que el periodo es el día local `[00:00, 00:00 del día siguiente)` (DI-29 a).
 - [ ] **CUS-13**: nota de que `VistaVenta` usa dos coordinadores (`RegistrarVentaCoordinator` y `RegistrarVentaPerdidaCoordinator`), única excepción a "una vista, un coordinador" (DI-30 c).
+- [ ] **CUS-17** (DI-34 b, d): nota de que `buscarPorLectura` quita los espacios y que una lectura vacía devuelve null sin buscar; en el alt "Lectura fallida", el lector desconectado no se puede detectar en modo teclado. Si el código no está registrado y hay resultados por nombre (se escribió un nombre y se oprimió Enter), quedan esos resultados.
+- [ ] **CUS-18**, opt "Asociar código" (DI-34 b, f): break "Código vacío" ("Escriba o lea el código") antes del paso 21; si `otro` es el mismo producto, devuelve el código que ya tiene sin crear otro; en un producto nuevo el código se asocia después de `crearProducto`.
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
 - [ ] **CUS-24** (DI-25 b, e):
   - El consumo usa `movimientos.buscarFechaPrimerMovimiento(item)` para los días con datos.
@@ -134,6 +141,6 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ## 5. Lo que no va en EA
 
-- **Esquema de la base de datos.** El `.qea` no tiene tablas. El esquema está en `supabase/migrations/` (fuente de verdad) y en las tablas drift de `lib/data/local/tablas/`. Por ejemplo, la columna `clientes.eliminado_en` de DI-31 ya está en las dos.
-- **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e) y DI-29 (f).
+- **Esquema de la base de datos.** El `.qea` no tiene tablas. El esquema está en `supabase/migrations/` (fuente de verdad) y en las tablas drift de `lib/data/local/tablas/`. Por ejemplo, la columna `clientes.eliminado_en` de DI-31 y la tabla `codigos_producto` de DI-34 ya están en las dos.
+- **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e), DI-29 (f) y DI-34 (e, f).
 - **Un detalle que se corrige en el código.** `ServicioAlertas.diaLocal` es pública, no está en EA y nadie la usa fuera de la clase: se vuelve privada.
