@@ -141,7 +141,7 @@ class _CajaViewState extends State<CajaView> {
               ),
               ButtonSegment(
                 value: ClasificacionMovimiento.personal,
-                label: Text('Para la casa'),
+                label: Text('Personal'),
               ),
             ],
             selected: {vm.clasificacion},
@@ -197,7 +197,7 @@ class _CajaViewState extends State<CajaView> {
   /// "Hielo · − $ 12.000 · Del negocio".
   static String _resumen(MovimientoCaja m) {
     final signo = m.esIngreso() ? '+' : '−';
-    final clase = m.esDelNegocio() ? 'Del negocio' : 'Para la casa';
+    final clase = m.esDelNegocio() ? 'Del negocio' : 'Personal';
     final partes = [
       if (m.getDescripcion().isNotEmpty) m.getDescripcion(),
       '$signo \$ ${mostrarPrecio(m.getValor())}',

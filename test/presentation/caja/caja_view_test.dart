@@ -117,13 +117,13 @@ void main() {
     );
   });
 
-  testWidgets('"Entra dinero" y "Para la casa" se guardan como se eligieron', (
+  testWidgets('"Entra dinero" y "Personal" se guardan como se eligieron', (
     tester,
   ) async {
     await abrir(tester);
 
     await tester.tap(find.text('Entra dinero'));
-    await tester.tap(find.text('Para la casa'));
+    await tester.tap(find.text('Personal'));
     await tester.pump();
     await escribir(tester, 'valor', '5.000');
     await escribir(tester, 'descripcion', 'Aporte');
