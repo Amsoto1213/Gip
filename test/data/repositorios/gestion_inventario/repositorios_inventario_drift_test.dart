@@ -1,6 +1,8 @@
 import 'package:decimal/decimal.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
@@ -229,6 +231,159 @@ void main() {
         );
       },
     );
+  });
+
+  group('ProductoRepositorioDrift con códigos (CUS-17)', () {
+    CodigoProducto ean(String id, [String valor = '7701234567897']) =>
+        CodigoProducto(id, FormatoCodigo.ean13, valor);
+
+    test('guarda los códigos y los lee con el producto', () async {
+      final p = producto('p1', 'LEC-1', 'Leche')
+        ..agregarCodigo(ean('c1'))
+        ..agregarCodigo(CodigoProducto('c2', FormatoCodigo.qr, 'GIP:LEC-1'));
+      await productos.guardar(tienda, p);
+
+      final leido = (await productos.buscarPorId(tienda, 'p1'))!;
+      expect(
+        leido.getCodigos().map(
+          (c) => (c.getId(), c.getFormato(), c.getValor()),
+        ),
+        [
+          ('c1', FormatoCodigo.ean13, '7701234567897'),
+          ('c2', FormatoCodigo.qr, 'GIP:LEC-1'),
+        ],
+      );
+      final crudo = await base
+          .customSelect('SELECT formato, tienda_id FROM codigos_producto')
+          .get();
+      expect(crudo.map((f) => f.read<String>('formato')), ['EAN13', 'QR']);
+      expect(crudo.every((f) => f.read<String>('tienda_id') == 't1'), isTrue);
+    });
+
+    test(
+      'listar, buscarPorNombre y buscarPorCodigo traen los códigos',
+      () async {
+        await productos.guardar(
+          tienda,
+          producto('p1', 'LEC-1', 'Leche')..agregarCodigo(ean('c1')),
+        );
+        await productos.guardar(tienda, producto('p2', 'ARR-1', 'Arroz'));
+
+        final lista = await productos.listar(tienda);
+        expect(lista.map((p) => p.getCodigos().length), [0, 1]);
+        expect(
+          (await productos.buscarPorNombre(tienda, 'lech')).single.getCodigos(),
+          hasLength(1),
+        );
+        expect(
+          (await productos.buscarPorCodigo(tienda, 'LEC-1'))!.getCodigos(),
+          hasLength(1),
+        );
+      },
+    );
+
+    test('anota cada código nuevo como INSERTAR, una sola vez', () async {
+      final p = producto('p1', 'LEC-1', 'Leche')..agregarCodigo(ean('c1'));
+      await productos.guardar(tienda, p);
+      p.agregarCodigo(ean('c2', '96385074'));
+      await productos.guardar(tienda, p);
+
+      final codigos = (await cola()).where(
+        (e) => e.tabla == 'codigos_producto',
+      );
+      expect(codigos.map((e) => (e.registroId, e.operacion)), [
+        ('c1', 'INSERTAR'),
+        ('c2', 'INSERTAR'),
+      ]);
+      expect(codigos.every((e) => e.tiendaId == 't1'), isTrue);
+      expect(
+        (await productos.buscarPorId(tienda, 'p1'))!.getCodigos(),
+        hasLength(2),
+      );
+    });
+
+    test('guardar un producto sin sus códigos no los borra', () async {
+      await productos.guardar(
+        tienda,
+        producto('p1', 'LEC-1', 'Leche')..agregarCodigo(ean('c1')),
+      );
+
+      // Así llega un producto leído por otro repositorio (p. ej. el ítem).
+      await productos.guardar(tienda, producto('p1', 'LEC-1', 'Leche entera'));
+
+      expect(
+        (await productos.buscarPorId(tienda, 'p1'))!.getCodigos(),
+        hasLength(1),
+      );
+    });
+
+    test('buscarPorCodigoProducto compara el texto exacto', () async {
+      await productos.guardar(
+        tienda,
+        producto('p1', 'LEC-1', 'Leche')
+          ..agregarCodigo(CodigoProducto('c1', FormatoCodigo.qr, 'GIP:LEC-1')),
+      );
+
+      final hallado = await productos.buscarPorCodigoProducto(
+        tienda,
+        'GIP:LEC-1',
+      );
+      expect(hallado?.getId(), 'p1');
+      expect(hallado!.getCodigos().single.getValor(), 'GIP:LEC-1');
+      expect(
+        await productos.buscarPorCodigoProducto(tienda, 'gip:lec-1'),
+        isNull,
+      );
+      expect(
+        await productos.buscarPorCodigoProducto(tienda, 'GIP:LEC'),
+        isNull,
+      );
+      expect(
+        await productos.buscarPorCodigoProducto(tienda, 'LEC-1'),
+        isNull,
+        reason: 'el código interno no es un código de barras ni QR (DA-41)',
+      );
+    });
+
+    test('buscarPorCodigoProducto distingue la tienda', () async {
+      await productos.guardar(
+        tienda,
+        producto('p1', 'LEC-1', 'Leche')..agregarCodigo(ean('c1')),
+      );
+      await productos.guardar(
+        otraTienda,
+        producto('p2', 'LEC-1', 'Leche')..agregarCodigo(ean('c2')),
+      );
+
+      expect(
+        (await productos.buscarPorCodigoProducto(
+          tienda,
+          '7701234567897',
+        ))?.getId(),
+        'p1',
+      );
+      expect(
+        (await productos.buscarPorCodigoProducto(
+          otraTienda,
+          '7701234567897',
+        ))?.getId(),
+        'p2',
+      );
+    });
+
+    test('si el código falla, no queda el producto ni la cola', () async {
+      await productos.guardar(
+        tienda,
+        producto('p1', 'LEC-1', 'Leche')..agregarCodigo(ean('c1')),
+      );
+      final repetido = producto('p2', 'ARR-1', 'Arroz')
+        ..agregarCodigo(ean('c1', '96385074')); // id c1 ya existe
+
+      await expectLater(productos.guardar(tienda, repetido), throwsA(anything));
+
+      expect(await productos.buscarPorId(tienda, 'p2'), isNull);
+      expect((await cola()).map((e) => e.registroId), ['p1', 'c1']);
+    });
   });
 
   group('InventarioRepositorioDrift', () {

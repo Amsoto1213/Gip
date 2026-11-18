@@ -1,3 +1,5 @@
+import 'package:gip/business/componentes/gestion_inventario/interprete_codigo_barras.dart';
+import 'package:gip/business/componentes/gestion_inventario/interprete_codigo_qr.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_catalogo.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
@@ -28,8 +30,9 @@ typedef CoordinadoresInventario = ({
 
 /// Arma el módulo de inventario con sus implementaciones concretas.
 ///
-/// Piezas de relleno (DI-15), que ningún flujo actual llama: lista vacía de
-/// intérpretes (CUS-17) e impresión de etiquetas (iteración 4).
+/// Los intérpretes van en orden: código de barras primero y QR de último,
+/// porque QR reconoce cualquier otro texto (CUS-17). Pieza de relleno (DI-15),
+/// que ningún flujo actual llama: impresión de etiquetas (iteración 4).
 CoordinadoresInventario registrarInventario(
   BaseLocalDrift base,
   UnidadTrabajoDrift unidadTrabajo,
@@ -44,7 +47,7 @@ CoordinadoresInventario registrarInventario(
   );
   final servicioCatalogo = ServicioCatalogo(
     productos,
-    const [],
+    [InterpreteCodigoBarras(productos), InterpreteCodigoQR(productos)],
     servicioInventario,
     const ImpresionEtiquetasPendiente(),
     unidadTrabajo,

@@ -17,7 +17,8 @@ import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-/// Prueba de punta a punta de CUS-06 (por nombre): la vista con el módulo
+/// Prueba de punta a punta de CUS-06 (por nombre) y CUS-17 (lector 2D en
+/// modo teclado: el texto y Enter en el campo): la vista con el módulo
 /// armado como en `main.dart`, una base drift en memoria y las mismas rutas de
 /// Surtido.
 void main() {
@@ -79,7 +80,12 @@ void main() {
                 create: (_) => ProductoViewModel(
                   inventario.gestionarProducto,
                   tienda,
-                  producto: state.extra as Producto?,
+                  producto: state.extra is Producto
+                      ? state.extra! as Producto
+                      : null,
+                  codigoLeido: state.extra is String
+                      ? state.extra! as String
+                      : null,
                 ),
                 child: const ProductoView(),
               ),
@@ -203,5 +209,135 @@ void main() {
     expect(find.text('Vender'), findsOneWidget);
     expect(find.text('¿No lo encuentra?'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('CUS-17 Leer código', () {
+    /// El lector 2D en modo teclado escribe el código y oprime Enter.
+    Future<void> leerConLector(WidgetTester tester, String codigo) async {
+      await escribir(tester, codigo);
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await esperarBase(tester);
+    }
+
+    testWidgets('un código registrado abre el producto', (tester) async {
+      await tester.runAsync(() async {
+        await crear('LEC-1', 'Leche bolsa 1 L', '4200');
+        final leche = await inventario.buscarProducto.buscarPorNombre(
+          tienda,
+          'leche',
+        );
+        await inventario.gestionarProducto.asociarCodigo(
+          tienda,
+          leche.single,
+          '7701234567897',
+        );
+      });
+      await abrir(tester);
+
+      await leerConLector(tester, '7701234567897');
+
+      expect(find.text('Editar producto'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'LEC-1'), findsOneWidget);
+      // La sección de códigos va debajo de los precios.
+      final lista = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(
+        find.text('EAN-13'),
+        200,
+        scrollable: lista,
+      );
+      expect(find.text('7701234567897'), findsOneWidget);
+      expect(find.text('Asociar otro código'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.byTooltip('Volver'),
+        -200,
+        scrollable: lista,
+      );
+      await tester.tap(find.byTooltip('Volver'));
+      await esperarBase(tester);
+      expect(find.text('Leche bolsa 1 L'), findsOneWidget);
+    });
+
+    testWidgets(
+      'un código no registrado ofrece crearlo y el producto nuevo lo lleva',
+      (tester) async {
+        await abrir(tester);
+
+        await leerConLector(tester, '7701234567897');
+        expect(
+          find.text('No se encontró el producto. ¿Desea crearlo?'),
+          findsOneWidget,
+        );
+        expect(find.text('Código leído: 7701234567897'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('buscar_crear_sin_coincidencias')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Producto nuevo'), findsOneWidget);
+        final lista = find.byType(Scrollable).first;
+        await tester.scrollUntilVisible(
+          find.text('Se asociará al guardar el producto'),
+          200,
+          scrollable: lista,
+        );
+        expect(find.text('7701234567897'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('producto_codigo')),
+          -200,
+          scrollable: lista,
+        );
+
+        await tester.enterText(find.byKey(const Key('producto_codigo')), 'L1');
+        await tester.enterText(
+          find.byKey(const Key('producto_nombre')),
+          'Leche bolsa 1 L',
+        );
+        await tester.enterText(
+          find.byKey(const Key('producto_precio_venta')),
+          '4.200',
+        );
+        await tester.scrollUntilVisible(
+          find.text('Guardar producto'),
+          200,
+          scrollable: lista,
+        );
+        await tester.tap(find.text('Guardar producto'));
+        await esperarBase(tester);
+        expect(find.text('Producto creado. Código asociado'), findsOneWidget);
+        expect(find.text('EAN-13'), findsOneWidget);
+
+        await tester.scrollUntilVisible(
+          find.byTooltip('Volver'),
+          -200,
+          scrollable: lista,
+        );
+        await tester.tap(find.byTooltip('Volver'));
+        await esperarBase(tester);
+        // Al volver se busca otra vez el código: ya está registrado.
+        expect(find.text('Leche bolsa 1 L'), findsOneWidget);
+        expect(find.textContaining('Código leído'), findsNothing);
+      },
+    );
+
+    testWidgets('un nombre con Enter deja los resultados por nombre', (
+      tester,
+    ) async {
+      await tester.runAsync(() => crear('COCO', 'Coco', '3000'));
+      await abrir(tester);
+
+      await leerConLector(tester, 'coco');
+
+      expect(find.text('Coco'), findsOneWidget);
+      expect(find.textContaining('Código leído'), findsNothing);
+    });
+
+    testWidgets('en la app Android muestra el botón de la cámara', (
+      tester,
+    ) async {
+      // Las pruebas corren como Android (defaultTargetPlatform).
+      await abrir(tester);
+      expect(find.byTooltip('Leer código con la cámara'), findsOneWidget);
+    });
   });
 }

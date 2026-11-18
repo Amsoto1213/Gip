@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/presentation/comun/leer_codigo.dart';
 import 'package:gip/presentation/comun/barra_busqueda.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
@@ -126,6 +127,9 @@ class _SurtidoViewState extends State<SurtidoView> {
                       ? 'Buscar producto por nombre…'
                       : 'Buscar en el surtido…',
                   onTap: () => _abrir(abrirBuscarProducto),
+                  onLeerCodigo: camaraDisponible
+                      ? () => _abrir(leerCodigoEnSurtido)
+                      : null,
                 ),
                 separacion,
                 Row(

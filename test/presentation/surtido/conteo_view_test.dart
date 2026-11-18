@@ -195,7 +195,7 @@ void main() {
     expect(find.text('Sin contar · 4'), findsOneWidget);
     expect(find.text('Diferencia · 0'), findsOneWidget);
     // Sin lector, "Pausar" ni "Volver a contar" (DI-24).
-    expect(find.byTooltip('Leer código con el lector'), findsNothing);
+    expect(find.byTooltip('Leer código con la cámara'), findsNothing);
     expect(find.textContaining('Pausar'), findsNothing);
     expect(find.text('Volver a contar'), findsNothing);
     expect(find.textContaining('cada producto contado'), findsNothing);

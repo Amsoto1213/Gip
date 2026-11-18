@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
+import 'package:gip/presentation/comun/leer_codigo.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
-import 'package:gip/presentation/comun/tema/forma_gip.dart';
+import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
 import 'package:go_router/go_router.dart';
@@ -15,8 +17,9 @@ import 'package:provider/provider.dart';
 /// Pantalla Producto (CUS-18, mockups `mProducto` y `wProducto`, con los
 /// componentes del rediseño): el mismo
 /// formulario crea y edita. Lleva el campo "Código interno", que no está en el
-/// mockup (DI-14). Las secciones de códigos y etiquetas llegan con CUS-17 y la
-/// iteración 4.
+/// mockup (DI-14). La sección "Códigos del producto" asocia códigos de barras
+/// o QR (CUS-17, DI-34); sin el botón de quitar (CUS-22). Las etiquetas QR
+/// llegan con la iteración 4.
 class ProductoView extends StatefulWidget {
   const ProductoView({super.key});
 
@@ -67,6 +70,16 @@ class _ProductoViewState extends State<ProductoView> {
     );
   }
 
+  Future<void> _asociarCodigo() async {
+    FocusScope.of(context).unfocus();
+    final vm = context.read<ProductoViewModel>();
+    final valor = await showDialog<String>(
+      context: context,
+      builder: (_) => const _DialogoCodigo(),
+    );
+    if (valor != null && mounted) await vm.asociarCodigo(valor);
+  }
+
   void _volver() {
     if (context.canPop()) {
       context.pop();
@@ -111,6 +124,8 @@ class _ProductoViewState extends State<ProductoView> {
                 _seccionDatos(vm, web),
                 const SizedBox(height: 18),
                 _seccionPrecios(vm, web),
+                const SizedBox(height: 18),
+                _SeccionCodigos(vm: vm, onAsociar: _asociarCodigo),
                 if (vm.error != null) ...[
                   const SizedBox(height: 16),
                   _Mensaje(texto: vm.error!, esError: true),
@@ -285,6 +300,233 @@ class _Mensaje extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Sección 3 "Códigos del producto" (mockup `mProducto`): los códigos ya
+/// asociados, el pendiente de un producto nuevo y "Asociar código".
+class _SeccionCodigos extends StatelessWidget {
+  const _SeccionCodigos({required this.vm, required this.onAsociar});
+
+  final ProductoViewModel vm;
+  final VoidCallback onAsociar;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final secundario = tema.textTheme.bodyMedium?.copyWith(
+      color: tema.colorScheme.onSurfaceVariant,
+    );
+    final pendiente = vm.codigoPendiente;
+    final codigos = vm.codigos;
+    return SeccionNumerada(
+      numero: 3,
+      titulo: 'Códigos del producto',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (codigos.isEmpty && pendiente == null)
+            Text(
+              'Asocie el código de barras o QR del empaque para encontrarlo '
+              'con el lector.',
+              style: secundario,
+            ),
+          for (final c in codigos)
+            _FilaCodigo(
+              key: Key('producto_codigo_${c.getValor()}'),
+              valor: c.getValor(),
+              detalle: nombreFormato(c.getFormato()),
+              esQr: c.getFormato() == FormatoCodigo.qr,
+            ),
+          if (pendiente != null)
+            _FilaCodigo(
+              key: const Key('producto_codigo_pendiente'),
+              valor: pendiente,
+              detalle: 'Se asociará al guardar el producto',
+              esQr: false,
+              onDescartar: vm.guardando ? null : vm.descartarCodigoPendiente,
+            ),
+          const SizedBox(height: 12),
+          BotonSecundario(
+            key: const Key('producto_asociar_codigo'),
+            texto: codigos.isEmpty && pendiente == null
+                ? 'Asociar código'
+                : 'Asociar otro código',
+            icono: Icons.qr_code_scanner,
+            expandido: true,
+            onPressed: vm.guardando ? null : onAsociar,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilaCodigo extends StatelessWidget {
+  const _FilaCodigo({
+    super.key,
+    required this.valor,
+    required this.detalle,
+    required this.esQr,
+    this.onDescartar,
+  });
+
+  final String valor;
+  final String detalle;
+  final bool esQr;
+
+  /// Solo para el código pendiente, que todavía no se ha guardado.
+  final VoidCallback? onDescartar;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 64),
+        padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+        decoration: BoxDecoration(
+          color: esquema.surface,
+          borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+          border: Border.all(color: esquema.outline),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              esQr ? Icons.qr_code_2 : Icons.qr_code_scanner,
+              color: esquema.primary,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    valor,
+                    style: tema.textTheme.bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w700)
+                        .cifrasTabulares,
+                  ),
+                  Text(
+                    detalle,
+                    style: tema.textTheme.bodySmall?.copyWith(
+                      color: esquema.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onDescartar != null)
+              IconButton(
+                key: const Key('producto_descartar_codigo'),
+                tooltip: 'No asociar este código',
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                onPressed: onDescartar,
+                icon: const Icon(Icons.close),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Diálogo "Asociar código": el lector 2D en modo teclado escribe en el campo
+/// y oprime Enter; también se puede escribir a mano o, en la app Android,
+/// leer con la cámara. Devuelve el texto, o null si se cancela.
+class _DialogoCodigo extends StatefulWidget {
+  const _DialogoCodigo();
+
+  @override
+  State<_DialogoCodigo> createState() => _DialogoCodigoState();
+}
+
+class _DialogoCodigoState extends State<_DialogoCodigo> {
+  final _valor = TextEditingController();
+  final _foco = FocusNode();
+  String? _aviso;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listo para que el lector 2D escriba sin tocar el campo.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _foco.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _valor.dispose();
+    _foco.dispose();
+    super.dispose();
+  }
+
+  void _aceptar() => Navigator.of(context).pop(_valor.text);
+
+  Future<void> _leerConCamara() async {
+    final resultado = await leerCodigoConCamara(context);
+    if (!mounted) return;
+    switch (resultado) {
+      case null:
+        return;
+      case LecturaFallida():
+        setState(() => _aviso = 'No se pudo usar la cámara. Escriba el código');
+      case LecturaLeida(:final texto):
+        Navigator.of(context).pop(texto);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Asociar código'),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CampoGip(
+              etiqueta: 'Código de barras o QR',
+              controlador: _valor,
+              campoKey: const Key('producto_valor_codigo'),
+              focusNode: _foco,
+              icono: Icons.qr_code_scanner,
+              ayuda: 'Dispare el lector o escriba el código',
+              error: _aviso,
+              accionTeclado: TextInputAction.done,
+              onSubmitted: (_) => _aceptar(),
+            ),
+            if (camaraDisponible) ...[
+              const SizedBox(height: 12),
+              BotonSecundario(
+                key: const Key('producto_codigo_camara'),
+                texto: 'Leer con la cámara',
+                icono: Icons.photo_camera_outlined,
+                expandido: true,
+                onPressed: _leerConCamara,
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        BotonSecundario(
+          texto: 'Cancelar',
+          sinBorde: true,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        BotonPrimario(
+          key: const Key('producto_confirmar_codigo'),
+          texto: 'Asociar',
+          compacto: true,
+          onPressed: _aceptar,
+        ),
+      ],
     );
   }
 }

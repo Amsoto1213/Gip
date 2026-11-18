@@ -2,6 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
@@ -52,11 +53,24 @@ void main() {
   Future<void> escribir(WidgetTester tester, String campo, String texto) =>
       tester.enterText(find.byKey(Key('producto_$campo')), texto);
 
-  /// El botón va al final de la lista: baja hasta él.
-  Future<void> bajarHasta(WidgetTester tester, Finder objetivo) =>
+  /// El botón va al final de la lista: baja hasta él. `scrollUntilVisible` se
+  /// detiene en cuanto la lista lo construye, aunque quede fuera de la
+  /// pantalla; `ensureVisible` lo trae a la vista para poder tocarlo.
+  Future<void> bajarHasta(WidgetTester tester, Finder objetivo) async {
+    await tester.scrollUntilVisible(
+      objetivo,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(objetivo);
+    await tester.pumpAndSettle();
+  }
+
+  /// Sube hasta [objetivo] (el título o los primeros campos).
+  Future<void> subirHasta(WidgetTester tester, Finder objetivo) =>
       tester.scrollUntilVisible(
         objetivo,
-        200,
+        -200,
         scrollable: find.byType(Scrollable).first,
       );
 
@@ -85,7 +99,8 @@ void main() {
 
     expect(find.text('Producto creado'), findsOneWidget);
     // El título quedó arriba, fuera de la vista tras bajar al botón.
-    expect(find.text('Editar producto', skipOffstage: false), findsOneWidget);
+    await subirHasta(tester, find.text('Editar producto'));
+    expect(find.text('Editar producto'), findsOneWidget);
 
     final lista = await tester.runAsync(
       () => InventarioRepositorioDrift(base).listarItems(tienda),
@@ -126,14 +141,14 @@ void main() {
       find.text('El código interno ya existe o faltan datos válidos'),
       findsOneWidget,
     );
-    expect(find.text('Producto nuevo', skipOffstage: false), findsOneWidget);
+    await subirHasta(tester, find.text('Producto nuevo'));
+    expect(find.text('Producto nuevo'), findsOneWidget);
   });
 
   testWidgets('en escritorio muestra Cancelar y los precios en una fila', (
     tester,
   ) async {
     await abrir(tester, tamano: const Size(1280, 900));
-    expect(find.text('Cancelar'), findsOneWidget);
     final venta = tester.getTopLeft(
       find.byKey(const Key('producto_precio_venta')),
     );
@@ -141,6 +156,104 @@ void main() {
       find.byKey(const Key('producto_precio_compra')),
     );
     expect(venta.dy, costo.dy);
+    await bajarHasta(tester, find.text('Cancelar'));
+    expect(find.text('Cancelar'), findsOneWidget);
+  });
+
+  testWidgets('asocia un código al producto nuevo al crearlo (CUS-17)', (
+    tester,
+  ) async {
+    await abrir(tester);
+    await escribir(tester, 'codigo', 'LEC-1');
+    await escribir(tester, 'nombre', 'Leche bolsa 1 L');
+    await escribir(tester, 'precio_venta', '4.200');
+
+    await bajarHasta(tester, find.text('Asociar código'));
+    await tester.tap(find.text('Asociar código'));
+    await tester.pumpAndSettle();
+    // El lector 2D en modo teclado escribe en el campo del diálogo.
+    await tester.enterText(
+      find.byKey(const Key('producto_valor_codigo')),
+      '7701234567897',
+    );
+    await tester.tap(find.byKey(const Key('producto_confirmar_codigo')));
+    await tester.pumpAndSettle();
+    expect(find.text('Se asociará al guardar el producto'), findsOneWidget);
+    expect(find.text('Asociar otro código'), findsOneWidget);
+
+    await guardar(tester);
+
+    expect(find.text('Producto creado. Código asociado'), findsOneWidget);
+    expect(find.text('EAN-13'), findsOneWidget);
+    final leido = await tester.runAsync(
+      () =>
+          ProductoRepositorioDrift(base)
+              .buscarPorCodigoProducto(tienda, '7701234567897'),
+    );
+    expect(leido!.getNombre(), 'Leche bolsa 1 L');
+  });
+
+  testWidgets('el código pendiente se puede descartar', (tester) async {
+    await abrir(tester);
+    await bajarHasta(tester, find.text('Asociar código'));
+    await tester.tap(find.text('Asociar código'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('producto_valor_codigo')),
+      'GIP:LEC-1',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.text('GIP:LEC-1'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('producto_descartar_codigo')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('GIP:LEC-1'), findsNothing);
+    expect(find.text('Asociar código'), findsOneWidget);
+  });
+
+  testWidgets('un código repetido muestra el mensaje del diagrama', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final otro = await coordinator.crearProducto(
+        tienda,
+        'ARR-1',
+        'Arroz',
+        UnidadMedida.libra,
+        null,
+        Decimal.parse('2800'),
+      );
+      await coordinator.asociarCodigo(tienda, otro, '7701234567897');
+    });
+    await abrir(tester);
+    await escribir(tester, 'codigo', 'LEC-1');
+    await escribir(tester, 'nombre', 'Leche');
+    await escribir(tester, 'precio_venta', '4.200');
+    await bajarHasta(tester, find.text('Asociar código'));
+    await tester.tap(find.text('Asociar código'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('producto_valor_codigo')),
+      '7701234567897',
+    );
+    await tester.tap(find.byKey(const Key('producto_confirmar_codigo')));
+    await tester.pumpAndSettle();
+
+    await guardar(tester);
+
+    // El producto queda creado; el código no. Los dos mensajes empujan la
+    // lista hacia abajo.
+    await tester.ensureVisible(
+      find.text('Producto creado', skipOffstage: false),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Producto creado'), findsOneWidget);
+    expect(
+      find.text('Ese código ya está asociado a otro producto'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('el costo dice que lo actualiza la entrada (DI-33)', (

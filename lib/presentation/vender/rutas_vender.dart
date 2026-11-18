@@ -57,14 +57,15 @@ StatefulShellBranch ramaVender() => StatefulShellBranch(
       routes: [
         GoRoute(
           path: 'buscar',
-          builder: (context, _) => ChangeNotifierProvider(
+          builder: (context, state) => ChangeNotifierProvider(
             create: (context) => BuscarProductoViewModel(
               context.read<BuscarProductoCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
             ),
-            child: const BuscarProductoView(
+            child: BuscarProductoView(
               modo: ModoBusqueda.seleccionar,
               seccion: 'Vender',
+              abrirCamara: pideCamara(state),
             ),
           ),
         ),
@@ -99,9 +100,14 @@ StatefulShellBranch ramaVender() => StatefulShellBranch(
 );
 
 /// Abre Buscar producto para agregar a la venta. Termina con el producto
-/// elegido, o null si el tendero volvió sin elegir.
-Future<Producto?> elegirProductoParaVender(BuildContext context) =>
-    context.push<Producto>(rutaBuscarParaVender);
+/// elegido, o null si el tendero volvió sin elegir. Con [camara] abre la
+/// cámara al entrar (botón del lector, CUS-17).
+Future<Producto?> elegirProductoParaVender(
+  BuildContext context, {
+  bool camara = false,
+}) => context.push<Producto>(
+  camara ? conCamara(rutaBuscarParaVender) : rutaBuscarParaVender,
+);
 
 /// Abre Cobrar. Termina con verdadero si la venta quedó registrada.
 Future<bool> abrirCobrar(BuildContext context, DatosCobro datos) async =>

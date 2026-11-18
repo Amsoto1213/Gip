@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/comun/leer_codigo.dart';
 import 'package:gip/presentation/comun/barra_busqueda.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
@@ -18,9 +19,11 @@ import 'package:provider/provider.dart';
 class VenderView extends StatelessWidget {
   const VenderView({super.key});
 
-  Future<void> _buscar(BuildContext context) async {
+  /// Abre Buscar producto (CUS-06) y agrega lo elegido. Con [camara] la
+  /// búsqueda abre la cámara al entrar (botón del lector, CUS-17).
+  Future<void> _buscar(BuildContext context, {bool camara = false}) async {
     final vm = context.read<VenderViewModel>();
-    final producto = await elegirProductoParaVender(context);
+    final producto = await elegirProductoParaVender(context, camara: camara);
     if (producto != null) await vm.agregar(producto);
   }
 
@@ -60,6 +63,9 @@ class VenderView extends StatelessWidget {
                   key: const Key('vender_buscar'),
                   pista: 'Buscar producto…',
                   onTap: () => _buscar(context),
+                  onLeerCodigo: camaraDisponible
+                      ? () => _buscar(context, camara: true)
+                      : null,
                 ),
                 if (vm.error != null) ...[
                   const SizedBox(height: 12),

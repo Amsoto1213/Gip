@@ -99,9 +99,17 @@ class ProductoRepositorioFalso implements IProductoRepositorio, Restaurable {
         .toList();
   }
 
+  /// Valores con que se llamó a buscarPorCodigoProducto.
+  final List<String> valoresBuscados = [];
+
+  /// Compara el texto exacto con los códigos de los productos de la tienda.
   @override
-  Future<Producto?> buscarPorCodigoProducto(Tienda tienda, String valor) =>
-      throw UnimplementedError();
+  Future<Producto?> buscarPorCodigoProducto(Tienda tienda, String valor) async {
+    valoresBuscados.add(valor);
+    return _de(tienda).values
+        .where((p) => p.getCodigos().any((c) => c.getValor() == valor))
+        .firstOrNull;
+  }
 
   @override
   Future<List<CodigoProducto>> listarCodigosRepetidos(Tienda tienda) =>

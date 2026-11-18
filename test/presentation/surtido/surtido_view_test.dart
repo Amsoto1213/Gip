@@ -70,10 +70,11 @@ void main() {
       expect(find.text('Todos · 3'), findsOneWidget);
       expect(find.text('Agotados · 1'), findsOneWidget);
       expect(find.text('Por peso'), findsOneWidget);
-      // Sin "Poco", sin valor del inventario y sin lector (DI-32).
+      // Sin "Poco" ni valor del inventario (DI-32). El botón del lector abre
+      // la cámara en la app Android (DI-34); las pruebas corren como Android.
       expect(find.textContaining('Poco'), findsNothing);
       expect(find.textContaining('valor'), findsNothing);
-      expect(find.byTooltip('Leer código con el lector'), findsNothing);
+      expect(find.byTooltip('Leer código con la cámara'), findsOneWidget);
 
       await tester.ensureVisible(fila(queso.getId()));
       expect(find.text('Aceite 1 L'), findsOneWidget);

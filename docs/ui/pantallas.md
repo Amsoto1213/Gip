@@ -32,7 +32,7 @@ Exporten cada tablero como PNG a `docs/ui/mockups/` con el nombre de la columna 
 | Negocio | Exportar | `mExportar` | `wExportar` | CUS-16 |
 | Negocio | Sincronización | `mConflictos` | `wConflictos` | CUS-22 |
 
-CUS-17: según el diagrama, la cámara se usa solo en la app Android (`mobile_scanner`); en la web se lee con el lector 2D. Si la lectura falla (lector desconectado, permiso de cámara negado o código ilegible) se muestra el mensaje y se sigue con la búsqueda por nombre (CUS-06).
+CUS-17: según el diagrama, la cámara se usa solo en la app Android (`mobile_scanner`); en la web se lee con el lector 2D. Si la lectura falla (lector desconectado, permiso de cámara negado o código ilegible) se muestra el mensaje y se sigue con la búsqueda por nombre (CUS-06). Implementado (DI-34): el lector 2D en modo teclado escribe en el campo de Buscar producto y el Enter busca por código; en Android, el botón del lector de Vender, Surtido y Buscar producto abre la pantalla `Escanear` (`LeerCodigoView`), sin la tarjeta del Bluetooth ni la del producto leído. Los códigos se asocian en Producto, sección "Códigos del producto".
 
 La pantalla de inicio de sesión no está en los mockups: hacerla simple con los tokens de `tokens.md` (logo o nombre, dos campos, botón primario verde).
 

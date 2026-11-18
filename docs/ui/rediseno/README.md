@@ -58,7 +58,8 @@ ignora; lo que importa son los estilos y la estructura.
    Variante resaltada (borde `error`, para un valor por revisar o no válido, con el mensaje fuera del
    campo), cifras alineadas a la derecha y letra propia (`estiloTexto`, Archivo 800 en cantidades).
 5. **BarraBusqueda**: campo grande de búsqueda (58 px web / 52 px móvil) con el botón oscuro del lector al
-   lado. Mientras no exista CUS-17, el botón del lector no se muestra.
+   lado. El botón solo se muestra en la app Android, donde abre la cámara (CUS-17, DI-34); en la web el
+   lector 2D escribe en el campo de Buscar producto.
 6. **TarjetaAccion**: caja de ícono `primarioSuave` con el ícono en `primario`, título 17 px peso 700 y una
    línea de descripción. En móvil, versión vertical (ícono arriba, título abajo).
 7. **ChipEstado**: "Poco" (alerta) y "Agotado" (error), en forma de píldora.

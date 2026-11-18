@@ -375,7 +375,7 @@ void main() {
       );
       await tester.tap(find.text('Buscar en el surtido…'));
       expect(tocado, 1);
-      expect(find.byTooltip('Leer código con el lector'), findsNothing);
+      expect(find.byTooltip('Leer código con la cámara'), findsNothing);
       expect(tester.getSize(find.byType(BarraBusqueda)).height, 52);
     });
 
@@ -393,7 +393,7 @@ void main() {
         ),
       );
       expect(tester.getSize(find.byType(AnimatedContainer)).height, 58);
-      await tester.tap(find.byTooltip('Leer código con el lector'));
+      await tester.tap(find.byTooltip('Leer código con la cámara'));
       expect(leido, 1);
     });
 
