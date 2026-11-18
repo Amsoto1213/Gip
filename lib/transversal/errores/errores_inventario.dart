@@ -14,6 +14,19 @@ class ExcepcionDatosProductoNoValidos extends ExcepcionNegocio {
     : super('Faltan datos válidos del producto');
 }
 
+/// El código leído o escrito ya está asociado a otro producto de la tienda
+/// (CUS-18, break "Código repetido", paso 25; DA-41).
+class ExcepcionCodigoRepetido extends ExcepcionNegocio {
+  const ExcepcionCodigoRepetido()
+    : super('Ese código ya está asociado a otro producto');
+}
+
+/// Se pidió asociar un código vacío (CUS-18 "Asociar código"; no está en el
+/// diagrama, DI-34).
+class ExcepcionCodigoVacio extends ExcepcionNegocio {
+  const ExcepcionCodigoVacio() : super('Escriba o lea el código');
+}
+
 /// Cantidad <= 0 o costo negativo en una entrada de mercancía (CUS-01, pasos
 /// 15 a 17).
 class ExcepcionDatosEntradaNoValidos extends ExcepcionNegocio {
