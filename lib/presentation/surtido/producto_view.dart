@@ -226,7 +226,7 @@ class _ProductoViewState extends State<ProductoView> {
       campoKey: const Key('producto_precio_compra'),
       icono: Icons.payments_outlined,
       prefijo: r'$ ',
-      ayuda: 'Sin costo, la ganancia sale incompleta.',
+      ayuda: 'Cada entrada de mercancía lo actualiza con su costo.',
       habilitado: habilitado,
       tipoTeclado: const TextInputType.numberWithOptions(decimal: true),
     );

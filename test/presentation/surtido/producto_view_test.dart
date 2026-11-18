@@ -143,6 +143,16 @@ void main() {
     expect(venta.dy, costo.dy);
   });
 
+  testWidgets('el costo dice que lo actualiza la entrada (DI-33)', (
+    tester,
+  ) async {
+    await abrir(tester);
+    expect(
+      find.text('Cada entrada de mercancía lo actualiza con su costo.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('las áreas táctiles miden al menos 44 px (RNF-19)', (
     tester,
   ) async {
