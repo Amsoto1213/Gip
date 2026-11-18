@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
@@ -9,23 +10,46 @@ import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 
 /// [IProductoRepositorio] sobre la base local (drift). Toda consulta filtra por
-/// `tienda_id`.
-///
-/// Los códigos de barras o QR todavía no se guardan: la tabla
-/// `codigos_producto` llega con "Asociar código" (CUS-17). Mientras tanto los
-/// productos se leen sin códigos.
+/// `tienda_id`. Los productos se leen con sus códigos de barras o QR
+/// (`codigos_producto`, CUS-17).
 class ProductoRepositorioDrift implements IProductoRepositorio {
   ProductoRepositorioDrift(this._base);
 
   final BaseLocalDrift _base;
 
   static const _tabla = 'productos';
+  static const _tablaCodigos = 'codigos_producto';
 
   SimpleSelectStatement<$ProductosTable, FilaProducto> _deTienda(
     Tienda tienda,
   ) =>
       _base.select(_base.productos)
         ..where((p) => p.tiendaId.equals(tienda.getId()));
+
+  /// Convierte las filas en productos con sus códigos, en el orden de
+  /// asociación. Una sola consulta para todos los productos.
+  Future<List<Producto>> _conCodigos(List<FilaProducto> filas) async {
+    if (filas.isEmpty) return const [];
+    final codigos =
+        await (_base.select(_base.codigosProducto)
+              ..where((c) => c.productoId.isIn(filas.map((f) => f.id)))
+              ..orderBy([
+                (c) => OrderingTerm.asc(c.creadoEn),
+                (c) => OrderingTerm.asc(c.id),
+              ]))
+            .get();
+    final porProducto = groupBy(
+      codigos,
+      (FilaCodigoProducto c) => c.productoId,
+    );
+    return [
+      for (final f in filas)
+        MapeoProducto.aEntidad(f, codigos: porProducto[f.id] ?? const []),
+    ];
+  }
+
+  Future<Producto?> _unoConCodigos(FilaProducto? fila) async =>
+      fila == null ? null : (await _conCodigos([fila])).single;
 
   @override
   Future<List<Producto>> buscarPorNombre(Tienda tienda, String texto) async {
@@ -35,7 +59,7 @@ class ProductoRepositorioDrift implements IProductoRepositorio {
               ..where((p) => p.nombreNormalizado.like(patron, escapeChar: r'\'))
               ..orderBy([(p) => OrderingTerm.asc(p.nombreNormalizado)]))
             .get();
-    return filas.map(MapeoProducto.aEntidad).toList();
+    return _conCodigos(filas);
   }
 
   @override
@@ -45,28 +69,46 @@ class ProductoRepositorioDrift implements IProductoRepositorio {
               ..where((p) => p.codigo.equals(codigo))
               ..limit(1))
             .get();
-    return filas.isEmpty ? null : MapeoProducto.aEntidad(filas.single);
+    return _unoConCodigos(filas.firstOrNull);
   }
 
-  /// TODO(CUS-17): buscar en `codigos_producto`. Sin esa tabla ningún producto
-  /// tiene códigos asociados.
+  /// Compara el texto exacto de la lectura (mayúsculas y prefijos incluidos)
+  /// con los códigos de la tienda (DA-41). Si tras sincronizar un valor quedó
+  /// en dos productos (CUS-22), devuelve el del código asociado primero.
   @override
-  Future<Producto?> buscarPorCodigoProducto(
-    Tienda tienda,
-    String valor,
-  ) async => null;
+  Future<Producto?> buscarPorCodigoProducto(Tienda tienda, String valor) async {
+    final c = _base.codigosProducto;
+    final consulta =
+        _base.select(_base.productos).join([
+            innerJoin(c, c.productoId.equalsExp(_base.productos.id)),
+          ])
+          ..where(
+            c.tiendaId.equals(tienda.getId()) &
+                _base.productos.tiendaId.equals(tienda.getId()) &
+                c.valor.equals(valor),
+          )
+          ..orderBy([OrderingTerm.asc(c.creadoEn), OrderingTerm.asc(c.id)])
+          ..limit(1);
+    final fila = await consulta.getSingleOrNull();
+    return _unoConCodigos(fila?.readTable(_base.productos));
+  }
 
   @override
   Future<List<Producto>> listar(Tienda tienda) async {
     final filas = await (_deTienda(
       tienda,
     )..orderBy([(p) => OrderingTerm.asc(p.nombreNormalizado)])).get();
-    return filas.map(MapeoProducto.aEntidad).toList();
+    return _conCodigos(filas);
   }
 
-  /// Crea o actualiza el producto y lo anota en `cola_pendientes` en la misma
-  /// transacción (DA-33). Si ya hay una transacción abierta (unidad de trabajo),
-  /// se une a ella.
+  /// Crea o actualiza el producto y agrega los códigos que todavía no estén
+  /// guardados; cada escritura se anota en `cola_pendientes` en la misma
+  /// transacción (DA-33). Si ya hay una transacción abierta (unidad de
+  /// trabajo), se une a ella.
+  ///
+  /// Nunca borra códigos: un producto leído por otro repositorio llega sin
+  /// ellos. Quitar un código (CUS-22, `quitarCodigo`) llega con su caso de
+  /// uso (DI-34).
   @override
   Future<void> guardar(Tienda tienda, Producto producto) =>
       _base.transaction(() async {
@@ -81,10 +123,37 @@ class ProductoRepositorioDrift implements IProductoRepositorio {
           registroId: producto.getId(),
           operacion: existe ? OperacionCola.actualizar : OperacionCola.insertar,
         );
+        await _agregarCodigosNuevos(tienda, producto);
       });
 
-  /// TODO(CUS-17 / CUS-22): sin `codigos_producto` no puede haber códigos
-  /// repetidos.
+  Future<void> _agregarCodigosNuevos(Tienda tienda, Producto producto) async {
+    final guardados =
+        (await (_base.selectOnly(_base.codigosProducto)
+                  ..addColumns([_base.codigosProducto.id])
+                  ..where(
+                    _base.codigosProducto.productoId.equals(producto.getId()),
+                  ))
+                .map((f) => f.read(_base.codigosProducto.id)!)
+                .get())
+            .toSet();
+    for (final codigo in producto.getCodigos()) {
+      if (guardados.contains(codigo.getId())) continue;
+      await _base
+          .into(_base.codigosProducto)
+          .insert(MapeoProducto.codigoAFila(tienda, producto, codigo));
+      await anotarEnCola(
+        _base,
+        tiendaId: tienda.getId(),
+        tabla: _tablaCodigos,
+        registroId: codigo.getId(),
+        operacion: OperacionCola.insertar,
+      );
+    }
+  }
+
+  /// TODO(CUS-22): códigos cuyo valor quedó en más de un producto al
+  /// sincronizar. Sin sincronización todavía no puede pasar: la regla de no
+  /// repetir la valida `ServicioCatalogo.asociarCodigo`.
   @override
   Future<List<CodigoProducto>> listarCodigosRepetidos(Tienda tienda) async =>
       const [];
@@ -94,7 +163,7 @@ class ProductoRepositorioDrift implements IProductoRepositorio {
     final fila = await (_deTienda(
       tienda,
     )..where((p) => p.id.equals(id))).getSingleOrNull();
-    return fila == null ? null : MapeoProducto.aEntidad(fila);
+    return _unoConCodigos(fila);
   }
 
   static String _escaparLike(String texto) =>

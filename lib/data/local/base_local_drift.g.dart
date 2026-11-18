@@ -6131,6 +6131,421 @@ class AbonosCompanion extends UpdateCompanion<FilaAbono> {
   }
 }
 
+class $CodigosProductoTable extends CodigosProducto
+    with TableInfo<$CodigosProductoTable, FilaCodigoProducto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CodigosProductoTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productoIdMeta = const VerificationMeta(
+    'productoId',
+  );
+  @override
+  late final GeneratedColumn<String> productoId = GeneratedColumn<String>(
+    'producto_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES productos (id)',
+    ),
+  );
+  static const VerificationMeta _formatoMeta = const VerificationMeta(
+    'formato',
+  );
+  @override
+  late final GeneratedColumn<String> formato = GeneratedColumn<String>(
+    'formato',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valorMeta = const VerificationMeta('valor');
+  @override
+  late final GeneratedColumn<String> valor = GeneratedColumn<String>(
+    'valor',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> creadoEn =
+      GeneratedColumn<DateTime>(
+        'creado_en',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($CodigosProductoTable.$convertercreadoEn);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    productoId,
+    formato,
+    valor,
+    creadoEn,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'codigos_producto';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaCodigoProducto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('producto_id')) {
+      context.handle(
+        _productoIdMeta,
+        productoId.isAcceptableOrUnknown(data['producto_id']!, _productoIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productoIdMeta);
+    }
+    if (data.containsKey('formato')) {
+      context.handle(
+        _formatoMeta,
+        formato.isAcceptableOrUnknown(data['formato']!, _formatoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_formatoMeta);
+    }
+    if (data.containsKey('valor')) {
+      context.handle(
+        _valorMeta,
+        valor.isAcceptableOrUnknown(data['valor']!, _valorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaCodigoProducto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaCodigoProducto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      productoId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}producto_id'],
+      )!,
+      formato: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}formato'],
+      )!,
+      valor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}valor'],
+      )!,
+      creadoEn: $CodigosProductoTable.$convertercreadoEn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}creado_en'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $CodigosProductoTable createAlias(String alias) {
+    return $CodigosProductoTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertercreadoEn =
+      const ConversorFechaUtc();
+}
+
+class FilaCodigoProducto extends DataClass
+    implements Insertable<FilaCodigoProducto> {
+  final String id;
+  final String tiendaId;
+  final String productoId;
+  final String formato;
+  final String valor;
+  final DateTime creadoEn;
+  const FilaCodigoProducto({
+    required this.id,
+    required this.tiendaId,
+    required this.productoId,
+    required this.formato,
+    required this.valor,
+    required this.creadoEn,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['producto_id'] = Variable<String>(productoId);
+    map['formato'] = Variable<String>(formato);
+    map['valor'] = Variable<String>(valor);
+    {
+      map['creado_en'] = Variable<DateTime>(
+        $CodigosProductoTable.$convertercreadoEn.toSql(creadoEn),
+      );
+    }
+    return map;
+  }
+
+  CodigosProductoCompanion toCompanion(bool nullToAbsent) {
+    return CodigosProductoCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      productoId: Value(productoId),
+      formato: Value(formato),
+      valor: Value(valor),
+      creadoEn: Value(creadoEn),
+    );
+  }
+
+  factory FilaCodigoProducto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaCodigoProducto(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      productoId: serializer.fromJson<String>(json['productoId']),
+      formato: serializer.fromJson<String>(json['formato']),
+      valor: serializer.fromJson<String>(json['valor']),
+      creadoEn: serializer.fromJson<DateTime>(json['creadoEn']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'productoId': serializer.toJson<String>(productoId),
+      'formato': serializer.toJson<String>(formato),
+      'valor': serializer.toJson<String>(valor),
+      'creadoEn': serializer.toJson<DateTime>(creadoEn),
+    };
+  }
+
+  FilaCodigoProducto copyWith({
+    String? id,
+    String? tiendaId,
+    String? productoId,
+    String? formato,
+    String? valor,
+    DateTime? creadoEn,
+  }) => FilaCodigoProducto(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    productoId: productoId ?? this.productoId,
+    formato: formato ?? this.formato,
+    valor: valor ?? this.valor,
+    creadoEn: creadoEn ?? this.creadoEn,
+  );
+  FilaCodigoProducto copyWithCompanion(CodigosProductoCompanion data) {
+    return FilaCodigoProducto(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      productoId: data.productoId.present
+          ? data.productoId.value
+          : this.productoId,
+      formato: data.formato.present ? data.formato.value : this.formato,
+      valor: data.valor.present ? data.valor.value : this.valor,
+      creadoEn: data.creadoEn.present ? data.creadoEn.value : this.creadoEn,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaCodigoProducto(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('productoId: $productoId, ')
+          ..write('formato: $formato, ')
+          ..write('valor: $valor, ')
+          ..write('creadoEn: $creadoEn')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, tiendaId, productoId, formato, valor, creadoEn);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaCodigoProducto &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.productoId == this.productoId &&
+          other.formato == this.formato &&
+          other.valor == this.valor &&
+          other.creadoEn == this.creadoEn);
+}
+
+class CodigosProductoCompanion extends UpdateCompanion<FilaCodigoProducto> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> productoId;
+  final Value<String> formato;
+  final Value<String> valor;
+  final Value<DateTime> creadoEn;
+  final Value<int> rowid;
+  const CodigosProductoCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.productoId = const Value.absent(),
+    this.formato = const Value.absent(),
+    this.valor = const Value.absent(),
+    this.creadoEn = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CodigosProductoCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String productoId,
+    required String formato,
+    required String valor,
+    required DateTime creadoEn,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       productoId = Value(productoId),
+       formato = Value(formato),
+       valor = Value(valor),
+       creadoEn = Value(creadoEn);
+  static Insertable<FilaCodigoProducto> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? productoId,
+    Expression<String>? formato,
+    Expression<String>? valor,
+    Expression<DateTime>? creadoEn,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (productoId != null) 'producto_id': productoId,
+      if (formato != null) 'formato': formato,
+      if (valor != null) 'valor': valor,
+      if (creadoEn != null) 'creado_en': creadoEn,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CodigosProductoCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? productoId,
+    Value<String>? formato,
+    Value<String>? valor,
+    Value<DateTime>? creadoEn,
+    Value<int>? rowid,
+  }) {
+    return CodigosProductoCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      productoId: productoId ?? this.productoId,
+      formato: formato ?? this.formato,
+      valor: valor ?? this.valor,
+      creadoEn: creadoEn ?? this.creadoEn,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (productoId.present) {
+      map['producto_id'] = Variable<String>(productoId.value);
+    }
+    if (formato.present) {
+      map['formato'] = Variable<String>(formato.value);
+    }
+    if (valor.present) {
+      map['valor'] = Variable<String>(valor.value);
+    }
+    if (creadoEn.present) {
+      map['creado_en'] = Variable<DateTime>(
+        $CodigosProductoTable.$convertercreadoEn.toSql(creadoEn.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CodigosProductoCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('productoId: $productoId, ')
+          ..write('formato: $formato, ')
+          ..write('valor: $valor, ')
+          ..write('creadoEn: $creadoEn, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -6153,6 +6568,9 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   late final $ClientesTable clientes = $ClientesTable(this);
   late final $FiadosTable fiados = $FiadosTable(this);
   late final $AbonosTable abonos = $AbonosTable(this);
+  late final $CodigosProductoTable codigosProducto = $CodigosProductoTable(
+    this,
+  );
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -6229,6 +6647,14 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'abonos_fiado_idx',
     'CREATE INDEX abonos_fiado_idx ON abonos (fiado_id)',
   );
+  late final Index codigosProductoTiendaValorIdx = Index(
+    'codigos_producto_tienda_valor_idx',
+    'CREATE INDEX codigos_producto_tienda_valor_idx ON codigos_producto (tienda_id, valor)',
+  );
+  late final Index codigosProductoProductoIdx = Index(
+    'codigos_producto_producto_idx',
+    'CREATE INDEX codigos_producto_producto_idx ON codigos_producto (producto_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6247,6 +6673,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     clientes,
     fiados,
     abonos,
+    codigosProducto,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -6266,6 +6693,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     fiadosClienteIdx,
     abonosTiendaIdx,
     abonosFiadoIdx,
+    codigosProductoTiendaValorIdx,
+    codigosProductoProductoIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6592,6 +7021,27 @@ final class $$ProductosTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$CodigosProductoTable, List<FilaCodigoProducto>>
+  _codigosProductoRefsTable(_$BaseLocalDrift db) =>
+      MultiTypedResultKey.fromTable(
+        db.codigosProducto,
+        aliasName: 'productos__id__codigos_producto__producto_id',
+      );
+
+  $$CodigosProductoTableProcessedTableManager get codigosProductoRefs {
+    final manager = $$CodigosProductoTableTableManager(
+      $_db,
+      $_db.codigosProducto,
+    ).filter((f) => f.productoId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _codigosProductoRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ProductosTableFilterComposer
@@ -6692,6 +7142,31 @@ class $$ProductosTableFilterComposer
           }) => $$VentasPerdidasTableFilterComposer(
             $db: $db,
             $table: $db.ventasPerdidas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> codigosProductoRefs(
+    Expression<bool> Function($$CodigosProductoTableFilterComposer f) f,
+  ) {
+    final $$CodigosProductoTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.codigosProducto,
+      getReferencedColumn: (t) => t.productoId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CodigosProductoTableFilterComposer(
+            $db: $db,
+            $table: $db.codigosProducto,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6855,6 +7330,31 @@ class $$ProductosTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> codigosProductoRefs<T extends Object>(
+    Expression<T> Function($$CodigosProductoTableAnnotationComposer a) f,
+  ) {
+    final $$CodigosProductoTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.codigosProducto,
+      getReferencedColumn: (t) => t.productoId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CodigosProductoTableAnnotationComposer(
+            $db: $db,
+            $table: $db.codigosProducto,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ProductosTableTableManager
@@ -6873,6 +7373,7 @@ class $$ProductosTableTableManager
           PrefetchHooks Function({
             bool itemsInventarioRefs,
             bool ventasPerdidasRefs,
+            bool codigosProductoRefs,
           })
         > {
   $$ProductosTableTableManager(_$BaseLocalDrift db, $ProductosTable table)
@@ -6943,12 +7444,17 @@ class $$ProductosTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({itemsInventarioRefs = false, ventasPerdidasRefs = false}) {
+              ({
+                itemsInventarioRefs = false,
+                ventasPerdidasRefs = false,
+                codigosProductoRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (itemsInventarioRefs) db.itemsInventario,
                     if (ventasPerdidasRefs) db.ventasPerdidas,
+                    if (codigosProductoRefs) db.codigosProducto,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6993,6 +7499,26 @@ class $$ProductosTableTableManager
                           referencedColumn: 'producto_id',
                           typedResults: items,
                         ),
+                      if (codigosProductoRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaProducto,
+                          $ProductosTable,
+                          FilaCodigoProducto,
+                          $CodigosProductoTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductosTableReferences
+                              ._codigosProductoRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductosTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).codigosProductoRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'producto_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -7016,6 +7542,7 @@ typedef $$ProductosTableProcessedTableManager =
       PrefetchHooks Function({
         bool itemsInventarioRefs,
         bool ventasPerdidasRefs,
+        bool codigosProductoRefs,
       })
     >;
 typedef $$ItemsInventarioTableCreateCompanionBuilder =
@@ -11398,6 +11925,352 @@ typedef $$AbonosTableProcessedTableManager =
       FilaAbono,
       PrefetchHooks Function()
     >;
+typedef $$CodigosProductoTableCreateCompanionBuilder =
+    CodigosProductoCompanion Function({
+      required String id,
+      required String tiendaId,
+      required String productoId,
+      required String formato,
+      required String valor,
+      required DateTime creadoEn,
+      Value<int> rowid,
+    });
+typedef $$CodigosProductoTableUpdateCompanionBuilder =
+    CodigosProductoCompanion Function({
+      Value<String> id,
+      Value<String> tiendaId,
+      Value<String> productoId,
+      Value<String> formato,
+      Value<String> valor,
+      Value<DateTime> creadoEn,
+      Value<int> rowid,
+    });
+
+final class $$CodigosProductoTableReferences
+    extends
+        BaseReferences<
+          _$BaseLocalDrift,
+          $CodigosProductoTable,
+          FilaCodigoProducto
+        > {
+  $$CodigosProductoTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProductosTable _productoIdTable(_$BaseLocalDrift db) =>
+      db.productos.createAlias('codigos_producto__producto_id__productos__id');
+
+  $$ProductosTableProcessedTableManager get productoId {
+    final $_column = $_itemColumn<String>('producto_id')!;
+
+    final manager = $$ProductosTableTableManager(
+      $_db,
+      $_db.productos,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productoIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CodigosProductoTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $CodigosProductoTable> {
+  $$CodigosProductoTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get formato => $composableBuilder(
+    column: $table.formato,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valor => $composableBuilder(
+    column: $table.valor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get creadoEn =>
+      $composableBuilder(
+        column: $table.creadoEn,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$ProductosTableFilterComposer get productoId {
+    final $$ProductosTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productoId,
+      referencedTable: $db.productos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductosTableFilterComposer(
+            $db: $db,
+            $table: $db.productos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CodigosProductoTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $CodigosProductoTable> {
+  $$CodigosProductoTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get formato => $composableBuilder(
+    column: $table.formato,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valor => $composableBuilder(
+    column: $table.valor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get creadoEn => $composableBuilder(
+    column: $table.creadoEn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProductosTableOrderingComposer get productoId {
+    final $$ProductosTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productoId,
+      referencedTable: $db.productos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductosTableOrderingComposer(
+            $db: $db,
+            $table: $db.productos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CodigosProductoTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $CodigosProductoTable> {
+  $$CodigosProductoTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get formato =>
+      $composableBuilder(column: $table.formato, builder: (column) => column);
+
+  GeneratedColumn<String> get valor =>
+      $composableBuilder(column: $table.valor, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get creadoEn =>
+      $composableBuilder(column: $table.creadoEn, builder: (column) => column);
+
+  $$ProductosTableAnnotationComposer get productoId {
+    final $$ProductosTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productoId,
+      referencedTable: $db.productos,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductosTableAnnotationComposer(
+            $db: $db,
+            $table: $db.productos,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CodigosProductoTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $CodigosProductoTable,
+          FilaCodigoProducto,
+          $$CodigosProductoTableFilterComposer,
+          $$CodigosProductoTableOrderingComposer,
+          $$CodigosProductoTableAnnotationComposer,
+          $$CodigosProductoTableCreateCompanionBuilder,
+          $$CodigosProductoTableUpdateCompanionBuilder,
+          (FilaCodigoProducto, $$CodigosProductoTableReferences),
+          FilaCodigoProducto,
+          PrefetchHooks Function({bool productoId})
+        > {
+  $$CodigosProductoTableTableManager(
+    _$BaseLocalDrift db,
+    $CodigosProductoTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CodigosProductoTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CodigosProductoTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CodigosProductoTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> productoId = const Value.absent(),
+                Value<String> formato = const Value.absent(),
+                Value<String> valor = const Value.absent(),
+                Value<DateTime> creadoEn = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CodigosProductoCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                productoId: productoId,
+                formato: formato,
+                valor: valor,
+                creadoEn: creadoEn,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String productoId,
+                required String formato,
+                required String valor,
+                required DateTime creadoEn,
+                Value<int> rowid = const Value.absent(),
+              }) => CodigosProductoCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                productoId: productoId,
+                formato: formato,
+                valor: valor,
+                creadoEn: creadoEn,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CodigosProductoTable, FilaCodigoProducto>(table),
+                  $$CodigosProductoTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({productoId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (productoId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.productoId,
+                        referencedTable: $$CodigosProductoTableReferences
+                            ._productoIdTable(db),
+                        referencedColumn: $$CodigosProductoTableReferences
+                            ._productoIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CodigosProductoTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $CodigosProductoTable,
+      FilaCodigoProducto,
+      $$CodigosProductoTableFilterComposer,
+      $$CodigosProductoTableOrderingComposer,
+      $$CodigosProductoTableAnnotationComposer,
+      $$CodigosProductoTableCreateCompanionBuilder,
+      $$CodigosProductoTableUpdateCompanionBuilder,
+      (FilaCodigoProducto, $$CodigosProductoTableReferences),
+      FilaCodigoProducto,
+      PrefetchHooks Function({bool productoId})
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -11431,4 +12304,6 @@ class $BaseLocalDriftManager {
       $$FiadosTableTableManager(_db, _db.fiados);
   $$AbonosTableTableManager get abonos =>
       $$AbonosTableTableManager(_db, _db.abonos);
+  $$CodigosProductoTableTableManager get codigosProducto =>
+      $$CodigosProductoTableTableManager(_db, _db.codigosProducto);
 }

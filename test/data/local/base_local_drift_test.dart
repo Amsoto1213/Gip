@@ -70,8 +70,14 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 10 (CUS-21).
+    /// Quita lo que agregó la versión 11 (CUS-17).
+    Future<void> bajarDeLaVersion11(BaseLocalDrift base) async {
+      await base.customStatement('DROP TABLE codigos_producto');
+    }
+
+    /// Quita lo que agregó la versión 10 (CUS-21), y antes la 11.
     Future<void> bajarDeLaVersion10(BaseLocalDrift base) async {
+      await bajarDeLaVersion11(base);
       await base.customStatement(
         'ALTER TABLE clientes DROP COLUMN eliminado_en',
       );
@@ -120,10 +126,11 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 10);
+      expect(actual.schemaVersion, 11);
       expect(
         await tablas(actual),
         containsAll([
+          'codigos_producto',
           'movimientos_inventario',
           'movimientos_inventario_tienda_idx',
           'movimientos_inventario_item_tipo_fecha_idx',
@@ -140,7 +147,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 10);
+      expect(version.read<int>('user_version'), 11);
       await actual.close();
     });
 
@@ -360,6 +367,36 @@ void main() {
       expect(filas.single.nombre, 'Ana');
       expect(filas.single.eliminadoEn, isNull);
       await v10.close();
+    });
+
+    test('de la versión 10 a la 11 crea codigos_producto sin perder '
+        'productos', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v10 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion11(v10);
+      await v10.customStatement(
+        "INSERT INTO productos (id, tienda_id, codigo, nombre, "
+        "nombre_normalizado, unidad_medida, precio_venta, actualizado_en) "
+        "VALUES ('p1', 't1', 'LEC-1', 'Leche', 'leche', 'UNIDAD', '4200', "
+        "'2026-11-14T10:00:00.000Z')",
+      );
+      await v10.customStatement('PRAGMA user_version = 10');
+      expect(await tablas(v10), isNot(contains('codigos_producto')));
+      await v10.close();
+
+      final v11 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(
+        await tablas(v11),
+        containsAll([
+          'codigos_producto',
+          'codigos_producto_tienda_valor_idx',
+          'codigos_producto_producto_idx',
+        ]),
+      );
+      expect((await v11.select(v11.productos).get()).single.nombre, 'Leche');
+      expect(await v11.select(v11.codigosProducto).get(), isEmpty);
+      await v11.close();
     });
   });
 }
