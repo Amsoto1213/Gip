@@ -8,6 +8,7 @@ import 'package:gip/presentation/comun/contador_entero.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/leer_codigo.dart';
+import 'package:gip/presentation/comun/mensaje_resultado.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
@@ -160,11 +161,11 @@ class _ProductoViewState extends State<ProductoView> {
         ],
         if (vm.error != null) ...[
           const SizedBox(height: 16),
-          _Mensaje(texto: vm.error!, esError: true),
+          MensajeResultado(texto: vm.error!, esError: true),
         ],
         if (vm.aviso != null) ...[
           const SizedBox(height: 16),
-          _Mensaje(texto: vm.aviso!, esError: false),
+          MensajeResultado(texto: vm.aviso!, esError: false),
         ],
         const SizedBox(height: 24),
         if (web)
@@ -365,45 +366,6 @@ class _PanelEtiquetas extends StatelessWidget {
             onPressed: ocupado ? null : vm.imprimirEtiquetas,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Mensaje extends StatelessWidget {
-  const _Mensaje({required this.texto, required this.esError});
-
-  final String texto;
-  final bool esError;
-
-  @override
-  Widget build(BuildContext context) {
-    final esquema = Theme.of(context).colorScheme;
-    final fondo = esError ? esquema.errorContainer : esquema.primaryContainer;
-    final color = esError ? esquema.error : esquema.onPrimaryContainer;
-    return Semantics(
-      liveRegion: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: fondo,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              esError ? Icons.warning_amber_rounded : Icons.check_circle,
-              color: color,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                texto,
-                style: TextStyle(color: color, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

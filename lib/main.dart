@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
+import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/buscar_producto_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/generar_alertas_diarias_coordinator.dart';
@@ -50,6 +51,10 @@ Future<void> main() async {
     caja.servicioCaja,
   );
   final acceso = registrarAcceso(cliente);
+  final cajaPropietario = registrarCoordinadoresCaja(
+    caja.servicioCaja,
+    acceso.servicioAcceso,
+  );
   final alertas = registrarAlertas(base, acceso.servicioAcceso);
   final reportes = registrarReportes(base, acceso.servicioAcceso);
   runApp(
@@ -70,6 +75,7 @@ Future<void> main() async {
       registrarVentaPerdida: alertas.registrarVentaPerdida,
       consultarMargen: reportes.consultarMargen,
       generarReporteDiario: reportes.generarReporteDiario,
+      registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
     ),
   );
 }
@@ -93,6 +99,7 @@ class GipApp extends StatefulWidget {
     required this.registrarVentaPerdida,
     required this.consultarMargen,
     required this.generarReporteDiario,
+    required this.registrarMovimientoCaja,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -111,6 +118,7 @@ class GipApp extends StatefulWidget {
   final RegistrarVentaPerdidaCoordinator registrarVentaPerdida;
   final ConsultarMargenCoordinator consultarMargen;
   final GenerarReporteDiarioCoordinator generarReporteDiario;
+  final RegistrarMovimientoCajaCoordinator registrarMovimientoCaja;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -158,6 +166,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarVentaPerdida),
         Provider.value(value: widget.consultarMargen),
         Provider.value(value: widget.generarReporteDiario),
+        Provider.value(value: widget.registrarMovimientoCaja),
       ],
       child: MaterialApp.router(
         title: 'GIP',

@@ -26,6 +26,7 @@ import '../negocio/alertas_falsos.dart';
 import '../negocio/margen_falsos.dart';
 import '../negocio/reporte_falsos.dart';
 import '../surtido/existencias_falsos.dart';
+import '../caja/caja_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -135,6 +136,7 @@ void main() {
         registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
         consultarMargen: ConsultarMargenFalso(),
         generarReporteDiario: GenerarReporteDiarioFalso(),
+        registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
       ),
     );
     await tester.pumpAndSettle();

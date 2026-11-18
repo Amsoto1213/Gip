@@ -8,6 +8,7 @@ import 'package:gip/presentation/comun/dialogo_confirmacion.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/icono_paquete.dart';
 import 'package:gip/presentation/comun/logo_gip.dart';
+import 'package:gip/presentation/comun/mensaje_resultado.dart';
 import 'package:gip/presentation/comun/nota_info.dart';
 import 'package:gip/presentation/comun/opcion_con_icono.dart';
 import 'package:gip/presentation/comun/opcion_radio.dart';
@@ -1126,6 +1127,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(resultados, [false, false]);
+    });
+  });
+
+  group('MensajeResultado', () {
+    testWidgets('el error va en rojo y el éxito en verde', (tester) async {
+      await montar(
+        tester,
+        const Column(
+          children: [
+            MensajeResultado(texto: 'Valor no válido', esError: true),
+            MensajeResultado(texto: 'Movimiento registrado', esError: false),
+          ],
+        ),
+      );
+
+      expect(find.text('Valor no válido'), findsOneWidget);
+      expect(find.text('Movimiento registrado'), findsOneWidget);
+      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
     });
   });
 }

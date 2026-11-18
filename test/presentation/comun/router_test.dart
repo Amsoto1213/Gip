@@ -32,6 +32,7 @@ import '../negocio/alertas_falsos.dart';
 import '../negocio/margen_falsos.dart';
 import '../negocio/reporte_falsos.dart';
 import '../surtido/existencias_falsos.dart';
+import '../caja/caja_falsos.dart';
 
 class AutenticacionFalsa extends Mock implements IAutenticacion {}
 
@@ -103,6 +104,7 @@ void main() {
         registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
         consultarMargen: ConsultarMargenFalso(),
         generarReporteDiario: GenerarReporteDiarioFalso(),
+        registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
       ),
     );
     await tester.pumpAndSettle();
@@ -235,7 +237,9 @@ void main() {
       for (final seccion in secciones.reversed) {
         await tester.tap(find.text(seccion).last);
         await tester.pumpAndSettle();
-        expect(titulo(seccion), findsOneWidget);
+        // En la web la caja se titula "Caja de hoy" (mockup `wCaja`).
+        final esCajaWeb = seccion == 'Caja' && ancho >= 1024;
+        expect(titulo(esCajaWeb ? 'Caja de hoy' : seccion), findsOneWidget);
       }
     });
   }
