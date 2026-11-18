@@ -317,4 +317,64 @@ void main() {
       verifyNever(() => coordinator.asociarCodigo(any(), any(), any()));
     });
   });
+
+  group('etiquetas (CUS-18, opt Etiquetas)', () {
+    test('propone 10 copias y las limita entre 1 y 100', () {
+      final vm = ProductoViewModel(coordinator, tienda, producto: galletas);
+      expect(vm.copias, 10);
+
+      vm.cambiarCopias(0);
+      expect(vm.copias, 1);
+      vm.cambiarCopias(500);
+      expect(vm.copias, 100);
+      vm.cambiarCopias(25);
+      expect(vm.copias, 25);
+    });
+
+    test('imprime las copias del producto y avisa', () async {
+      when(() => coordinator.imprimirEtiquetas(any(), any(), any()))
+          .thenAnswer((_) async {});
+      final vm = ProductoViewModel(coordinator, tienda, producto: galletas)
+        ..cambiarCopias(4);
+
+      await vm.imprimirEtiquetas();
+
+      verify(() => coordinator.imprimirEtiquetas(tienda, [galletas], 4))
+          .called(1);
+      expect(vm.aviso, 'Etiquetas enviadas a impresión');
+      expect(vm.error, isNull);
+      expect(vm.imprimiendo, isFalse);
+    });
+
+    test('muestra el mensaje de negocio si se rechaza', () async {
+      when(() => coordinator.imprimirEtiquetas(any(), any(), any()))
+          .thenThrow(ExcepcionCopiasNoValidas(100));
+      final vm = ProductoViewModel(coordinator, tienda, producto: galletas);
+
+      await vm.imprimirEtiquetas();
+
+      expect(vm.error, 'Las copias deben estar entre 1 y 100');
+      expect(vm.aviso, isNull);
+    });
+
+    test('un fallo inesperado da un mensaje para el tendero', () async {
+      when(() => coordinator.imprimirEtiquetas(any(), any(), any()))
+          .thenThrow(StateError('sin papel'));
+      final vm = ProductoViewModel(coordinator, tienda, producto: galletas);
+
+      await vm.imprimirEtiquetas();
+
+      expect(vm.error, 'No se pudo imprimir. Inténtalo de nuevo');
+      expect(vm.imprimiendo, isFalse);
+    });
+
+    test('un producto nuevo no imprime', () async {
+      final vm = ProductoViewModel(coordinator, tienda);
+
+      await vm.imprimirEtiquetas();
+
+      verifyNever(() => coordinator.imprimirEtiquetas(any(), any(), any()));
+      expect(vm.aviso, isNull);
+    });
+  });
 }

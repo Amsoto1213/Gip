@@ -6,6 +6,7 @@ import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
+import 'package:gip/transversal/configuracion/configuracion_inventario.dart';
 import 'package:gip/transversal/errores/errores_inventario.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
 
@@ -20,6 +21,9 @@ import 'package:gip/transversal/errores/excepcion_negocio.dart';
 /// asocian de una vez; a uno nuevo, el código queda pendiente y se asocia al
 /// crearlo. [codigoLeido] es el código que se leyó en Buscar producto y no
 /// estaba registrado (CUS-17 → CUS-18).
+///
+/// Etiquetas (opt "Etiquetas"): con un producto guardado se imprimen [copias]
+/// etiquetas con su código QR (DI-35).
 class ProductoViewModel extends ChangeNotifier {
   ProductoViewModel(
     this._coordinator,
@@ -34,6 +38,13 @@ class ProductoViewModel extends ChangeNotifier {
   Producto? _producto;
   String? _codigoPendiente;
 
+  /// Copias que se proponen al abrir el panel de etiquetas (mockup `wProducto`).
+  static const int copiasIniciales = 10;
+  static const int copiasMaximas =
+      ConfiguracionInventario.maximoCopiasEtiquetas;
+
+  int _copias = copiasIniciales;
+  bool _imprimiendo = false;
   bool _guardando = false;
   String? _error;
   String? _aviso;
@@ -56,6 +67,40 @@ class ProductoViewModel extends ChangeNotifier {
 
   /// Código que se asociará al crear el producto, o null.
   String? get codigoPendiente => _codigoPendiente;
+
+  /// Copias de etiquetas que se imprimirán, entre 1 y [copiasMaximas].
+  int get copias => _copias;
+
+  /// Verdadero mientras se arma y se envía la impresión de etiquetas.
+  bool get imprimiendo => _imprimiendo;
+
+  /// Cambia las copias; lo que quede fuera de 1 a [copiasMaximas] se ajusta.
+  void cambiarCopias(int valor) {
+    _copias = valor.clamp(1, copiasMaximas);
+    notifyListeners();
+  }
+
+  /// Imprime las etiquetas del producto guardado (CUS-18, pasos 41 a 51):
+  /// "Etiquetas enviadas a impresión" o el mensaje del rechazo.
+  Future<void> imprimirEtiquetas() async {
+    final actual = _producto;
+    if (_imprimiendo || _guardando || actual == null) return;
+    _error = null;
+    _aviso = null;
+    _imprimiendo = true;
+    notifyListeners();
+    try {
+      await _coordinator.imprimirEtiquetas(_tienda, [actual], _copias);
+      _aviso = 'Etiquetas enviadas a impresión';
+    } on ExcepcionNegocio catch (e) {
+      _error = e.mensaje;
+    } catch (_) {
+      _error = 'No se pudo imprimir. Inténtalo de nuevo';
+    } finally {
+      _imprimiendo = false;
+      notifyListeners();
+    }
+  }
 
   /// Mensaje de error para el tendero, o null.
   String? get error => _error;

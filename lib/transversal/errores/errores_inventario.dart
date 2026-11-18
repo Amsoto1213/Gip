@@ -27,6 +27,13 @@ class ExcepcionCodigoVacio extends ExcepcionNegocio {
   const ExcepcionCodigoVacio() : super('Escriba o lea el código');
 }
 
+/// Copias de etiquetas fuera de rango (CUS-18, opt "Etiquetas"; no está en el
+/// diagrama, DI-35).
+class ExcepcionCopiasNoValidas extends ExcepcionNegocio {
+  ExcepcionCopiasNoValidas(int maximo)
+    : super('Las copias deben estar entre 1 y $maximo');
+}
+
 /// Cantidad <= 0 o costo negativo en una entrada de mercancía (CUS-01, pasos
 /// 15 a 17).
 class ExcepcionDatosEntradaNoValidos extends ExcepcionNegocio {

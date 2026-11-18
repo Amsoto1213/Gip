@@ -5,6 +5,8 @@ import 'package:gip/business/componentes/gestion_inventario/interprete_codigo_ba
 import 'package:gip/business/componentes/gestion_inventario/interprete_codigo_qr.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_catalogo.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/etiqueta.dart';
 import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
@@ -593,6 +595,132 @@ void main() {
           isNull,
         );
       });
+    });
+  });
+
+  group('imprimirEtiquetas (CUS-18, opt Etiquetas)', () {
+    late Producto galletas;
+    late Producto aceite;
+    late List<Etiqueta> impresas;
+
+    setUp(() async {
+      galletas = await crearGalletas();
+      aceite = await crearGalletas(codigo: 'ACE-1');
+      impresas = [];
+      when(() => impresion.imprimir(any())).thenAnswer((i) async {
+        impresas = List<Etiqueta>.of(
+          i.positionalArguments.first as List<Etiqueta>,
+        );
+      });
+      productos.guardadosEnTransaccion.clear();
+    });
+
+    setUpAll(() => registerFallbackValue(<Etiqueta>[]));
+
+    test('al producto sin códigos le crea un QR "GIP:" + código interno y lo '
+        'guarda en una transacción', () async {
+      await servicio.imprimirEtiquetas(tienda, [galletas], 1);
+
+      final codigo = galletas.getCodigos().single;
+      expect(codigo.getFormato(), FormatoCodigo.qr);
+      expect(codigo.getValor(), 'GIP:GAL-6');
+      expect(codigo.getId(), matches(uuidV4));
+      expect(productos.guardadosEnTransaccion, [true]);
+      expect(impresas.single.getCodigo(), codigo);
+    });
+
+    test('genera una etiqueta por copia de cada producto, sin repetir el '
+        'código ni guardar otra vez', () async {
+      await servicio.imprimirEtiquetas(tienda, [galletas, aceite], 3);
+
+      expect(impresas, hasLength(6));
+      expect(
+        impresas.take(3).map((e) => e.getProducto()),
+        everyElement(galletas),
+      );
+      expect(
+        impresas.skip(3).map((e) => e.getProducto()),
+        everyElement(aceite),
+      );
+      expect(galletas.getCodigos(), hasLength(1));
+      expect(productos.guardadosEnTransaccion, [true, true]);
+      verify(() => impresion.imprimir(any())).called(1);
+
+      await servicio.imprimirEtiquetas(tienda, [galletas], 2);
+      expect(galletas.getCodigos(), hasLength(1));
+      expect(productos.guardadosEnTransaccion, hasLength(2));
+    });
+
+    test(
+      'no crea código si el producto ya tiene uno y prefiere el QR',
+      () async {
+        final qr = CodigoProducto('c1', FormatoCodigo.qr, 'GIP:otro');
+        final ean = CodigoProducto('c2', FormatoCodigo.ean13, '7701234567897');
+        galletas
+          ..agregarCodigo(ean)
+          ..agregarCodigo(qr);
+        aceite.agregarCodigo(ean);
+
+        await servicio.imprimirEtiquetas(tienda, [galletas, aceite], 1);
+
+        expect(impresas.map((e) => e.getCodigo()), [qr, ean]);
+        expect(productos.guardadosEnTransaccion, isEmpty);
+      },
+    );
+
+    test('copias fuera de 1 a 100 se rechazan sin imprimir', () async {
+      for (final copias in [0, -1, 101]) {
+        await expectLater(
+          servicio.imprimirEtiquetas(tienda, [galletas], copias),
+          throwsA(
+            isA<ExcepcionCopiasNoValidas>().having(
+              (e) => e.mensaje,
+              'mensaje',
+              'Las copias deben estar entre 1 y 100',
+            ),
+          ),
+        );
+      }
+      verifyNever(() => impresion.imprimir(any()));
+      expect(galletas.getCodigos(), isEmpty);
+    });
+
+    test('acepta los extremos 1 y 100', () async {
+      await servicio.imprimirEtiquetas(tienda, [galletas], 100);
+      expect(impresas, hasLength(100));
+      await servicio.imprimirEtiquetas(tienda, [galletas], 1);
+      expect(impresas, hasLength(1));
+    });
+
+    test('si el guardado falla, quita el código y no imprime', () async {
+      productos.fallar = true;
+
+      await expectLater(
+        servicio.imprimirEtiquetas(tienda, [galletas], 2),
+        throwsStateError,
+      );
+
+      expect(galletas.getCodigos(), isEmpty);
+      verifyNever(() => impresion.imprimir(any()));
+    });
+
+    test('sin productos falla sin imprimir', () async {
+      await expectLater(
+        servicio.imprimirEtiquetas(tienda, [], 1),
+        throwsStateError,
+      );
+      verifyNever(() => impresion.imprimir(any()));
+    });
+
+    test('si la impresión falla, el error sube y el código ya quedó '
+        'guardado', () async {
+      when(() => impresion.imprimir(any())).thenThrow(StateError('sin papel'));
+
+      await expectLater(
+        servicio.imprimirEtiquetas(tienda, [galletas], 1),
+        throwsStateError,
+      );
+      expect(galletas.getCodigos(), hasLength(1));
     });
   });
 }

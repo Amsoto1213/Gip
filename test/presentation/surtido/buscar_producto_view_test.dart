@@ -149,6 +149,11 @@ void main() {
         200,
         scrollable: lista,
       );
+      // Sin foco, el campo editado no vuelve a subir la lista al cursor.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Guardar producto'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Guardar producto'));
       await esperarBase(tester);
       expect(find.text('Producto actualizado'), findsOneWidget);
@@ -158,6 +163,8 @@ void main() {
         -200,
         scrollable: lista,
       );
+      await tester.ensureVisible(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Volver'));
       await esperarBase(tester);
       // En la web también sale en la miga.
@@ -302,6 +309,11 @@ void main() {
           200,
           scrollable: lista,
         );
+        // Sin foco, el campo editado no vuelve a subir la lista al cursor.
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Guardar producto'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Guardar producto'));
         await esperarBase(tester);
         expect(find.text('Producto creado. Código asociado'), findsOneWidget);

@@ -129,6 +129,10 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **CUS-13**: nota de que `VistaVenta` usa dos coordinadores (`RegistrarVentaCoordinator` y `RegistrarVentaPerdidaCoordinator`), única excepción a "una vista, un coordinador" (DI-30 c).
 - [ ] **CUS-17** (DI-34 b, d): nota de que `buscarPorLectura` quita los espacios y que una lectura vacía devuelve null sin buscar; en el alt "Lectura fallida", el lector desconectado no se puede detectar en modo teclado. Si el código no está registrado y hay resultados por nombre (se escribió un nombre y se oprimió Enter), quedan esos resultados.
 - [ ] **CUS-18**, opt "Asociar código" (DI-34 b, f): break "Código vacío" ("Escriba o lea el código") antes del paso 21; si `otro` es el mismo producto, devuelve el código que ya tiene sin crear otro; en un producto nuevo el código se asocia después de `crearProducto`.
+- [ ] **CUS-18**, opt "Etiquetas" (DI-35 a, b):
+  - Break "Copias no válidas" ("Las copias deben estar entre 1 y 100") antes de generar las etiquetas.
+  - Dice de qué código es la etiqueta: el QR del producto o, si no tiene, el primero que tenga.
+  - Si falla el guardado del código nuevo, se quita del producto antes de relanzar el error.
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
 - [ ] **CUS-24** (DI-25 b, e):
   - El consumo usa `movimientos.buscarFechaPrimerMovimiento(item)` para los días con datos.

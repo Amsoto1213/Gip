@@ -4,10 +4,12 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
+import 'package:gip/presentation/comun/contador_entero.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/leer_codigo.dart';
 import 'package:gip/presentation/comun/seccion_numerada.dart';
+import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:gip/presentation/surtido/rutas_surtido.dart';
@@ -18,8 +20,9 @@ import 'package:provider/provider.dart';
 /// componentes del rediseño): el mismo
 /// formulario crea y edita. Lleva el campo "Código interno", que no está en el
 /// mockup (DI-14). La sección "Códigos del producto" asocia códigos de barras
-/// o QR (CUS-17, DI-34); sin el botón de quitar (CUS-22). Las etiquetas QR
-/// llegan con la iteración 4.
+/// o QR (CUS-17, DI-34); sin el botón de quitar (CUS-22). Con el producto
+/// guardado, el panel "Etiquetas QR" imprime sus etiquetas (DI-35): al lado en
+/// la web y debajo de los códigos en el móvil.
 class ProductoView extends StatefulWidget {
   const ProductoView({super.key});
 
@@ -106,7 +109,9 @@ class _ProductoViewState extends State<ProductoView> {
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 968),
+            constraints: BoxConstraints(
+              maxWidth: web && !vm.esNuevo ? 1180 : 968,
+            ),
             child: ListView(
               padding: web
                   ? const EdgeInsets.fromLTRB(44, 32, 44, 48)
@@ -121,44 +126,67 @@ class _ProductoViewState extends State<ProductoView> {
                   onVolver: _volver,
                 ),
                 SizedBox(height: web ? 24 : 16),
-                _seccionDatos(vm, web),
-                const SizedBox(height: 18),
-                _seccionPrecios(vm, web),
-                const SizedBox(height: 18),
-                _SeccionCodigos(vm: vm, onAsociar: _asociarCodigo),
-                if (vm.error != null) ...[
-                  const SizedBox(height: 16),
-                  _Mensaje(texto: vm.error!, esError: true),
-                ],
-                if (vm.aviso != null) ...[
-                  const SizedBox(height: 16),
-                  _Mensaje(texto: vm.aviso!, esError: false),
-                ],
-                const SizedBox(height: 24),
-                if (web)
+                if (web && !vm.esNuevo)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: 160,
-                        child: BotonSecundario(
-                          texto: 'Cancelar',
-                          alto: 58,
-                          expandido: true,
-                          onPressed: vm.guardando ? null : _volver,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(width: 280, child: botonGuardar),
+                      Expanded(child: _formulario(vm, web, botonGuardar)),
+                      const SizedBox(width: 24),
+                      SizedBox(width: 300, child: _PanelEtiquetas(vm: vm)),
                     ],
                   )
                 else
-                  botonGuardar,
+                  _formulario(vm, web, botonGuardar),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _formulario(ProductoViewModel vm, bool web, Widget botonGuardar) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _seccionDatos(vm, web),
+        const SizedBox(height: 18),
+        _seccionPrecios(vm, web),
+        const SizedBox(height: 18),
+        _SeccionCodigos(vm: vm, onAsociar: _asociarCodigo),
+        if (!web && !vm.esNuevo) ...[
+          const SizedBox(height: 18),
+          _PanelEtiquetas(vm: vm),
+        ],
+        if (vm.error != null) ...[
+          const SizedBox(height: 16),
+          _Mensaje(texto: vm.error!, esError: true),
+        ],
+        if (vm.aviso != null) ...[
+          const SizedBox(height: 16),
+          _Mensaje(texto: vm.aviso!, esError: false),
+        ],
+        const SizedBox(height: 24),
+        if (web)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 160,
+                child: BotonSecundario(
+                  texto: 'Cancelar',
+                  alto: 58,
+                  expandido: true,
+                  onPressed: vm.guardando ? null : _volver,
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(width: 280, child: botonGuardar),
+            ],
+          )
+        else
+          botonGuardar,
+      ],
     );
   }
 
@@ -261,6 +289,83 @@ class _ProductoViewState extends State<ProductoView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [venta, const SizedBox(height: 16), costo],
             ),
+    );
+  }
+}
+
+/// Panel "Etiquetas QR" (mockup `wProducto`): vista previa de la etiqueta,
+/// copias e "Imprimir etiquetas". Solo con el producto guardado. La vista
+/// previa no dibuja el QR real: el producto puede no tener todavía su código
+/// QR, que se crea al imprimir (DI-35).
+class _PanelEtiquetas extends StatelessWidget {
+  const _PanelEtiquetas({required this.vm});
+
+  final ProductoViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    final esquema = tema.colorScheme;
+    final producto = vm.producto!;
+    final ocupado = vm.imprimiendo || vm.guardando;
+    return TarjetaGip(
+      key: const Key('producto_panel_etiquetas'),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Etiquetas QR', style: tema.textTheme.titleLarge),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(FormaGip.radioCampo),
+              border: Border.all(color: esquema.outline),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.qr_code_2, size: 64, color: esquema.onSurface),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        producto.getNombre(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: tema.textTheme.titleSmall,
+                      ),
+                      Text(
+                        '\$ ${mostrarPrecio(producto.getPrecioVenta())}',
+                        style: tema.textTheme.titleLarge?.cifrasTabulares,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Copias', style: tema.textTheme.labelMedium),
+          const SizedBox(height: 8),
+          ContadorEntero(
+            valor: vm.copias,
+            maximo: ProductoViewModel.copiasMaximas,
+            etiquetaMenos: 'Una copia menos',
+            etiquetaMas: 'Una copia más',
+            onCambio: ocupado ? null : vm.cambiarCopias,
+          ),
+          const SizedBox(height: 16),
+          BotonSecundario(
+            key: const Key('producto_imprimir_etiquetas'),
+            texto: 'Imprimir etiquetas',
+            icono: Icons.print_outlined,
+            expandido: true,
+            onPressed: ocupado ? null : vm.imprimirEtiquetas,
+          ),
+        ],
+      ),
     );
   }
 }

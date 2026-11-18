@@ -6,4 +6,8 @@ abstract final class ConfiguracionInventario {
   /// antes de confirmar, sin bloquear (IE-04 b). Hoy es fijo (DI-24); el mismo
   /// número vale para unidades, kilos y libras.
   static final Decimal umbralRevisionConteo = Decimal.fromInt(5);
+
+  /// Más copias de una etiqueta que estas se rechazan (CUS-18, opt "Etiquetas";
+  /// el diseño no fija el máximo, DI-35).
+  static const int maximoCopiasEtiquetas = 100;
 }

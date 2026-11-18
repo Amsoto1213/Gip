@@ -2,18 +2,33 @@ import 'package:decimal/decimal.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/componentes/gestion_inventario/servicio_catalogo.dart';
+import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/entidades/gestion_inventario/etiqueta.dart';
+import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
+import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
+import 'package:gip/business/interfaces/gestion_inventario/i_impresion_etiquetas.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coordinator.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/inventario_repositorio_drift.dart';
+import 'package:gip/data/repositorios/gestion_inventario/movimiento_inventario_repositorio_drift.dart';
 import 'package:gip/data/repositorios/gestion_inventario/producto_repositorio_drift.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/surtido/producto_view.dart';
 import 'package:gip/presentation/surtido/producto_view_model.dart';
 import 'package:provider/provider.dart';
+
+class ImpresionGrabadora implements IImpresionEtiquetas {
+  final List<List<Etiqueta>> envios = [];
+
+  @override
+  Future<void> imprimir(List<Etiqueta> etiquetas) async =>
+      envios.add(etiquetas);
+}
 
 /// Prueba de punta a punta de CUS-18: la vista con el módulo armado como en
 /// `main.dart` y una base drift en memoria.
@@ -75,6 +90,9 @@ void main() {
       );
 
   Future<void> guardar(WidgetTester tester) async {
+    // Sin foco, el campo editado no vuelve a subir la lista al cursor.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await bajarHasta(tester, find.text('Guardar producto'));
     await tester.tap(find.text('Guardar producto'));
     // Las consultas de drift corren fuera del reloj falso de la prueba.
@@ -279,5 +297,124 @@ void main() {
       );
       expect(caja.height, greaterThanOrEqualTo(44), reason: texto);
     }
+  });
+
+  group('etiquetas', () {
+    late ImpresionGrabadora impresion;
+    late Producto galletas;
+
+    /// Como `main.dart`, pero con una impresión falsa: la real abriría el
+    /// diálogo de impresión del sistema.
+    Future<void> abrirConProducto(
+      WidgetTester tester, {
+      Size tamano = const Size(390, 844),
+    }) async {
+      impresion = ImpresionGrabadora();
+      final productos = ProductoRepositorioDrift(base);
+      final unidad = UnidadTrabajoDrift(base);
+      final servicio = ServicioCatalogo(
+        productos,
+        const [],
+        ServicioInventario(
+          InventarioRepositorioDrift(base),
+          MovimientoInventarioRepositorioDrift(base),
+          Decimal.one,
+          unidad,
+          productos,
+        ),
+        impresion,
+        unidad,
+      );
+      galletas = await tester.runAsync(
+        () => servicio.crearProducto(
+          tienda,
+          'GAL-6',
+          'Galletas de coco x 6',
+          UnidadMedida.unidad,
+          Decimal.parse('2600'),
+          Decimal.parse('3500'),
+        ),
+      ) as Producto;
+      tester.view.physicalSize = tamano;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: TemaGip.claro(),
+          home: ChangeNotifierProvider(
+            create: (_) => ProductoViewModel(
+              GestionarProductoCoordinator(servicio),
+              tienda,
+              producto: galletas,
+            ),
+            child: const ProductoView(),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('un producto nuevo no muestra el panel', (tester) async {
+      await abrir(tester);
+      expect(find.byKey(const Key('producto_panel_etiquetas')), findsNothing);
+    });
+
+    testWidgets('imprime las copias elegidas y avisa (móvil)', (tester) async {
+      await abrirConProducto(tester);
+      await bajarHasta(tester, find.text('Imprimir etiquetas'));
+      expect(find.text('Etiquetas QR'), findsOneWidget);
+      expect(find.text('10'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('contador_menos')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('contador_menos')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('producto_imprimir_etiquetas')));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Etiquetas enviadas a impresión'), findsOneWidget);
+      final etiquetas = impresion.envios.single;
+      expect(etiquetas, hasLength(8));
+      final codigo = etiquetas.first.getCodigo();
+      expect(codigo.getFormato(), FormatoCodigo.qr);
+      expect(codigo.getValor(), 'GIP:GAL-6');
+    });
+
+    testWidgets('en escritorio el panel va al lado del formulario', (
+      tester,
+    ) async {
+      await abrirConProducto(tester, tamano: const Size(1280, 800));
+
+      final panel = tester.getRect(
+        find.byKey(const Key('producto_panel_etiquetas')),
+      );
+      final datos = tester.getRect(find.byKey(const Key('producto_nombre')));
+      expect(panel.left, greaterThan(datos.right));
+      expect(panel.top, lessThan(datos.top));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('sin desbordes en 360×640 y con áreas de 44 px', (
+      tester,
+    ) async {
+      await abrirConProducto(tester, tamano: const Size(360, 640));
+      await bajarHasta(tester, find.text('Imprimir etiquetas'));
+
+      for (final clave in ['contador_menos', 'contador_mas']) {
+        expect(
+          tester.getSize(find.byKey(Key(clave))).shortestSide,
+          greaterThanOrEqualTo(44),
+        );
+      }
+      expect(
+        tester
+            .getSize(find.byKey(const Key('producto_imprimir_etiquetas')))
+            .height,
+        greaterThanOrEqualTo(44),
+      );
+      expect(tester.takeException(), isNull);
+    });
   });
 }

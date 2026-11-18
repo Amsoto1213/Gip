@@ -94,6 +94,9 @@ ignora; lo que importa son los estilos y la estructura.
     negrilla, subtítulo y un valor a la derecha (en `errorTexto` si es una deuda). Elegida: fondo
     `primarioSuave` y radio `primario`. Sin borde propio: va dentro de una TarjetaGip con separadores;
     56 px de alto mínimo.
+19. **ContadorEntero**: número entero con "−" y "+" (BotonIconoSecundario de 48 px) a los lados y el valor
+    en `headlineSmall` con cifras tabulares; los botones se desactivan en el mínimo y el máximo (copias
+    de etiquetas en Producto).
 
 ## Pantallas
 
