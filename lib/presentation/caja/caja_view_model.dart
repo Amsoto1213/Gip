@@ -36,7 +36,7 @@ class CajaViewModel extends ChangeNotifier {
   /// como el mockup.
   TipoMovimientoCaja get tipo => _tipo;
 
-  /// "Del negocio" o "Para la casa". La clasificación ANULACION no se elige:
+  /// "Del negocio" o "Personal". La clasificación ANULACION no se elige:
   /// solo la usa la anulación de ventas (DA-51).
   ClasificacionMovimiento get clasificacion => _clasificacion;
 
