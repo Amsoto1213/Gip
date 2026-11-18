@@ -14,6 +14,7 @@ El diseño está en Enterprise Architect y exportado a texto en `docs/diseno/`. 
 - `docs/ui/tokens.md` y `docs/ui/mockups/` — colores, tipografía y pantallas (mockups móvil y web).
 - `docs/ui/rediseno/` — rediseño visual aprobado: `README.md` (reglas, tokens y componentes) y prototipos HTML. Manda sobre el aspecto de los mockups.
 - `docs/decisiones.md` — decisiones de implementación (DI-xx) que no están en EA.
+- `docs/diseno/cambios-pendientes-ea.md` — lo que hay que pasar a EA. Toda DI que diga "pasar a EA" se agrega ahí en el mismo PR.
 - `docs/probar-en-telefono.md` — cómo se prueba en Android sin cable (APK de GitHub y depuración inalámbrica).
 - `docs/versiones.md` — versiones fijadas de Flutter, herramientas, paquetes y navegadores soportados. **No cambies versiones** ni corras `flutter upgrade`/`pub upgrade --major-versions`.
 
