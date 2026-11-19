@@ -42,6 +42,11 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`ServicioExportacion`** (DI-41 a, e): constructor con `reloj` opcional (la fecha de `DatosExportacion`); descripción de `exportar`: el periodo es `[desde, hasta)`, los fiados salen todos (no solo los del periodo) y con `desde > hasta` lanza "Periodo no válido" sin leer nada.
 - [ ] **`IExportador.exportar`**, descripción (DI-41 b, c, d): arma el archivo **y lo entrega** (compartir o descargar) y devuelve el nombre. En Excel es un libro con tres hojas (Inventario, Ventas, Fiados); en CSV son tres archivos y devuelve el nombre base común. Una fila por fiado, con la cantidad de abonos, el total abonado y el saldo; una fila por venta (también las anuladas, marcadas).
 
+- [ ] **`ServicioUsuarios`** (DI-42 b, d):
+  - `crearEmpleado`: quita los espacios del inicio y del final del nombre y de la cédula; una cédula vacía también es "Datos no válidos"; la cédula repetida cuenta aunque el otro usuario esté inactivo, y la misma cédula en otra tienda se permite.
+  - `desactivar`: si guardar falla el usuario ya quedó inactivo en memoria; quien llama vuelve a leer la lista.
+- [ ] **`IUsuarioRepositorio`**, descripción (DI-42 b, c): los usuarios viven en el servidor y la pantalla necesita internet. `listar` trae primero al propietario y luego a los empleados, cada grupo por nombre. `buscarPorCedula` encuentra también al inactivo. `guardar` no cambia el correo de la cuenta de acceso (la cuenta la crea Supabase Auth, fuera de la app).
+
 ### Entidades/GestionInventario
 
 - [ ] **`ItemInventario`**: `+ setStockActual(stockActual: Decimal): void`. El diagrama de CUS-01 (paso 27) ya la usa (DI-20 a).
@@ -149,6 +154,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - Break "Copias no válidas" ("Las copias deben estar entre 1 y 100") antes de generar las etiquetas.
   - Dice de qué código es la etiqueta: el QR del producto o, si no tiene, el primero que tenga.
   - Si falla el guardado del código nuevo, se quita del producto antes de relanzar el error.
+- [ ] **CUS-15** (DI-42 b, c, d): el break "Datos no válidos" incluye la cédula vacía. Nota en `crearEmpleado`: la cuenta de acceso (correo y contraseña) la crea Supabase Auth y el correo se pone después en la fila; el empleado no puede entrar hasta entonces. Tras cada intento de agregar o desactivar, `VistaUsuarios` vuelve a llamar a `listarUsuarios`.
 - [ ] **CUS-16** (DI-41 b, c, e): el exportador entrega el archivo y `VistaExportacion` solo muestra "Datos exportados: " + nombre (sin tamaño ni botón de volver a compartir); en CSV son tres archivos y el nombre es el nombre base. Nota: el periodo es `[desde, hasta)`.
 - [ ] **CUS-20** (DI-39 a, b, d, e):
   - `Venta`: el constructor acepta, como opcional, la anulación para armar una venta guardada. `Fiado.restaurar(saldo, estado)`.
@@ -170,3 +176,4 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - **Esquema de la base de datos.** El `.qea` no tiene tablas. El esquema está en `supabase/migrations/` (fuente de verdad) y en las tablas drift de `lib/data/local/tablas/`. Por ejemplo, la columna `clientes.eliminado_en` de DI-31 y la tabla `codigos_producto` de DI-34 ya están en las dos.
 - **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e), DI-29 (f) y DI-34 (e, f).
 - **Un detalle que se corrige en el código.** `ServicioAlertas.diaLocal` es pública, no está en EA y nadie la usa fuera de la clase: se vuelve privada.
+- **`usuarios.correo` opcional.** La migración `20261119200000_usuarios_correo_opcional.sql` (DI-42 c) quita el `not null`: el empleado que crea la app no tiene correo hasta que se le crea la cuenta de acceso.

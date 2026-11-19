@@ -4,6 +4,7 @@ import 'package:gip/business/workflow/gestion_caja/consultar_rotacion_coordinato
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
+import 'package:gip/business/workflow/info_tienda/gestionar_usuarios_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/negocio/alertas_view.dart';
@@ -17,6 +18,8 @@ import 'package:gip/presentation/negocio/reporte_diario_view.dart';
 import 'package:gip/presentation/negocio/reporte_diario_view_model.dart';
 import 'package:gip/presentation/negocio/rotacion_view.dart';
 import 'package:gip/presentation/negocio/rotacion_view_model.dart';
+import 'package:gip/presentation/negocio/usuarios_view.dart';
+import 'package:gip/presentation/negocio/usuarios_view_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -37,6 +40,9 @@ const rutaRotacion = '$rutaPrincipalNegocio/rotacion';
 /// Pantalla Exportar datos (CUS-16).
 const rutaExportar = '$rutaPrincipalNegocio/exportar';
 
+/// Pantalla Usuarios de la tienda (CUS-15).
+const rutaUsuarios = '$rutaPrincipalNegocio/usuarios';
+
 /// Subsecciones de Negocio en el menú lateral: solo las que ya tienen
 /// pantalla (DI-23). Se listan para todos; al empleado la pantalla le dice que
 /// la consulta es solo para el propietario (CUS-05, paso 7).
@@ -45,6 +51,7 @@ const subseccionesNegocio = <Subseccion>[
   (etiqueta: 'Reporte del día', ruta: rutaReporte),
   (etiqueta: 'Ganancia por producto', ruta: rutaMargen),
   (etiqueta: 'Rotación', ruta: rutaRotacion),
+  (etiqueta: 'Usuarios', ruta: rutaUsuarios),
   (etiqueta: 'Exportar datos', ruta: rutaExportar),
 ];
 
@@ -97,6 +104,16 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
           ),
         ),
         GoRoute(
+          path: 'usuarios',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => UsuariosViewModel(
+              context.read<GestionarUsuariosCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!,
+            )..cargar(),
+            child: const UsuariosView(),
+          ),
+        ),
+        GoRoute(
           path: 'reporte',
           builder: (context, _) => ChangeNotifierProvider(
             create: (context) => ReporteDiarioViewModel(
@@ -125,3 +142,6 @@ void abrirRotacion(BuildContext context) => context.push(rutaRotacion);
 
 /// Abre la pantalla Exportar datos.
 void abrirExportar(BuildContext context) => context.push(rutaExportar);
+
+/// Abre la pantalla Usuarios de la tienda.
+void abrirUsuarios(BuildContext context) => context.push(rutaUsuarios);
