@@ -45,9 +45,8 @@ import 'package:provider/provider.dart';
 /// Los módulos se registran desde composition_root/.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final cliente = await ClienteSupabase(
-    const ConfiguracionSupabase.desdeEntorno(),
-  ).inicializar();
+  const configuracion = ConfiguracionSupabase.desdeEntorno();
+  final cliente = await ClienteSupabase(configuracion).inicializar();
   final base = BaseLocalDrift.abrir();
   final unidadTrabajo = UnidadTrabajoDrift(base);
   final inventario = registrarInventario(base, unidadTrabajo);
@@ -70,7 +69,11 @@ Future<void> main() async {
   final alertas = registrarAlertas(base, acceso.servicioAcceso);
   final reportes = registrarReportes(base, acceso.servicioAcceso);
   final exportarDatos = registrarExportacion(base, acceso.servicioAcceso);
-  final gestionarUsuarios = registrarUsuarios(cliente, acceso.servicioAcceso);
+  final gestionarUsuarios = registrarUsuarios(
+    cliente,
+    configuracion,
+    acceso.servicioAcceso,
+  );
   runApp(
     GipApp(
       iniciarSesion: acceso.iniciarSesion,

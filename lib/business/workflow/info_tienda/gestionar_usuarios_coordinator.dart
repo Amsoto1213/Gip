@@ -22,15 +22,24 @@ class GestionarUsuariosCoordinator {
   }
 
   /// Llama a servicioAcceso.exigirPropietario(usuario) y luego a
-  /// servicioUsuarios.crearEmpleado(tienda, nombre, cedula).
+  /// servicioUsuarios.crearEmpleado(tienda, nombre, cedula, correo, clave).
+  /// Crea también la cuenta con la que el empleado inicia sesión (DI-43).
   Future<Empleado> crearEmpleado(
     Tienda tienda,
     String nombre,
     String cedula,
+    String correo,
+    String clave,
     Usuario usuario,
   ) async {
     _servicioAcceso.exigirPropietario(usuario);
-    return _servicioUsuarios.crearEmpleado(tienda, nombre, cedula);
+    return _servicioUsuarios.crearEmpleado(
+      tienda,
+      nombre,
+      cedula,
+      correo,
+      clave,
+    );
   }
 
   /// Llama a servicioAcceso.exigirPropietario(usuario) y luego a

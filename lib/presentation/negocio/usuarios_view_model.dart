@@ -77,9 +77,15 @@ class UsuariosViewModel extends ChangeNotifier {
     }
   }
 
-  /// Crea el empleado y vuelve a leer la lista. Devuelve verdadero si quedó
-  /// creado, para que la pantalla limpie el formulario.
-  Future<bool> agregar(String nombre, String cedula) async {
+  /// Crea el empleado con su cuenta de acceso y vuelve a leer la lista.
+  /// Devuelve verdadero si quedó creado, para que la pantalla limpie el
+  /// formulario (DI-43).
+  Future<bool> agregar(
+    String nombre,
+    String cedula,
+    String correo,
+    String clave,
+  ) async {
     if (_ocupado) return false;
     _empezar();
     var creado = false;
@@ -88,6 +94,8 @@ class UsuariosViewModel extends ChangeNotifier {
         _usuarioActivo.tienda,
         nombre,
         cedula,
+        correo,
+        clave,
         _usuarioActivo.usuario,
       );
       _mensajeListo = mensajeEmpleadoCreado;

@@ -31,8 +31,9 @@ void main() {
 
   When<Future<List<Usuario>>> alListar() =>
       when(() => coordinador.listarUsuarios(any(), any()));
-  When<Future<Empleado>> alCrear() =>
-      when(() => coordinador.crearEmpleado(any(), any(), any(), any()));
+  When<Future<Empleado>> alCrear() => when(
+    () => coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
+  );
   When<Future<void>> alDesactivar() =>
       when(() => coordinador.desactivarUsuario(any(), any(), any()));
 
@@ -125,7 +126,12 @@ void main() {
       );
       final vm = crear();
 
-      final creado = await vm.agregar('Daniel Mendoza', '1045678901');
+      final creado = await vm.agregar(
+        'Daniel Mendoza',
+        '1045678901',
+        'x@gip.test',
+        'gip12345',
+      );
 
       expect(creado, isTrue);
       expect(vm.mensajeListo, 'Empleado creado');
@@ -137,9 +143,18 @@ void main() {
           captureAny(),
           captureAny(),
           captureAny(),
+          captureAny(),
+          captureAny(),
         ),
       ).captured;
-      expect(args, [tiendaAlertas, 'Daniel Mendoza', '1045678901', carmen]);
+      expect(args, [
+        tiendaAlertas,
+        'Daniel Mendoza',
+        '1045678901',
+        'x@gip.test',
+        'gip12345',
+        carmen,
+      ]);
       verify(() => coordinador.listarUsuarios(any(), any())).called(1);
       expect(vm.usuarios, [carmen, luis]);
     });
@@ -150,7 +165,7 @@ void main() {
         alCrear().thenThrow(const ExcepcionDatosUsuarioNoValidos());
         final vm = crear();
 
-        final creado = await vm.agregar('', '1');
+        final creado = await vm.agregar('', '1', 'x@gip.test', 'gip12345');
 
         expect(creado, isFalse);
         expect(
@@ -161,11 +176,36 @@ void main() {
       },
     );
 
+    test('correo no válido, contraseña corta y correo ya registrado muestran '
+        'su mensaje', () async {
+      final vm = crear();
+
+      alCrear().thenThrow(const ExcepcionCorreoNoValido());
+      await vm.agregar('Ana', '1', 'mal', 'gip12345');
+      expect(vm.error, 'Escribe un correo válido');
+
+      alCrear().thenThrow(const ExcepcionClaveNoValida(6));
+      await vm.agregar('Ana', '1', 'a@gip.test', '123');
+      expect(vm.error, 'La contraseña debe tener al menos 6 caracteres');
+
+      alCrear().thenThrow(const ExcepcionCorreoYaRegistrado());
+      await vm.agregar('Ana', '1', 'a@gip.test', 'gip12345');
+      expect(vm.error, 'Ese correo ya tiene una cuenta. Usa otro correo');
+
+      alCrear().thenThrow(const ExcepcionCuentaNoCreada());
+      await vm.agregar('Ana', '1', 'a@gip.test', 'gip12345');
+      expect(
+        vm.error,
+        'No se pudo crear la cuenta de acceso. Inténtalo de nuevo',
+      );
+      expect(vm.mensajeListo, isNull);
+    });
+
     test('el empleado ve el mensaje de solo propietario', () async {
       alCrear().thenThrow(const ExcepcionSoloPropietario());
       final vm = crear(propietaria: false);
 
-      await vm.agregar('Ana', '1');
+      await vm.agregar('Ana', '1', 'x@gip.test', 'gip12345');
 
       expect(vm.error, 'Esta consulta es solo para el propietario');
     });
@@ -174,7 +214,7 @@ void main() {
       alCrear().thenThrow(StateError('x'));
       final vm = crear();
 
-      await vm.agregar('Ana', '1');
+      await vm.agregar('Ana', '1', 'x@gip.test', 'gip12345');
 
       expect(vm.error, 'No se pudo completar. Intente de nuevo');
       expect(vm.ocupado, isFalse);
@@ -183,11 +223,11 @@ void main() {
     test('un intento nuevo borra el mensaje anterior', () async {
       alCrear().thenThrow(const ExcepcionDatosUsuarioNoValidos());
       final vm = crear();
-      await vm.agregar('', '1');
+      await vm.agregar('', '1', 'x@gip.test', 'gip12345');
       expect(vm.error, isNotNull);
 
       alCrear().thenAnswer((_) async => Empleado('u9', 'Ana', '2'));
-      await vm.agregar('Ana', '2');
+      await vm.agregar('Ana', '2', 'x@gip.test', 'gip12345');
 
       expect(vm.error, isNull);
       expect(vm.mensajeListo, 'Empleado creado');
@@ -201,7 +241,7 @@ void main() {
         await vm.cargar();
         alListar().thenThrow(const ExcepcionSinConexionUsuarios());
 
-        final creado = await vm.agregar('Ana', '2');
+        final creado = await vm.agregar('Ana', '2', 'x@gip.test', 'gip12345');
 
         expect(creado, isTrue);
         expect(vm.mensajeListo, 'Empleado creado');
@@ -215,14 +255,16 @@ void main() {
       alCrear().thenAnswer((_) => espera.future);
       final vm = crear();
 
-      final primero = vm.agregar('Ana', '1');
+      final primero = vm.agregar('Ana', '1', 'x@gip.test', 'gip12345');
       expect(vm.ocupado, isTrue);
-      expect(await vm.agregar('Pedro', '2'), isFalse);
+      expect(await vm.agregar('Pedro', '2', 'x@gip.test', 'gip12345'), isFalse);
       espera.complete(Empleado('u9', 'Ana', '1'));
       await primero;
 
-      verify(() => coordinador.crearEmpleado(any(), any(), any(), any()))
-          .called(1);
+      verify(
+        () =>
+            coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
+      ).called(1);
     });
   });
 

@@ -16,12 +16,14 @@ void main() {
   );
 
   late UsuarioRepositorioFalso usuarios;
+  late CuentaAccesoFalsa cuentas;
   late ServicioUsuarios servicio;
   late Administrador carmen;
 
   setUp(() {
     usuarios = UsuarioRepositorioFalso();
-    servicio = ServicioUsuarios(usuarios);
+    cuentas = CuentaAccesoFalsa();
+    servicio = ServicioUsuarios(usuarios, cuentas);
     carmen = Administrador('u1', 'Carmen Ruiz', '1000000001');
     usuarios.sembrar(tienda, carmen);
   });
@@ -55,72 +57,95 @@ void main() {
   });
 
   group('crearEmpleado', () {
-    test('crea un Empleado activo con id uuid y lo guarda', () async {
-      final empleado = await servicio.crearEmpleado(
-        tienda,
-        'Daniel Mendoza',
-        '1045678901',
-      );
+    Future<Empleado> crear([
+      String nombre = 'Daniel Mendoza',
+      String cedula = '1045678901',
+      String correo = 'daniel@gip.test',
+      String clave = 'gip12345',
+    ]) => servicio.crearEmpleado(tienda, nombre, cedula, correo, clave);
+
+    test('crea la cuenta y el Empleado activo, con id uuid y correo', () async {
+      final empleado = await crear();
 
       expect(empleado, isA<Empleado>());
       expect(empleado.isActivo(), isTrue);
       expect(empleado.getNombre(), 'Daniel Mendoza');
       expect(empleado.getCedula(), '1045678901');
+      expect(empleado.getCorreo(), 'daniel@gip.test');
       expect(empleado.getId(), matches(uuid));
+      expect(cuentas.cuentas, {'daniel@gip.test': 'gip12345'});
       expect(usuarios.guardados.map((u) => u.getId()), [empleado.getId()]);
       final guardado = await usuarios.buscarPorCedula(tienda, '1045678901');
       expect(guardado, isA<Empleado>());
-      expect(guardado!.getNombre(), 'Daniel Mendoza');
+      expect(guardado!.getCorreo(), 'daniel@gip.test');
       expect(guardado.isActivo(), isTrue);
     });
 
     test('cada empleado nuevo tiene un id distinto', () async {
-      final a = await servicio.crearEmpleado(tienda, 'A', '1');
-      final b = await servicio.crearEmpleado(tienda, 'B', '2');
+      final a = await crear('A', '1', 'a@gip.test');
+      final b = await crear('B', '2', 'b@gip.test');
 
       expect(a.getId(), isNot(b.getId()));
     });
 
-    test('quita los espacios del nombre y de la cédula', () async {
-      final empleado = await servicio.crearEmpleado(
-        tienda,
+    test('quita los espacios del nombre, la cédula y el correo, y pasa el '
+        'correo a minúsculas (así lo busca el inicio de sesión)', () async {
+      final empleado = await crear(
         '  Daniel Mendoza ',
         ' 1045678901  ',
+        '  Daniel@GIP.test ',
       );
 
       expect(empleado.getNombre(), 'Daniel Mendoza');
       expect(empleado.getCedula(), '1045678901');
+      expect(empleado.getCorreo(), 'daniel@gip.test');
+      expect(cuentas.intentos.single.$1, 'daniel@gip.test');
+    });
+
+    test('la contraseña va tal cual a la cuenta, sin recortarla', () async {
+      await crear('Daniel', '1', 'd@gip.test', ' gip 12345 ');
+
+      expect(cuentas.cuentas['d@gip.test'], ' gip 12345 ');
+    });
+
+    test('la contraseña nunca queda en el usuario guardado', () async {
+      await crear();
+
+      final texto = usuarios.guardados.map((u) => '$u').join();
+      expect(texto, isNot(contains('gip12345')));
     });
 
     for (final nombre in ['', '   ']) {
       test(
-        'nombre vacío ("$nombre"): "Datos no válidos" y no guarda',
+        'nombre vacío ("$nombre"): "Datos no válidos" y no crea nada',
         () async {
           await expectLater(
-            servicio.crearEmpleado(tienda, nombre, '1045678901'),
+            crear(nombre),
             throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
           );
           expect(usuarios.guardados, isEmpty);
+          expect(cuentas.intentos, isEmpty);
         },
       );
     }
 
     for (final cedula in ['', '  ']) {
       test(
-        'cédula vacía ("$cedula"): "Datos no válidos" y no guarda',
+        'cédula vacía ("$cedula"): "Datos no válidos" y no crea nada',
         () async {
           await expectLater(
-            servicio.crearEmpleado(tienda, 'Daniel', cedula),
+            crear('Daniel', cedula),
             throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
           );
           expect(usuarios.guardados, isEmpty);
+          expect(cuentas.intentos, isEmpty);
         },
       );
     }
 
-    test('el mensaje es el del diagrama', () async {
+    test('el mensaje de datos no válidos es el del diagrama', () async {
       await expectLater(
-        servicio.crearEmpleado(tienda, '', '1'),
+        crear(''),
         throwsA(
           isA<ExcepcionDatosUsuarioNoValidos>().having(
             (e) => e.mensaje,
@@ -131,13 +156,18 @@ void main() {
       );
     });
 
-    test('cédula repetida: "Datos no válidos" y no guarda', () async {
-      await expectLater(
-        servicio.crearEmpleado(tienda, 'Otra Carmen', '1000000001'),
-        throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
-      );
-      expect(usuarios.guardados, isEmpty);
-    });
+    test(
+      'cédula repetida: "Datos no válidos" y NO se crea la cuenta',
+      () async {
+        await expectLater(
+          crear('Otra Carmen', '1000000001'),
+          throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
+        );
+        expect(usuarios.guardados, isEmpty);
+        // Se revisa antes de crear la cuenta: no queda una cuenta sin empleado.
+        expect(cuentas.intentos, isEmpty);
+      },
+    );
 
     test(
       'la cédula de un usuario inactivo también cuenta como repetida',
@@ -145,7 +175,7 @@ void main() {
         usuarios.sembrar(tienda, Empleado('u3', 'Ana', '777')..desactivar());
 
         await expectLater(
-          servicio.crearEmpleado(tienda, 'Otra Ana', '777'),
+          crear('Otra Ana', '777'),
           throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
         );
       },
@@ -154,7 +184,7 @@ void main() {
     test('la misma cédula en otra tienda sí se permite', () async {
       usuarios.sembrar(otraTienda, Empleado('u9', 'Pedro', '555'));
 
-      final empleado = await servicio.crearEmpleado(tienda, 'Pedro', '555');
+      final empleado = await crear('Pedro', '555');
 
       expect(empleado.getCedula(), '555');
       expect((await servicio.listar(tienda)), hasLength(2));
@@ -162,21 +192,92 @@ void main() {
 
     test('la cédula repetida se busca con la cédula ya sin espacios', () async {
       await expectLater(
-        servicio.crearEmpleado(tienda, 'Otra Carmen', ' 1000000001 '),
+        crear('Otra Carmen', ' 1000000001 '),
         throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
       );
     });
 
-    test('si guardar falla, el error llega y no queda guardado', () async {
-      usuarios.fallar = true;
+    for (final correo in [
+      '',
+      '   ',
+      'sin-arroba',
+      'a@b',
+      '@gip.test',
+      'a@.com',
+      'dos palabras@gip.test',
+      'a@@gip.test',
+    ]) {
+      test('correo no válido ("$correo"): lo rechaza y no crea nada', () async {
+        await expectLater(
+          crear('Daniel', '1045678901', correo),
+          throwsA(
+            isA<ExcepcionCorreoNoValido>().having(
+              (e) => e.mensaje,
+              'mensaje',
+              'Escribe un correo válido',
+            ),
+          ),
+        );
+        expect(cuentas.intentos, isEmpty);
+        expect(usuarios.guardados, isEmpty);
+      });
+    }
+
+    for (final clave in ['', '1', '12345']) {
+      test('contraseña corta ("$clave"): lo rechaza y no crea nada', () async {
+        await expectLater(
+          crear('Daniel', '1045678901', 'd@gip.test', clave),
+          throwsA(
+            isA<ExcepcionClaveNoValida>().having(
+              (e) => e.mensaje,
+              'mensaje',
+              'La contraseña debe tener al menos 6 caracteres',
+            ),
+          ),
+        );
+        expect(cuentas.intentos, isEmpty);
+        expect(usuarios.guardados, isEmpty);
+      });
+    }
+
+    test('seis caracteres es lo mínimo válido', () async {
+      final empleado = await crear('Daniel', '1', 'd@gip.test', '123456');
+
+      expect(empleado.getCorreo(), 'd@gip.test');
+    });
+
+    test('correo ya registrado con otra contraseña: error y no guarda al '
+        'empleado', () async {
+      cuentas.cuentas['luis@gip.test'] = 'otraclave';
 
       await expectLater(
-        servicio.crearEmpleado(tienda, 'Daniel', '1045678901'),
-        throwsA(isA<StateError>()),
+        crear('Luis', '1000000002', 'luis@gip.test'),
+        throwsA(isA<ExcepcionCorreoYaRegistrado>()),
       );
-      usuarios.fallar = false;
       expect(usuarios.guardados, isEmpty);
-      expect(await usuarios.buscarPorCedula(tienda, '1045678901'), isNull);
+    });
+
+    test('si crear la cuenta falla, el error llega y no se guarda al '
+        'empleado', () async {
+      cuentas.fallar = true;
+
+      await expectLater(crear(), throwsA(isA<StateError>()));
+      expect(usuarios.guardados, isEmpty);
+    });
+
+    test('si guardar falla, queda la cuenta y el mismo intento se puede '
+        'repetir', () async {
+      usuarios.fallarAlGuardar = true;
+      await expectLater(crear(), throwsA(isA<StateError>()));
+      expect(cuentas.cuentas, {'daniel@gip.test': 'gip12345'});
+      usuarios.fallarAlGuardar = false;
+
+      // El reintento con los mismos datos da por buena la cuenta ya creada.
+      final empleado = await crear();
+
+      expect(empleado.getCorreo(), 'daniel@gip.test');
+      expect(usuarios.guardados, hasLength(1));
+      expect(cuentas.intentos, hasLength(2));
     });
   });
 

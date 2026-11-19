@@ -20,3 +20,27 @@ class ExcepcionSinConexionUsuarios extends ExcepcionNegocio {
   const ExcepcionSinConexionUsuarios()
     : super('Necesitas internet para ver y cambiar los usuarios');
 }
+
+/// El correo no tiene forma de correo (DI-43).
+class ExcepcionCorreoNoValido extends ExcepcionNegocio {
+  const ExcepcionCorreoNoValido() : super('Escribe un correo válido');
+}
+
+/// La contraseña es más corta de lo que pide Supabase (DI-43).
+class ExcepcionClaveNoValida extends ExcepcionNegocio {
+  const ExcepcionClaveNoValida(int minimo)
+    : super('La contraseña debe tener al menos $minimo caracteres');
+}
+
+/// Ya hay una cuenta con ese correo y no es la de este intento (DI-43).
+class ExcepcionCorreoYaRegistrado extends ExcepcionNegocio {
+  const ExcepcionCorreoYaRegistrado()
+    : super('Ese correo ya tiene una cuenta. Usa otro correo');
+}
+
+/// Supabase rechazó crear la cuenta de acceso por otra razón, por ejemplo
+/// porque los registros están desactivados (DI-43).
+class ExcepcionCuentaNoCreada extends ExcepcionNegocio {
+  const ExcepcionCuentaNoCreada()
+    : super('No se pudo crear la cuenta de acceso. Inténtalo de nuevo');
+}

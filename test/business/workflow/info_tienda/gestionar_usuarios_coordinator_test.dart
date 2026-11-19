@@ -24,14 +24,16 @@ void main() {
   final luis = Empleado('u2', 'Luis Gómez', '1000000002');
 
   late UsuarioRepositorioFalso usuarios;
+  late CuentaAccesoFalsa cuentas;
   late GestionarUsuariosCoordinator coordinador;
 
   setUp(() {
     usuarios = UsuarioRepositorioFalso()
       ..sembrar(tienda, carmen)
       ..sembrar(tienda, luis);
+    cuentas = CuentaAccesoFalsa();
     coordinador = GestionarUsuariosCoordinator(
-      ServicioUsuarios(usuarios),
+      ServicioUsuarios(usuarios, cuentas),
       ServicioAcceso(AutenticacionFalsa(), SesionLocalFalsa()),
     );
   });
@@ -48,11 +50,16 @@ void main() {
         tienda,
         'Ana Torres',
         '1000000003',
+        'ana@gip.test',
+        'gip12345',
         carmen,
       );
 
       expect(empleado, isA<Empleado>());
       expect(usuarios.guardados.single.getNombre(), 'Ana Torres');
+      expect(usuarios.guardados.single.getCorreo(), 'ana@gip.test');
+      // La cuenta con la que va a iniciar sesión.
+      expect(cuentas.cuentas, {'ana@gip.test': 'gip12345'});
     });
 
     test('desactiva a un empleado', () async {
@@ -64,7 +71,14 @@ void main() {
 
     test('los errores del servicio llegan tal cual', () async {
       await expectLater(
-        coordinador.crearEmpleado(tienda, '', '1', carmen),
+        coordinador.crearEmpleado(
+          tienda,
+          '',
+          '1',
+          'a@gip.test',
+          'gip12345',
+          carmen,
+        ),
         throwsA(isA<ExcepcionDatosUsuarioNoValidos>()),
       );
       await expectLater(
@@ -84,10 +98,19 @@ void main() {
 
     test('crear', () async {
       await expectLater(
-        coordinador.crearEmpleado(tienda, 'Ana', '3', luis),
+        coordinador.crearEmpleado(
+          tienda,
+          'Ana',
+          '3',
+          'ana@gip.test',
+          'gip12345',
+          luis,
+        ),
         throwsA(isA<ExcepcionSoloPropietario>()),
       );
       expect(usuarios.guardados, isEmpty);
+      // Ni siquiera se crea la cuenta de acceso.
+      expect(cuentas.intentos, isEmpty);
     });
 
     test('desactivar', () async {

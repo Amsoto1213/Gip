@@ -23,10 +23,15 @@ import 'package:provider/provider.dart';
 /// e inactivos, y el formulario "Agregar empleado". Desactivar pide
 /// confirmación; el propietario no se desactiva.
 ///
-/// No se muestran la fecha de alta ("desde jul. 2026") ni la de baja
-/// ("desactivada el 3 nov.") porque `Usuario` no las guarda, ni el género
-/// ("Propietaria", "Empleada"), ni "con su PIN": el PIN no existe, se inicia
-/// sesión con correo y contraseña (DI-05, DI-42).
+/// Agregar un empleado crea también su cuenta de acceso: el formulario pide
+/// correo y contraseña, y el empleado entra con ellos (DI-43). La lista muestra
+/// el correo de cada usuario.
+///
+/// No se muestran la fecha de alta ("desde jul. 2026", la tabla web muestra el
+/// correo en su lugar) ni la de baja ("desactivada el 3 nov.") porque
+/// `Usuario` no las guarda, ni el género ("Propietaria", "Empleada"), ni "con
+/// la cédula … y su PIN": el PIN no existe, se inicia sesión con correo y
+/// contraseña (DI-05, DI-42, DI-43).
 class UsuariosView extends StatefulWidget {
   const UsuariosView({super.key});
 
@@ -45,6 +50,8 @@ class UsuariosView extends StatefulWidget {
 class _UsuariosViewState extends State<UsuariosView> {
   final _nombre = TextEditingController();
   final _cedula = TextEditingController();
+  final _correo = TextEditingController();
+  final _clave = TextEditingController();
 
   /// Para llevar la pantalla hasta el resultado de un intento.
   final _resultadoKey = GlobalKey();
@@ -53,6 +60,8 @@ class _UsuariosViewState extends State<UsuariosView> {
   void dispose() {
     _nombre.dispose();
     _cedula.dispose();
+    _correo.dispose();
+    _clave.dispose();
     super.dispose();
   }
 
@@ -81,10 +90,17 @@ class _UsuariosViewState extends State<UsuariosView> {
 
   Future<void> _agregar() async {
     final vm = context.read<UsuariosViewModel>();
-    final creado = await vm.agregar(_nombre.text, _cedula.text);
+    final creado = await vm.agregar(
+      _nombre.text,
+      _cedula.text,
+      _correo.text,
+      _clave.text,
+    );
     if (creado) {
       _nombre.clear();
       _cedula.clear();
+      _correo.clear();
+      _clave.clear();
     }
     if (mounted) _verResultado();
   }
@@ -132,6 +148,8 @@ class _UsuariosViewState extends State<UsuariosView> {
         vm: vm,
         nombre: _nombre,
         cedula: _cedula,
+        correo: _correo,
+        clave: _clave,
         onAgregar: _agregar,
       );
       final resultado = _Resultado(key: _resultadoKey, vm: vm);
@@ -330,6 +348,16 @@ class _FilaMovil extends StatelessWidget {
                       color: esquema.onSurfaceVariant,
                     ),
                   ),
+                  if (u.getCorreo() case final correo?)
+                    Text(
+                      correo,
+                      key: Key('usuario_correo_${u.getId()}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tema.textTheme.bodyMedium?.copyWith(
+                        color: esquema.onSurfaceVariant,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -355,8 +383,9 @@ class _EncabezadoTabla extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 12),
       child: Row(
         children: [
-          Expanded(flex: 4, child: Text('Nombre', style: estilo)),
-          Expanded(flex: 3, child: Text('Rol', style: estilo)),
+          Expanded(flex: 3, child: Text('Nombre', style: estilo)),
+          Expanded(flex: 2, child: Text('Rol', style: estilo)),
+          Expanded(flex: 4, child: Text('Correo', style: estilo)),
           Expanded(flex: 2, child: Text('Estado', style: estilo)),
           const SizedBox(width: 130),
         ],
@@ -390,7 +419,7 @@ class _FilaWeb extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Text.rich(
                 TextSpan(
                   text: u.getNombre(),
@@ -406,9 +435,19 @@ class _FilaWeb extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Text(
                 _rol(u),
+                style: tema.textTheme.bodyLarge?.copyWith(color: color),
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: Text(
+                u.getCorreo() ?? '',
+                key: Key('usuario_correo_${u.getId()}'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: tema.textTheme.bodyLarge?.copyWith(color: color),
               ),
             ),
@@ -438,12 +477,16 @@ class _Formulario extends StatelessWidget {
     required this.vm,
     required this.nombre,
     required this.cedula,
+    required this.correo,
+    required this.clave,
     required this.onAgregar,
   });
 
   final UsuariosViewModel vm;
   final TextEditingController nombre;
   final TextEditingController cedula;
+  final TextEditingController correo;
+  final TextEditingController clave;
   final VoidCallback onAgregar;
 
   @override
@@ -475,6 +518,27 @@ class _Formulario extends StatelessWidget {
             habilitado: !vm.ocupado,
             tipoTeclado: TextInputType.number,
             formateadores: [FilteringTextInputFormatter.digitsOnly],
+            accionTeclado: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          CampoGip(
+            campoKey: const Key('usuarios_correo'),
+            etiqueta: 'Correo',
+            controlador: correo,
+            pista: 'daniel@correo.com',
+            ayuda: 'Con este correo y su contraseña el empleado entra a GIP.',
+            habilitado: !vm.ocupado,
+            tipoTeclado: TextInputType.emailAddress,
+            accionTeclado: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          CampoGip(
+            campoKey: const Key('usuarios_clave'),
+            etiqueta: 'Contraseña',
+            controlador: clave,
+            pista: 'Mínimo 6 caracteres',
+            contrasena: true,
+            habilitado: !vm.ocupado,
             accionTeclado: TextInputAction.done,
             onSubmitted: (_) => vm.ocupado ? null : onAgregar(),
           ),

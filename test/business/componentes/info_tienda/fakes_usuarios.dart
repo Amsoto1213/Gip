@@ -1,6 +1,8 @@
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
+import 'package:gip/business/interfaces/info_tienda/i_cuenta_acceso.dart';
 import 'package:gip/business/interfaces/info_tienda/i_usuario_repositorio.dart';
+import 'package:gip/transversal/errores/errores_usuarios.dart';
 
 /// Usuarios en memoria, por tienda. Como una base de datos: guarda y devuelve
 /// copias, así cambiar un usuario leído no cambia lo guardado hasta que se
@@ -13,14 +15,24 @@ class UsuarioRepositorioFalso implements IUsuarioRepositorio {
 
   bool fallar = false;
 
+  /// Falla solo al guardar: lo demás sigue funcionando.
+  bool fallarAlGuardar = false;
+
   static Usuario _copiar(Usuario u) => u is Administrador
       ? Administrador(
           u.getId(),
           u.getNombre(),
           u.getCedula(),
+          correo: u.getCorreo(),
           activo: u.isActivo(),
         )
-      : Empleado(u.getId(), u.getNombre(), u.getCedula(), activo: u.isActivo());
+      : Empleado(
+          u.getId(),
+          u.getNombre(),
+          u.getCedula(),
+          correo: u.getCorreo(),
+          activo: u.isActivo(),
+        );
 
   List<Usuario> _de(Tienda t) => _datos.putIfAbsent(t.getId(), () => []);
 
@@ -48,7 +60,7 @@ class UsuarioRepositorioFalso implements IUsuarioRepositorio {
 
   @override
   Future<void> guardar(Tienda tienda, Usuario usuario) async {
-    if (fallar) throw StateError('sin red');
+    if (fallar || fallarAlGuardar) throw StateError('sin red');
     final copia = _copiar(usuario);
     guardados.add(copia);
     final lista = _de(tienda);
@@ -58,5 +70,29 @@ class UsuarioRepositorioFalso implements IUsuarioRepositorio {
     } else {
       lista.add(copia);
     }
+  }
+}
+
+/// Cuentas de acceso en memoria: correo → contraseña. Cumple lo que promete
+/// `ICuentaAcceso.crear`: con el mismo correo y la misma contraseña da por
+/// buena la cuenta que ya existe; con otra contraseña, el correo es de alguien
+/// más. [fallar] simula una falla de la red.
+class CuentaAccesoFalsa implements ICuentaAcceso {
+  final Map<String, String> cuentas = {};
+
+  /// Cada llamada a crear, en orden de llegada: (correo, clave).
+  final List<(String, String)> intentos = [];
+
+  bool fallar = false;
+
+  @override
+  Future<void> crear(String correo, String clave) async {
+    intentos.add((correo, clave));
+    if (fallar) throw StateError('sin red');
+    final existente = cuentas[correo];
+    if (existente != null && existente != clave) {
+      throw const ExcepcionCorreoYaRegistrado();
+    }
+    cuentas[correo] = clave;
   }
 }

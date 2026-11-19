@@ -64,18 +64,39 @@ void main() {
       );
     });
 
-    test('las columnas que se piden no incluyen el correo', () {
-      expect(MapeoUsuario.columnas, isNot(contains('correo')));
+    test('lee el correo, y es nulo si la fila no lo trae', () {
+      final con = MapeoUsuario.aEntidad({
+        'id': 'u1',
+        'nombre': 'Luis',
+        'cedula': '2',
+        'rol': 'EMPLEADO',
+        'activo': true,
+        'correo': 'luis@gip.test',
+      });
+      final sin = MapeoUsuario.aEntidad({
+        'id': 'u2',
+        'nombre': 'Ana',
+        'cedula': '3',
+        'rol': 'EMPLEADO',
+        'activo': true,
+      });
+
+      expect(con.getCorreo(), 'luis@gip.test');
+      expect(sin.getCorreo(), isNull);
+    });
+
+    test('las columnas que se piden incluyen el correo', () {
+      expect(MapeoUsuario.columnas, contains('correo'));
     });
   });
 
   group('aFila', () {
     final ahora = DateTime.utc(2026, 11, 19, 15, 30);
 
-    test('empleado nuevo: tienda, rol y activo; sin correo', () {
+    test('empleado nuevo: tienda, correo, rol y activo', () {
       final fila = MapeoUsuario.aFila(
         tienda,
-        Empleado('u2', 'Daniel Mendoza', '1045678901'),
+        Empleado('u2', 'Daniel Mendoza', '1045678901', correo: 'd@gip.test'),
         ahora: ahora,
       );
 
@@ -84,11 +105,21 @@ void main() {
         'tienda_id': 't-uuid',
         'nombre': 'Daniel Mendoza',
         'cedula': '1045678901',
+        'correo': 'd@gip.test',
         'rol': 'EMPLEADO',
         'activo': true,
         'actualizado_en': '2026-11-19T15:30:00.000Z',
       });
-      // Sin correo: al actualizar no se borra el que ya tiene.
+    });
+
+    test('un usuario sin correo no manda la columna: no se borra el del '
+        'servidor', () {
+      final fila = MapeoUsuario.aFila(
+        tienda,
+        Empleado('u2', 'Daniel', '1'),
+        ahora: ahora,
+      );
+
       expect(fila.containsKey('correo'), isFalse);
     });
 
@@ -126,7 +157,8 @@ void main() {
     });
 
     test('lo que se guarda se vuelve a leer igual', () {
-      final original = Empleado('u2', 'Ana Torres', '3')..desactivar();
+      final original = Empleado('u2', 'Ana Torres', '3', correo: 'ana@gip.test')
+        ..desactivar();
 
       final leido = MapeoUsuario.aEntidad(
         MapeoUsuario.aFila(tienda, original, ahora: ahora),
@@ -136,6 +168,7 @@ void main() {
       expect(leido.getId(), 'u2');
       expect(leido.getNombre(), 'Ana Torres');
       expect(leido.getCedula(), '3');
+      expect(leido.getCorreo(), 'ana@gip.test');
       expect(leido.isActivo(), isFalse);
     });
   });
@@ -151,6 +184,22 @@ void main() {
 
       expect(error, isA<ExcepcionDatosUsuarioNoValidos>());
     });
+
+    test(
+      'correo repetido (23505 en usuarios_correo_key): correo ya registrado',
+      () {
+        final error = MapeoUsuario.traducirError(
+          const PostgrestException(
+            message:
+                'duplicate key value violates unique constraint '
+                '"usuarios_correo_key"',
+            code: '23505',
+          ),
+        );
+
+        expect(error, isA<ExcepcionCorreoYaRegistrado>());
+      },
+    );
 
     test('otro error del servidor llega tal cual', () {
       const original = PostgrestException(message: 'permiso', code: '42501');

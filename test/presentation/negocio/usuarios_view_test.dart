@@ -22,7 +22,12 @@ void main() {
   const web = Size(1280, 800);
 
   final carmen = propietariaAlertas.usuario;
-  final luis = Empleado('u2', 'Luis Gómez', '1000000002');
+  final luis = Empleado(
+    'u2',
+    'Luis Gómez',
+    '1000000002',
+    correo: 'luis@gip.test',
+  );
   final ana = Empleado('u3', 'Ana Torres', '1000000003', activo: false);
 
   late GestionarUsuariosFalso coordinador;
@@ -64,6 +69,24 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Escribe los cuatro campos del formulario.
+  Future<void> escribir(
+    WidgetTester tester, {
+    String nombre = '',
+    String cedula = '',
+    String correo = '',
+    String clave = '',
+  }) async {
+    for (final (campo, texto) in [
+      ('nombre', nombre),
+      ('cedula', cedula),
+      ('correo', correo),
+      ('clave', clave),
+    ]) {
+      await tester.enterText(find.byKey(Key('usuarios_$campo')), texto);
+    }
+  }
+
   /// Lleva el botón a la vista (la lista se arma por partes) y deja que se
   /// asiente antes de tocarlo.
   Future<void> verAgregar(WidgetTester tester) async {
@@ -94,6 +117,15 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.text(UsuariosView.notaEmpleado), findsOneWidget);
+    });
+
+    testWidgets('$nombre: la lista muestra el correo con el que entra cada '
+        'usuario', (tester) async {
+      await abrir(tester, tamano);
+
+      expect(find.text('luis@gip.test'), findsOneWidget);
+      // Carmen y Ana no tienen correo en los datos de prueba.
+      expect(find.byKey(const Key('usuario_correo_u2')), findsOneWidget);
     });
 
     testWidgets('$nombre: solo el empleado activo tiene Desactivar', (
@@ -131,7 +163,12 @@ void main() {
           tester.getSize(desactivar(luis)).height,
           greaterThanOrEqualTo(44),
         );
-        for (final clave in ['usuarios_nombre', 'usuarios_cedula']) {
+        for (final clave in [
+          'usuarios_nombre',
+          'usuarios_cedula',
+          'usuarios_correo',
+          'usuarios_clave',
+        ]) {
           expect(
             tester.getSize(find.byKey(Key(clave))).height,
             greaterThanOrEqualTo(44),
@@ -189,16 +226,16 @@ void main() {
     ) async {
       await abrir(tester, tamano);
       when(
-        () => coordinador.crearEmpleado(any(), any(), any(), any()),
+        () =>
+            coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
       ).thenAnswer((_) async => Empleado('u9', 'Daniel Mendoza', '1045678901'));
 
-      await tester.enterText(
-        find.byKey(const Key('usuarios_nombre')),
-        'Daniel Mendoza',
-      );
-      await tester.enterText(
-        find.byKey(const Key('usuarios_cedula')),
-        '1045678901',
+      await escribir(
+        tester,
+        nombre: 'Daniel Mendoza',
+        cedula: '1045678901',
+        correo: 'daniel@gip.test',
+        clave: 'gip12345',
       );
       await verAgregar(tester);
       await tester.tap(find.byKey(const Key('usuarios_agregar')));
@@ -210,31 +247,38 @@ void main() {
           captureAny(),
           captureAny(),
           captureAny(),
+          captureAny(),
+          captureAny(),
         ),
       ).captured;
-      expect(args, [tiendaAlertas, 'Daniel Mendoza', '1045678901', carmen]);
+      expect(args, [
+        tiendaAlertas,
+        'Daniel Mendoza',
+        '1045678901',
+        'daniel@gip.test',
+        'gip12345',
+        carmen,
+      ]);
       expect(find.text('Empleado creado'), findsOneWidget);
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const Key('usuarios_nombre')))
-            .controller!
-            .text,
-        isEmpty,
-      );
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const Key('usuarios_cedula')))
-            .controller!
-            .text,
-        isEmpty,
-      );
+      for (final campo in ['nombre', 'cedula', 'correo', 'clave']) {
+        expect(
+          tester
+              .widget<TextField>(find.byKey(Key('usuarios_$campo')))
+              .controller!
+              .text,
+          isEmpty,
+          reason: campo,
+        );
+      }
     });
 
     testWidgets('$nombre: datos no válidos muestra el mensaje y conserva lo '
         'escrito', (tester) async {
       await abrir(tester, tamano);
-      when(() => coordinador.crearEmpleado(any(), any(), any(), any()))
-          .thenThrow(const ExcepcionDatosUsuarioNoValidos());
+      when(
+        () =>
+            coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
+      ).thenThrow(const ExcepcionDatosUsuarioNoValidos());
 
       await tester.enterText(find.byKey(const Key('usuarios_nombre')), 'Ana');
       await tester.enterText(
@@ -279,6 +323,60 @@ void main() {
       );
     });
 
+    testWidgets('$nombre: el correo es de teclado de correo y la contraseña va '
+        'oculta', (tester) async {
+      await abrir(tester, tamano);
+
+      final correo = tester.widget<TextField>(
+        find.byKey(const Key('usuarios_correo')),
+      );
+      expect(correo.keyboardType, TextInputType.emailAddress);
+      final clave = tester.widget<TextField>(
+        find.byKey(const Key('usuarios_clave')),
+      );
+      expect(clave.obscureText, isTrue);
+      expect(
+        find.text('Con este correo y su contraseña el empleado entra a GIP.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('$nombre: el correo no válido y la contraseña corta muestran '
+        'su mensaje y conservan lo escrito', (tester) async {
+      await abrir(tester, tamano);
+      when(
+        () =>
+            coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
+      ).thenThrow(const ExcepcionCorreoNoValido());
+
+      await escribir(
+        tester,
+        nombre: 'Ana',
+        cedula: '3',
+        correo: 'sin-arroba',
+        clave: 'gip12345',
+      );
+      await verAgregar(tester);
+      await tester.tap(find.byKey(const Key('usuarios_agregar')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Escribe un correo válido'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('usuarios_correo')))
+            .controller!
+            .text,
+        'sin-arroba',
+      );
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('usuarios_clave')))
+            .controller!
+            .text,
+        'gip12345',
+      );
+    });
+
     testWidgets('$nombre: el empleado ve que es solo del propietario y no '
         'hay formulario', (tester) async {
       await abrir(tester, tamano, usuario: empleadoAlertas);
@@ -312,8 +410,10 @@ void main() {
     'móvil: tras un error, el aviso y el formulario siguen a la vista',
     (tester) async {
       await abrir(tester, movil);
-      when(() => coordinador.crearEmpleado(any(), any(), any(), any()))
-          .thenThrow(const ExcepcionDatosUsuarioNoValidos());
+      when(
+        () =>
+            coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
+      ).thenThrow(const ExcepcionDatosUsuarioNoValidos());
 
       await tester.enterText(find.byKey(const Key('usuarios_nombre')), '');
       await verAgregar(tester);
@@ -357,6 +457,14 @@ void main() {
     expect(find.text('Nombre'), findsOneWidget);
     expect(find.text('Rol'), findsOneWidget);
     expect(find.text('Estado'), findsOneWidget);
+    // "Correo" también es la etiqueta del formulario: se mira solo la tabla.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('usuarios_lista')),
+        matching: find.text('Correo'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Carmen (usted)', findRichText: true), findsOneWidget);
     expect(find.text('Propietario'), findsOneWidget);
     expect(find.text('Empleado'), findsNWidgets(2));
@@ -379,8 +487,9 @@ void main() {
   testWidgets('mientras guarda, bloquea el botón y los campos', (tester) async {
     await abrir(tester, web);
     final espera = Completer<Empleado>();
-    when(() => coordinador.crearEmpleado(any(), any(), any(), any()))
-        .thenAnswer((_) => espera.future);
+    when(
+      () => coordinador.crearEmpleado(any(), any(), any(), any(), any(), any()),
+    ).thenAnswer((_) => espera.future);
 
     await tester.enterText(find.byKey(const Key('usuarios_nombre')), 'Ana');
     await tester.enterText(find.byKey(const Key('usuarios_cedula')), '123');
