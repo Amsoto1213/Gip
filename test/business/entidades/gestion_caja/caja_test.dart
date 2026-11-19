@@ -147,4 +147,148 @@ void main() {
       expect(() => caja.cerrar(d('1')), throwsA(isA<ExcepcionCajaCerrada>()));
     });
   });
+
+  group('base de apertura (DI-38)', () {
+    test('sin base, abre en cero', () {
+      expect(Caja('t_2026-11-14', hoy).getBaseApertura(), Decimal.zero);
+    });
+
+    test('el saldo esperado suma la base a los movimientos', () {
+      final caja = Caja('t_2026-11-14', hoy, baseApertura: d('100000'))
+        ..registrarMovimiento(mov('268000', TipoMovimientoCaja.ingreso))
+        ..registrarMovimiento(mov('18000', TipoMovimientoCaja.egreso));
+
+      expect(caja.getBaseApertura(), d('100000'));
+      expect(caja.calcularSaldoEsperado(), d('350000'));
+    });
+
+    test('la diferencia del cierre cuenta la base', () {
+      final caja = Caja('t_2026-11-14', hoy, baseApertura: d('100000'))
+        ..registrarMovimiento(mov('50000', TipoMovimientoCaja.ingreso));
+
+      expect(caja.cerrar(d('148000')), d('-2000'));
+    });
+  });
+
+  group('calcularDesglose (DI-38)', () {
+    MovimientoCaja movc(
+      String id,
+      String valor,
+      TipoMovimientoCaja tipo,
+      ClasificacionMovimiento c,
+    ) => MovimientoCaja(id, d(valor), 'x', c, tipo, hoy);
+
+    test('separa la base y cada clase de movimiento', () {
+      final caja = Caja('t_2026-11-14', hoy, baseApertura: d('100000'))
+        ..registrarMovimiento(
+          movc(
+            '1',
+            '268000',
+            TipoMovimientoCaja.ingreso,
+            ClasificacionMovimiento.negocio,
+          ),
+        )
+        ..registrarMovimiento(
+          movc(
+            '2',
+            '8500',
+            TipoMovimientoCaja.ingreso,
+            ClasificacionMovimiento.negocio,
+          ),
+        )
+        ..registrarMovimiento(
+          movc(
+            '3',
+            '12000',
+            TipoMovimientoCaja.egreso,
+            ClasificacionMovimiento.negocio,
+          ),
+        )
+        ..registrarMovimiento(
+          movc(
+            '4',
+            '6000',
+            TipoMovimientoCaja.egreso,
+            ClasificacionMovimiento.negocio,
+          ),
+        )
+        ..registrarMovimiento(
+          movc(
+            '5',
+            '40000',
+            TipoMovimientoCaja.egreso,
+            ClasificacionMovimiento.personal,
+          ),
+        )
+        ..registrarMovimiento(
+          movc(
+            '6',
+            '20000',
+            TipoMovimientoCaja.ingreso,
+            ClasificacionMovimiento.personal,
+          ),
+        )
+        ..registrarMovimiento(
+          movc(
+            '7',
+            '5000',
+            TipoMovimientoCaja.egreso,
+            ClasificacionMovimiento.anulacion,
+          ),
+        );
+
+      final desglose = caja.calcularDesglose();
+
+      expect(desglose.baseApertura, d('100000'));
+      expect(desglose.ingresosNegocio, d('276500'));
+      expect(desglose.egresosNegocio, d('18000'));
+      expect(desglose.cantidadEgresosNegocio, 2);
+      expect(desglose.egresosPersonales, d('40000'));
+      expect(desglose.ingresosPersonales, d('20000'));
+      expect(desglose.devolucionesPorAnulacion, d('5000'));
+      expect(desglose.saldoEsperado, caja.calcularSaldoEsperado());
+    });
+
+    test('una caja sin movimientos solo tiene la base', () {
+      final desglose = Caja(
+        't_2026-11-14',
+        hoy,
+        baseApertura: d('100000'),
+      ).calcularDesglose();
+
+      expect(desglose.saldoEsperado, d('100000'));
+      expect(desglose.ingresosNegocio, Decimal.zero);
+      expect(desglose.cantidadEgresosNegocio, 0);
+    });
+
+    test('siempre cuadra: base + entradas − salidas = saldo esperado', () {
+      for (final tipo in TipoMovimientoCaja.values) {
+        for (final c in ClasificacionMovimiento.values) {
+          final caja = Caja('t_2026-11-14', hoy, baseApertura: d('1000'))
+            ..registrarMovimiento(movc('a', '300', tipo, c))
+            ..registrarMovimiento(movc('b', '70', tipo, c))
+            ..registrarMovimiento(
+              movc(
+                'c',
+                '5',
+                tipo == TipoMovimientoCaja.ingreso
+                    ? TipoMovimientoCaja.egreso
+                    : TipoMovimientoCaja.ingreso,
+                c,
+              ),
+            );
+          final x = caja.calcularDesglose();
+
+          final suma =
+              x.baseApertura +
+              x.ingresosNegocio +
+              x.ingresosPersonales -
+              x.egresosNegocio -
+              x.egresosPersonales -
+              x.devolucionesPorAnulacion;
+          expect(suma, x.saldoEsperado, reason: '$tipo $c');
+        }
+      }
+    });
+  });
 }

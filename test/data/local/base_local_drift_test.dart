@@ -70,8 +70,14 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 12 (CUS-14).
+    /// Quita lo que agregó la versión 13 (CUS-14, DI-38).
+    Future<void> bajarDeLaVersion13(BaseLocalDrift base) async {
+      await base.customStatement('ALTER TABLE cajas DROP COLUMN base_apertura');
+    }
+
+    /// Quita lo que agregó la versión 12 (CUS-14), y antes la 13.
     Future<void> bajarDeLaVersion12(BaseLocalDrift base) async {
+      await bajarDeLaVersion13(base);
       for (final c in [
         'cerrada',
         'efectivo_contado',
@@ -139,7 +145,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 12);
+      expect(actual.schemaVersion, 13);
       expect(
         await tablas(actual),
         containsAll([
@@ -160,7 +166,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 12);
+      expect(version.read<int>('user_version'), 13);
       await actual.close();
     });
 
@@ -440,6 +446,26 @@ void main() {
       expect(caja.fechaCierre, isNull);
       expect(await v12.select(v12.movimientosCaja).get(), hasLength(1));
       await v12.close();
+    });
+
+    test('de la versión 12 a la 13 agrega base_apertura (en 0) sin perder '
+        'cajas', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v12 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion13(v12);
+      await v12.customStatement(
+        "INSERT INTO cajas (id, tienda_id, fecha, cerrada) "
+        "VALUES ('t1_2026-11-14', 't1', '2026-11-14', 0)",
+      );
+      await v12.customStatement('PRAGMA user_version = 12');
+      await v12.close();
+
+      final v13 = BaseLocalDrift(NativeDatabase(archivo));
+      final caja = (await v13.select(v13.cajas).get()).single;
+      expect(caja.id, 't1_2026-11-14');
+      expect(caja.baseApertura, Decimal.zero);
+      await v13.close();
     });
   });
 }

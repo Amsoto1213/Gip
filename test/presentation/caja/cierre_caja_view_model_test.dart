@@ -1,5 +1,9 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/entidades/gestion_caja/caja.dart';
+import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dart';
+import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
+import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/presentation/caja/cierre_caja_view_model.dart';
@@ -24,31 +28,79 @@ void main() {
     registerFallbackValue(Decimal.zero);
   });
 
+  /// Abre con $ 100.000, entran $ 276.500 y salen $ 58.000: debe haber
+  /// $ 318.500.
+  Caja cajaDeHoy() {
+    MovimientoCaja m(
+      String id,
+      String valor,
+      TipoMovimientoCaja tipo,
+      ClasificacionMovimiento clase,
+    ) => MovimientoCaja(
+      id,
+      d(valor),
+      'x',
+      clase,
+      tipo,
+      DateTime.utc(2026, 11, 18),
+    );
+    return Caja(
+      't1_2026-11-18',
+      DateTime(2026, 11, 18),
+      baseApertura: d('100000'),
+      movimientos: [
+        m(
+          '1',
+          '276500',
+          TipoMovimientoCaja.ingreso,
+          ClasificacionMovimiento.negocio,
+        ),
+        m(
+          '2',
+          '18000',
+          TipoMovimientoCaja.egreso,
+          ClasificacionMovimiento.negocio,
+        ),
+        m(
+          '3',
+          '40000',
+          TipoMovimientoCaja.egreso,
+          ClasificacionMovimiento.personal,
+        ),
+      ],
+    );
+  }
+
   setUp(() {
     coordinador = RegistrarCierreCajaFalso();
     vm = CierreCajaViewModel(coordinador, (
       usuario: propietario,
       tienda: tienda,
     ));
-    when(() => coordinador.consultarSaldoEsperado(any(), any()))
-        .thenAnswer((_) async => d('318500'));
+    when(() => coordinador.consultarCajaDelDia(any(), any()))
+        .thenAnswer((_) async => cajaDeHoy());
   });
 
   When<Future<Decimal>> cuandoCierra() =>
       when(() => coordinador.cerrarCaja(any(), any(), any()));
 
   group('cargar', () {
-    test('trae lo que debe haber con la tienda y el usuario activo', () async {
+    test('trae lo que debe haber y de dónde sale, con la tienda y el usuario '
+        'activo', () async {
       await vm.cargar();
 
       expect(vm.saldoEsperado, d('318500'));
+      expect(vm.desglose!.baseApertura, d('100000'));
+      expect(vm.desglose!.ingresosNegocio, d('276500'));
+      expect(vm.desglose!.egresosNegocio, d('18000'));
+      expect(vm.desglose!.egresosPersonales, d('40000'));
       expect(vm.cargando, isFalse);
-      verify(() => coordinador.consultarSaldoEsperado(tienda, propietario))
+      verify(() => coordinador.consultarCajaDelDia(tienda, propietario))
           .called(1);
     });
 
     test('un empleado recibe el rechazo de acceso', () async {
-      when(() => coordinador.consultarSaldoEsperado(any(), any()))
+      when(() => coordinador.consultarCajaDelDia(any(), any()))
           .thenThrow(const ExcepcionSoloPropietario());
 
       await vm.cargar();
@@ -58,7 +110,7 @@ void main() {
     });
 
     test('un fallo inesperado da un mensaje para el tendero', () async {
-      when(() => coordinador.consultarSaldoEsperado(any(), any()))
+      when(() => coordinador.consultarCajaDelDia(any(), any()))
           .thenThrow(StateError('disco'));
 
       await vm.cargar();

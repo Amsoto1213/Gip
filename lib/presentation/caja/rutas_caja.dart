@@ -30,9 +30,8 @@ StatefulShellBranch ramaCaja() => StatefulShellBranch(
       builder: (context, _) => ChangeNotifierProvider(
         create: (context) => CajaViewModel(
           context.read<RegistrarMovimientoCajaCoordinator>(),
-          context.read<RegistrarCierreCajaCoordinator>(),
           context.read<IniciarSesionViewModel>().usuarioActivo!,
-        )..cargarSaldo(),
+        )..cargar(),
         child: const CajaView(),
       ),
       routes: [

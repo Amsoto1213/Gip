@@ -1,6 +1,7 @@
 import 'package:decimal/decimal.dart';
 import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
+import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
 
@@ -30,5 +31,14 @@ class RegistrarCierreCajaCoordinator {
   ) async {
     _servicioAcceso.exigirPropietario(usuario);
     return _servicioCaja.cerrarCaja(tienda, efectivoContado);
+  }
+
+  /// Llama a servicioAcceso.exigirPropietario(usuario) y luego a
+  /// servicioCaja.consultarCajaDelDia(tienda): la caja de hoy con sus
+  /// movimientos y su base de apertura, para mostrar la lista y las cifras
+  /// (DI-38).
+  Future<Caja> consultarCajaDelDia(Tienda tienda, Usuario usuario) async {
+    _servicioAcceso.exigirPropietario(usuario);
+    return _servicioCaja.consultarCajaDelDia(tienda);
   }
 }

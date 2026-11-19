@@ -1,5 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gip/business/entidades/gestion_caja/desglose_caja.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
@@ -9,7 +10,7 @@ import 'package:gip/transversal/errores/excepcion_negocio.dart';
 /// Estado de la pantalla Cierre de caja (CUS-14). Llama solo a
 /// [RegistrarCierreCajaCoordinator].
 ///
-/// Muestra el saldo esperado de hoy, deja escribir el efectivo contado con una
+/// Muestra de dónde sale el saldo esperado de hoy (DI-38), deja escribir el efectivo contado con una
 /// vista previa de la diferencia y cierra la caja. La vista previa es solo una
 /// resta para mostrar: la diferencia que cuenta la calcula `Caja.cerrar`
 /// (DI-37).
@@ -27,15 +28,19 @@ class CierreCajaViewModel extends ChangeNotifier {
   final RegistrarCierreCajaCoordinator _coordinador;
   final UsuarioActivo _usuarioActivo;
 
-  Decimal? _saldoEsperado;
+  DesgloseCaja? _desglose;
   Decimal? _efectivo;
   Decimal? _diferenciaFinal;
   bool _cargando = false;
   bool _cerrando = false;
   String? _error;
 
+  /// De dónde sale lo que debe haber en caja, o null mientras no se ha
+  /// consultado.
+  DesgloseCaja? get desglose => _desglose;
+
   /// Lo que debe haber en caja, o null mientras no se ha consultado.
-  Decimal? get saldoEsperado => _saldoEsperado;
+  Decimal? get saldoEsperado => _desglose?.saldoEsperado;
 
   /// Efectivo escrito, si es un valor válido.
   Decimal? get efectivoContado => _efectivo;
@@ -56,7 +61,7 @@ class CierreCajaViewModel extends ChangeNotifier {
   /// para mostrar (DI-37).
   Decimal? get vistaPrevia {
     final efectivo = _efectivo;
-    final saldo = _saldoEsperado;
+    final saldo = saldoEsperado;
     if (efectivo == null || saldo == null) return null;
     return efectivo - saldo;
   }
@@ -81,16 +86,19 @@ class CierreCajaViewModel extends ChangeNotifier {
       ? null
       : '\$ ${mostrarPrecio(diferencia.abs())}';
 
-  /// Consulta lo que debe haber en caja (CUS-14, pasos 2 a 11).
+  /// Consulta lo que debe haber en caja y de dónde sale (CUS-14, pasos 2 a 11).
+  /// Lee la caja de hoy completa y de ahí saca el saldo esperado y su desglose
+  /// (DI-38).
   Future<void> cargar() async {
     _cargando = true;
     _error = null;
     notifyListeners();
     try {
-      _saldoEsperado = await _coordinador.consultarSaldoEsperado(
+      final caja = await _coordinador.consultarCajaDelDia(
         _usuarioActivo.tienda,
         _usuarioActivo.usuario,
       );
+      _desglose = caja.calcularDesglose();
     } on ExcepcionNegocio catch (e) {
       _error = e.mensaje;
     } catch (_) {

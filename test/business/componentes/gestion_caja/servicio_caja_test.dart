@@ -2,6 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
 import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dart';
+import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/transversal/errores/errores_caja.dart';
@@ -272,6 +273,164 @@ void main() {
       await servicio.cerrarCaja(tienda, d('1000'));
 
       expect(await servicio.consultarSaldoEsperado(tienda), d('1000'));
+    });
+  });
+
+  group('base de apertura (DI-38)', () {
+    final hoy = ServicioCaja.diaLocal(DateTime.now());
+    DateTime dia(int atras) => DateTime(hoy.year, hoy.month, hoy.day - atras);
+
+    /// Deja guardada una caja de otro día, con su base, sus movimientos y, si
+    /// se dice, su cierre.
+    void sembrar(
+      DateTime fecha, {
+      String base = '0',
+      List<(String, TipoMovimientoCaja)> movimientos = const [],
+      String? contado,
+    }) {
+      final id = ServicioCaja.idCaja(tienda, fecha);
+      cajas.cajas.putIfAbsent(tienda.getId(), () => {})[id] = fecha;
+      cajas.bases.putIfAbsent(tienda.getId(), () => {})[id] = d(base);
+      var n = 0;
+      for (final (valor, tipo) in movimientos) {
+        cajas.movimientos.putIfAbsent(tienda.getId(), () => []).add((
+          id,
+          MovimientoCaja(
+            '$id-${n++}',
+            d(valor),
+            'x',
+            ClasificacionMovimiento.negocio,
+            tipo,
+            fecha.toUtc(),
+          ),
+        ));
+      }
+      if (contado != null) {
+        cajas.cierres.putIfAbsent(tienda.getId(), () => {})[id] = (
+          d(contado),
+          Decimal.zero,
+          fecha.toUtc(),
+        );
+      }
+    }
+
+    test('la primera caja de la tienda abre en cero', () async {
+      final caja = await servicio.consultarCajaDelDia(tienda);
+
+      expect(caja.getBaseApertura(), Decimal.zero);
+      expect(cajas.bases[tienda.getId()]!.values.single, Decimal.zero);
+    });
+
+    test('abre con lo que se contó al cerrar la caja anterior', () async {
+      sembrar(
+        dia(1),
+        base: '100000',
+        movimientos: [('218500', TipoMovimientoCaja.ingreso)],
+        contado: '315000',
+      );
+
+      final caja = await servicio.consultarCajaDelDia(tienda);
+
+      // Lo contado (315.000), no lo esperado (318.500).
+      expect(caja.getBaseApertura(), d('315000'));
+      expect(caja.calcularSaldoEsperado(), d('315000'));
+    });
+
+    test(
+      'si la caja anterior no se cerró, abre con su saldo esperado',
+      () async {
+        sembrar(
+          dia(1),
+          base: '100000',
+          movimientos: [
+            ('50000', TipoMovimientoCaja.ingreso),
+            ('20000', TipoMovimientoCaja.egreso),
+          ],
+        );
+
+        final caja = await servicio.consultarCajaDelDia(tienda);
+
+        expect(caja.getBaseApertura(), d('130000'));
+      },
+    );
+
+    test('varios días sin cerrar siguen la cadena de bases', () async {
+      sembrar(dia(3), contado: '10000');
+      sembrar(
+        dia(2),
+        base: '10000',
+        movimientos: [('5000', TipoMovimientoCaja.ingreso)],
+      );
+      sembrar(
+        dia(1),
+        base: '15000',
+        movimientos: [('1000', TipoMovimientoCaja.egreso)],
+      );
+
+      final caja = await servicio.consultarCajaDelDia(tienda);
+
+      expect(caja.getBaseApertura(), d('14000'));
+    });
+
+    test(
+      'usa la caja más reciente aunque haya días sin caja en medio',
+      () async {
+        sembrar(dia(5), contado: '70000');
+
+        final caja = await servicio.consultarCajaDelDia(tienda);
+
+        expect(caja.getBaseApertura(), d('70000'));
+      },
+    );
+
+    test('la base se fija al crear la caja y no se recalcula', () async {
+      sembrar(dia(1), contado: '50000');
+      final primera = await servicio.consultarCajaDelDia(tienda);
+      // Cambia lo que había ayer: la caja de hoy ya está abierta.
+      cajas.cierres[tienda.getId()]!.updateAll(
+        (_, c) => (d('99999'), c.$2, c.$3),
+      );
+
+      final segunda = await servicio.consultarCajaDelDia(tienda);
+
+      expect(primera.getBaseApertura(), d('50000'));
+      expect(segunda.getBaseApertura(), d('50000'));
+      expect(cajas.cajas[tienda.getId()], hasLength(2));
+    });
+
+    test('el saldo esperado y el cierre cuentan la base', () async {
+      sembrar(dia(1), contado: '100000');
+      await servicio.registrarIngreso(tienda, d('268000'), 'Venta');
+
+      expect(await servicio.consultarSaldoEsperado(tienda), d('368000'));
+      expect(await servicio.cerrarCaja(tienda, d('368000')), Decimal.zero);
+    });
+
+    test('un movimiento de hoy no entra en la base de mañana por separado: '
+        'mañana abre con lo contado hoy', () async {
+      await servicio.registrarIngreso(tienda, d('1000'), 'Venta');
+      await servicio.cerrarCaja(tienda, d('900'));
+      final manana = DateTime(hoy.year, hoy.month, hoy.day + 1);
+
+      final anterior = await cajas.buscarUltimaAnterior(tienda, manana);
+
+      expect(anterior!.getEfectivoContado(), d('900'));
+    });
+
+    test('consultarCajaDelDia devuelve los movimientos de hoy', () async {
+      await servicio.registrarIngreso(tienda, d('1000'), 'Venta');
+      await servicio.registrarMovimientoManual(
+        tienda,
+        TipoMovimientoCaja.egreso,
+        ClasificacionMovimiento.personal,
+        d('400'),
+        'Retiro',
+      );
+
+      final caja = await servicio.consultarCajaDelDia(tienda);
+
+      expect(caja.getMovimientos(), hasLength(2));
+      expect(caja.calcularDesglose().egresosPersonales, d('400'));
     });
   });
 }

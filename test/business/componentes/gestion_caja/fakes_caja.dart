@@ -19,6 +19,10 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
   Map<String, Map<String, DateTime>> _copiaCajas = {};
   Map<String, List<(String, MovimientoCaja)>> _copiaMovs = {};
   Map<String, Map<String, (Decimal, Decimal, DateTime)>> _copiaCierres = {};
+  Map<String, Map<String, Decimal>> _copiaBases = {};
+
+  /// Por tienda: id de caja → base de apertura.
+  final Map<String, Map<String, Decimal>> bases = {};
 
   /// Por tienda: id de caja → (efectivo contado, diferencia, fecha de cierre).
   final Map<String, Map<String, (Decimal, Decimal, DateTime)>> cierres = {};
@@ -37,6 +41,7 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
     _copiaCajas = {for (final e in cajas.entries) e.key: Map.of(e.value)};
     _copiaMovs = {for (final e in movimientos.entries) e.key: List.of(e.value)};
     _copiaCierres = {for (final e in cierres.entries) e.key: Map.of(e.value)};
+    _copiaBases = {for (final e in bases.entries) e.key: Map.of(e.value)};
   }
 
   @override
@@ -50,6 +55,9 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
     cierres
       ..clear()
       ..addAll(_copiaCierres);
+    bases
+      ..clear()
+      ..addAll(_copiaBases);
   }
 
   @override
@@ -62,6 +70,7 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
     return Caja(
       entrada.key,
       entrada.value,
+      baseApertura: bases[tienda.getId()]?[entrada.key],
       movimientos: [
         for (final (idCaja, m)
             in movimientos[tienda.getId()] ??
@@ -86,11 +95,25 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
   }
 
   @override
+  Future<Caja?> buscarUltimaAnterior(Tienda tienda, DateTime fecha) async {
+    final anteriores =
+        (cajas[tienda.getId()] ?? {}).values
+            .where((f) => f.isBefore(fecha))
+            .toList()
+          ..sort();
+    if (anteriores.isEmpty) return null;
+    return buscarPorFecha(tienda, anteriores.last);
+  }
+
+  @override
   Future<void> crear(Tienda tienda, Caja caja) async {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     cajas
         .putIfAbsent(tienda.getId(), () => {})
         .putIfAbsent(caja.getId(), () => caja.getFecha());
+    bases
+        .putIfAbsent(tienda.getId(), () => {})
+        .putIfAbsent(caja.getId(), () => caja.getBaseApertura());
   }
 
   @override

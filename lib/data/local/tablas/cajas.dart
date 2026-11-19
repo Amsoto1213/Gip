@@ -11,12 +11,16 @@ import 'package:gip/data/local/conversores/conversor_fecha_utc.dart';
 /// juntas al cerrar la caja (CUS-14, DI-37): mientras está abierta, `cerrada`
 /// es falso y las otras tres son nulas. `fecha_cierre` es el instante del
 /// cierre en UTC (DI-13) y hace de fecha de última modificación.
+/// `base_apertura` es el efectivo con el que abrió la caja, calculado al
+/// crearla (CUS-14, DI-38); no cambia después.
 @DataClassName('FilaCaja')
 @TableIndex(name: 'cajas_tienda_idx', columns: {#tiendaId})
 class Cajas extends Table {
   TextColumn get id => text()();
   TextColumn get tiendaId => text()();
   TextColumn get fecha => text()();
+  TextColumn get baseApertura =>
+      text().map(const ConversorDecimal()).withDefault(const Constant('0'))();
   BoolColumn get cerrada => boolean().withDefault(const Constant(false))();
   TextColumn get efectivoContado =>
       text().map(const ConversorDecimal()).nullable()();

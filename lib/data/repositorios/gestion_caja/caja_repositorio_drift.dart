@@ -50,7 +50,28 @@ class CajaRepositorioDrift implements ICajaRepositorio {
             ))
             .getSingleOrNull();
     if (fila == null) return null;
+    return _armar(tienda, fila);
+  }
 
+  /// La caja más reciente con fecha anterior a [fecha] (DI-38). Las fechas son
+  /// texto "AAAA-MM-DD", que ordena igual que los días.
+  @override
+  Future<Caja?> buscarUltimaAnterior(Tienda tienda, DateTime fecha) async {
+    final fila =
+        await (_base.select(_base.cajas)
+              ..where(
+                (c) =>
+                    c.tiendaId.equals(tienda.getId()) &
+                    c.fecha.isSmallerThanValue(_textoDia(fecha)),
+              )
+              ..orderBy([(c) => OrderingTerm.desc(c.fecha)])
+              ..limit(1))
+            .getSingleOrNull();
+    if (fila == null) return null;
+    return _armar(tienda, fila);
+  }
+
+  Future<Caja> _armar(Tienda tienda, FilaCaja fila) async {
     final movimientos =
         await (_base.select(_base.movimientosCaja)
               ..where(
@@ -65,6 +86,7 @@ class CajaRepositorioDrift implements ICajaRepositorio {
     return Caja(
       fila.id,
       _leerDia(fila.fecha),
+      baseApertura: fila.baseApertura,
       movimientos: [
         for (final m in movimientos)
           MovimientoCaja(
@@ -82,31 +104,6 @@ class CajaRepositorioDrift implements ICajaRepositorio {
     );
   }
 
-  /// Guarda solo el cierre de la caja y lo anota en `cola_pendientes` como
-  /// ACTUALIZAR en la misma transacción (DA-33, RF-13). No toca los
-  /// movimientos. Se une a la transacción abierta.
-  @override
-  Future<void> cerrar(Tienda tienda, Caja caja) => _base.transaction(() async {
-    await (_base.update(_base.cajas)..where(
-          (c) => c.id.equals(caja.getId()) & c.tiendaId.equals(tienda.getId()),
-        ))
-        .write(
-          CajasCompanion(
-            cerrada: const Value(true),
-            efectivoContado: Value(caja.getEfectivoContado()),
-            diferencia: Value(caja.getDiferencia()),
-            fechaCierre: Value(caja.getFechaCierre()),
-          ),
-        );
-    await anotarEnCola(
-      _base,
-      tiendaId: tienda.getId(),
-      tabla: _tablaCajas,
-      registroId: caja.getId(),
-      operacion: OperacionCola.actualizar,
-    );
-  });
-
   /// Inserta la caja si su id no existe y, solo entonces, la anota en
   /// `cola_pendientes` (DA-33, DA-62). Se une a la transacción abierta.
   @override
@@ -122,6 +119,7 @@ class CajaRepositorioDrift implements ICajaRepositorio {
             id: caja.getId(),
             tiendaId: tienda.getId(),
             fecha: _textoDia(caja.getFecha()),
+            baseApertura: Value(caja.getBaseApertura()),
           ),
         );
     await anotarEnCola(
@@ -161,6 +159,31 @@ class CajaRepositorioDrift implements ICajaRepositorio {
       tabla: _tablaMovimientos,
       registroId: movimiento.getId(),
       operacion: OperacionCola.insertar,
+    );
+  });
+
+  /// Guarda solo el cierre de la caja y lo anota en `cola_pendientes` como
+  /// ACTUALIZAR en la misma transacción (DA-33, RF-13). No toca los
+  /// movimientos. Se une a la transacción abierta.
+  @override
+  Future<void> cerrar(Tienda tienda, Caja caja) => _base.transaction(() async {
+    await (_base.update(_base.cajas)..where(
+          (c) => c.id.equals(caja.getId()) & c.tiendaId.equals(tienda.getId()),
+        ))
+        .write(
+          CajasCompanion(
+            cerrada: const Value(true),
+            efectivoContado: Value(caja.getEfectivoContado()),
+            diferencia: Value(caja.getDiferencia()),
+            fechaCierre: Value(caja.getFechaCierre()),
+          ),
+        );
+    await anotarEnCola(
+      _base,
+      tiendaId: tienda.getId(),
+      tabla: _tablaCajas,
+      registroId: caja.getId(),
+      operacion: OperacionCola.actualizar,
     );
   });
 

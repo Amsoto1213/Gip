@@ -3,6 +3,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
+import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
+import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -104,7 +106,10 @@ void main() {
 
     expect(find.text('Cerrar caja'), findsWidgets);
     expect(find.byKey(const Key('cierre_saldo_esperado')), findsOneWidget);
-    expect(find.text(r'$ 318.500'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('cierre_saldo_esperado'))).data,
+      r'$ 318.500',
+    );
     expect(find.byKey(const Key('cierre_vista_previa')), findsNothing);
 
     await contar(tester, '315.000');
@@ -240,5 +245,66 @@ void main() {
       );
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el desglose muestra con qué abrió y de dónde sale el total', (
+    tester,
+  ) async {
+    // Ayer cerró con $ 100.000: hoy abre con esa base.
+    final ayer = DateTime.now().subtract(const Duration(days: 1));
+    final dia = DateTime(ayer.year, ayer.month, ayer.day);
+    final repositorio = CajaRepositorioDrift(base);
+    await tester.runAsync(() async {
+      final caja = Caja(ServicioCaja.idCaja(tienda, dia), dia);
+      await repositorio.crear(tienda, caja);
+      caja.cerrar(d('100000'));
+      await repositorio.cerrar(tienda, caja);
+    });
+    await conSaldo(tester, '276500');
+    await tester.runAsync(
+      () => coordinadores.registrarMovimientoCaja.registrarMovimiento(
+        tienda,
+        TipoMovimientoCaja.egreso,
+        ClasificacionMovimiento.personal,
+        d('40000'),
+        'Retiro',
+        Administrador('2222', 'Carmen', '1'),
+      ),
+    );
+
+    await abrir(tester, tamano: const Size(1280, 800));
+
+    expect(find.text('Abrió con'), findsOneWidget);
+    expect(find.text(r'$ 100.000'), findsOneWidget);
+    expect(find.text('+ Entró al negocio'), findsOneWidget);
+    expect(find.text(r'$ 276.500'), findsOneWidget);
+    expect(find.text('− Gastos del negocio'), findsOneWidget);
+    expect(find.text('− Personal'), findsOneWidget);
+    expect(find.text(r'$ 40.000'), findsOneWidget);
+    expect(find.text('Debe haber'), findsOneWidget);
+    expect(find.text(r'$ 336.500'), findsOneWidget);
+    // Lo que no ocurrió hoy no ocupa renglones.
+    expect(find.text('+ Dinero personal que entró'), findsNothing);
+    expect(find.text('− Devoluciones por anulación'), findsNothing);
+  });
+
+  testWidgets('el dinero personal que entró y las devoluciones salen solo si '
+      'hay', (tester) async {
+    await tester.runAsync(() async {
+      final admin = Administrador('2222', 'Carmen', '1');
+      final c = coordinadores.registrarMovimientoCaja;
+      await c.registrarMovimiento(
+        tienda,
+        TipoMovimientoCaja.ingreso,
+        ClasificacionMovimiento.personal,
+        d('20000'),
+        'Aporte',
+        admin,
+      );
+    });
+    await abrir(tester, tamano: const Size(1280, 800));
+
+    expect(find.text('+ Dinero personal que entró'), findsOneWidget);
+    expect(find.text(r'$ 20.000'), findsWidgets);
   });
 }

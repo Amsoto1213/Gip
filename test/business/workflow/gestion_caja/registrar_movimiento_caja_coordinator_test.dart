@@ -74,4 +74,24 @@ void main() {
       throwsA(isA<ExcepcionValorMovimientoNoValido>()),
     );
   });
+
+  group('consultarCajaDelDia (DI-38)', () {
+    test('el propietario recibe la caja de hoy con sus movimientos', () async {
+      await ServicioCaja(cajas)
+          .registrarIngreso(tienda, Decimal.parse('5000'), 'Venta');
+
+      final caja = await coordinador.consultarCajaDelDia(tienda, propietario);
+
+      expect(caja.getMovimientos(), hasLength(1));
+      expect(caja.calcularSaldoEsperado(), Decimal.parse('5000'));
+    });
+
+    test('el empleado no la consulta ni abre la caja', () async {
+      await expectLater(
+        coordinador.consultarCajaDelDia(tienda, Empleado('3333', 'Luis', '1')),
+        throwsA(isA<ExcepcionSoloPropietario>()),
+      );
+      expect(cajas.cajas, isEmpty);
+    });
+  });
 }

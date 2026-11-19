@@ -65,9 +65,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// 7: alertas_reabastecimiento y ventas_perdidas (CUS-24 y CUS-05).
   /// 8: clientes y fiados (CUS-07). 9: abonos (CUS-08). 10: columna
   /// `eliminado_en` de clientes (CUS-21). 11: codigos_producto (CUS-17).
-  /// 12: columnas del cierre en cajas (CUS-14).
+  /// 12: columnas del cierre en cajas (CUS-14). 13: `base_apertura` en cajas
+  /// (CUS-14, DI-38).
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -153,6 +154,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
         await m.addColumn(cajas, cajas.efectivoContado);
         await m.addColumn(cajas, cajas.diferencia);
         await m.addColumn(cajas, cajas.fechaCierre);
+      }
+      // Si la tabla se acaba de crear en el paso 4, ya trae la columna.
+      if (desde >= 4 && desde < 13) {
+        await m.addColumn(cajas, cajas.baseApertura);
       }
     },
   );

@@ -1,5 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dart';
 import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
@@ -17,7 +18,6 @@ void main() {
   final propietario = Administrador('2222', 'Carmen', '1000000001');
 
   late RegistrarMovimientoCajaFalso coordinador;
-  late RegistrarCierreCajaFalso cierre;
   late CajaViewModel vm;
 
   MovimientoCaja movimiento(String valor, String descripcion) => MovimientoCaja(
@@ -50,11 +50,7 @@ void main() {
 
   setUp(() {
     coordinador = RegistrarMovimientoCajaFalso();
-    cierre = RegistrarCierreCajaFalso();
-    vm = CajaViewModel(coordinador, cierre, (
-      usuario: propietario,
-      tienda: tienda,
-    ));
+    vm = CajaViewModel(coordinador, (usuario: propietario, tienda: tienda));
   });
 
   test('empieza en "Sale dinero" y "Del negocio", como el mockup', () {
@@ -149,40 +145,72 @@ void main() {
     expect(vm.clasificacion, ClasificacionMovimiento.negocio);
   });
 
-  group('saldo esperado (CUS-14)', () {
-    When<Future<Decimal>> cuandoConsulta() =>
-        when(() => cierre.consultarSaldoEsperado(any(), any()));
+  group('caja de hoy (DI-38)', () {
+    final hoy = DateTime(2026, 11, 18);
 
-    test('cargarSaldo guarda lo que debe haber en caja', () async {
-      cuandoConsulta().thenAnswer((_) async => Decimal.parse('318500'));
-      expect(vm.saldoEsperado, isNull);
+    Caja cajaDeHoy() => Caja(
+      't1_2026-11-18',
+      hoy,
+      baseApertura: Decimal.parse('100000'),
+      movimientos: [
+        MovimientoCaja(
+          'a',
+          Decimal.parse('268000'),
+          'Venta',
+          ClasificacionMovimiento.negocio,
+          TipoMovimientoCaja.ingreso,
+          DateTime.utc(2026, 11, 18, 11),
+        ),
+        MovimientoCaja(
+          'b',
+          Decimal.parse('12000'),
+          'Hielo',
+          ClasificacionMovimiento.negocio,
+          TipoMovimientoCaja.egreso,
+          DateTime.utc(2026, 11, 18, 16),
+        ),
+      ],
+    );
 
-      await vm.cargarSaldo();
+    When<Future<Caja>> cuandoConsulta() =>
+        when(() => coordinador.consultarCajaDelDia(any(), any()));
 
-      expect(vm.saldoEsperado, Decimal.parse('318500'));
-      verify(() => cierre.consultarSaldoEsperado(tienda, propietario))
+    test('cargar guarda el saldo, la base y la lista (la más reciente '
+        'primero)', () async {
+      cuandoConsulta().thenAnswer((_) async => cajaDeHoy());
+      expect(vm.desglose, isNull);
+
+      await vm.cargar();
+
+      expect(vm.saldoEsperado, Decimal.parse('356000'));
+      expect(vm.baseApertura, Decimal.parse('100000'));
+      expect(vm.desglose!.egresosNegocio, Decimal.parse('12000'));
+      expect(vm.movimientosDeHoy.map((m) => m.getId()), ['b', 'a']);
+      verify(() => coordinador.consultarCajaDelDia(tienda, propietario))
           .called(1);
     });
 
-    test(
-      'si no se puede consultar (p. ej. un empleado), no hay saldo',
-      () async {
-        cuandoConsulta().thenThrow(const ExcepcionSoloPropietario());
+    test('si no se puede consultar (p. ej. un empleado), no hay nada que '
+        'mostrar', () async {
+      cuandoConsulta().thenThrow(const ExcepcionSoloPropietario());
 
-        await vm.cargarSaldo();
+      await vm.cargar();
 
-        expect(vm.saldoEsperado, isNull);
-        expect(vm.error, isNull);
-      },
-    );
+      expect(vm.desglose, isNull);
+      expect(vm.saldoEsperado, isNull);
+      expect(vm.baseApertura, isNull);
+      expect(vm.movimientosDeHoy, isEmpty);
+      expect(vm.error, isNull);
+    });
 
-    test('al anotar un movimiento vuelve a consultar el saldo', () async {
+    test('al anotar un movimiento vuelve a consultar la caja', () async {
       cuandoRegistra().thenAnswer((_) async => movimiento('1000', 'a'));
-      cuandoConsulta().thenAnswer((_) async => Decimal.parse('99000'));
+      cuandoConsulta().thenAnswer((_) async => cajaDeHoy());
 
       await vm.anotar(valor: '1.000', descripcion: 'a');
 
-      expect(vm.saldoEsperado, Decimal.parse('99000'));
+      expect(vm.saldoEsperado, Decimal.parse('356000'));
+      verify(() => coordinador.consultarCajaDelDia(any(), any())).called(1);
     });
 
     test('si el movimiento se rechaza no vuelve a consultar', () async {
@@ -190,7 +218,7 @@ void main() {
 
       await vm.anotar(valor: '1.000', descripcion: 'a');
 
-      verifyNever(() => cierre.consultarSaldoEsperado(any(), any()));
+      verifyNever(() => coordinador.consultarCajaDelDia(any(), any()));
     });
   });
 }

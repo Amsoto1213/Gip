@@ -213,4 +213,89 @@ void main() {
       );
     });
   });
+
+  group('base de apertura (DI-38)', () {
+    Caja dePrueba(Tienda t, DateTime fecha, {String base = '0'}) {
+      String dos(int n) => n.toString().padLeft(2, '0');
+      return Caja(
+        '${t.getId()}_${fecha.year}-${dos(fecha.month)}-${dos(fecha.day)}',
+        fecha,
+        baseApertura: d(base),
+      );
+    }
+
+    test('crear guarda la base y se lee igual', () async {
+      await cajas.crear(tienda, dePrueba(tienda, dia, base: '100000'));
+
+      final leida = (await cajas.buscarPorFecha(tienda, dia))!;
+
+      expect(leida.getBaseApertura(), d('100000'));
+      final fila = await base.select(base.cajas).getSingle();
+      expect(fila.baseApertura, d('100000'));
+    });
+
+    test('crear la misma caja dos veces no cambia su base', () async {
+      await cajas.crear(tienda, dePrueba(tienda, dia, base: '100000'));
+      await cajas.crear(tienda, dePrueba(tienda, dia, base: '5'));
+
+      expect(
+        (await cajas.buscarPorFecha(tienda, dia))!.getBaseApertura(),
+        d('100000'),
+      );
+    });
+
+    test(
+      'buscarUltimaAnterior devuelve la caja más reciente anterior',
+      () async {
+        await cajas.crear(tienda, dePrueba(tienda, DateTime(2026, 11, 10)));
+        await cajas.crear(
+          tienda,
+          dePrueba(tienda, DateTime(2026, 11, 12), base: '7'),
+        );
+        await cajas.crear(tienda, dePrueba(tienda, DateTime(2026, 11, 14)));
+
+        final anterior = (await cajas.buscarUltimaAnterior(
+          tienda,
+          DateTime(2026, 11, 14),
+        ))!;
+
+        expect(anterior.getFecha(), DateTime(2026, 11, 12));
+        expect(anterior.getBaseApertura(), d('7'));
+      },
+    );
+
+    test('buscarUltimaAnterior trae sus movimientos y su cierre', () async {
+      final ayer = dePrueba(tienda, DateTime(2026, 11, 13), base: '100000');
+      await cajas.crear(tienda, ayer);
+      final venta = mov('m1', '218500', DateTime.utc(2026, 11, 13, 15));
+      ayer.registrarMovimiento(venta);
+      await cajas.registrarMovimiento(tienda, ayer, venta);
+      ayer.cerrar(d('315000'));
+      await cajas.cerrar(tienda, ayer);
+
+      final anterior = (await cajas.buscarUltimaAnterior(tienda, dia))!;
+
+      expect(anterior.isCerrada(), isTrue);
+      expect(anterior.getEfectivoContado(), d('315000'));
+      expect(anterior.calcularSaldoEsperado(), d('318500'));
+    });
+
+    test(
+      'sin cajas anteriores devuelve null y no cuenta la del mismo día',
+      () async {
+        await cajas.crear(tienda, dePrueba(tienda, dia));
+
+        expect(await cajas.buscarUltimaAnterior(tienda, dia), isNull);
+      },
+    );
+
+    test('solo mira las cajas de la tienda', () async {
+      await cajas.crear(
+        otraTienda,
+        dePrueba(otraTienda, DateTime(2026, 11, 13)),
+      );
+
+      expect(await cajas.buscarUltimaAnterior(tienda, dia), isNull);
+    });
+  });
 }

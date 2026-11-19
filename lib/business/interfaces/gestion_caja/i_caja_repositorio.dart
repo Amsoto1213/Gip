@@ -6,14 +6,19 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 /// Data Layer lo implementa (RNF-08).
 ///
 /// Tiene las operaciones del ingreso de una venta (CUS-02), [listarMovimientos]
-/// (CUS-10) y [cerrar] (CUS-14); buscarPorId llega con CUS-23 (DI-21, DI-29,
-/// DI-37).
+/// (CUS-10), [cerrar] (CUS-14) y [buscarUltimaAnterior] (base de apertura);
+/// buscarPorId llega con CUS-23 (DI-21, DI-29, DI-37, DI-38).
 abstract interface class ICajaRepositorio {
   /// Caja de la jornada con sus movimientos, o null si todavía no se ha
   /// abierto. [fecha] es el día local, sin hora (DI-21).
   Future<Caja?> buscarPorFecha(Tienda tienda, DateTime fecha);
 
-  /// Inserta la caja si su id no existe (dos dispositivos pueden abrir la misma
+  /// La caja más reciente con fecha anterior a [fecha] (día local, sin hora),
+  /// con sus movimientos y su cierre, o null si no hay ninguna. De ella sale la
+  /// base de apertura de la caja de [fecha] (DI-38).
+  Future<Caja?> buscarUltimaAnterior(Tienda tienda, DateTime fecha);
+
+  /// Inserta la caja con su base de apertura si su id no existe (dos dispositivos pueden abrir la misma
   /// caja sin conexión, DA-62).
   Future<void> crear(Tienda tienda, Caja caja);
 

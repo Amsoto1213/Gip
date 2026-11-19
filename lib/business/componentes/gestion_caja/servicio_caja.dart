@@ -31,15 +31,35 @@ class ServicioCaja {
   }
 
   /// Creator: busca la caja del día; si no existe, la crea con id = tienda +
-  /// fecha y la guarda con cajas.crear.
+  /// fecha y la base de apertura de [_calcularBase], y la guarda con
+  /// cajas.crear.
   Future<Caja> _obtenerCajaDelDia(Tienda tienda, DateTime fecha) async {
     final dia = diaLocal(fecha);
     final existente = await _cajas.buscarPorFecha(tienda, dia);
     if (existente != null) return existente;
-    final caja = Caja(idCaja(tienda, dia), dia);
+    final caja = Caja(
+      idCaja(tienda, dia),
+      dia,
+      baseApertura: await _calcularBase(tienda, dia),
+    );
     await _cajas.crear(tienda, caja);
     return caja;
   }
+
+  /// Efectivo con el que abre la caja de [dia] (DI-38): lo que se contó al
+  /// cerrar la caja anterior; si esa no se cerró, su saldo esperado (que ya
+  /// incluye su propia base); y cero si es la primera caja de la tienda. Los
+  /// retiros se anotan como movimientos, así que la cuenta es continua.
+  Future<Decimal> _calcularBase(Tienda tienda, DateTime dia) async {
+    final anterior = await _cajas.buscarUltimaAnterior(tienda, dia);
+    if (anterior == null) return Decimal.zero;
+    return anterior.getEfectivoContado() ?? anterior.calcularSaldoEsperado();
+  }
+
+  /// La caja de hoy con sus movimientos y su base de apertura; la abre si no
+  /// existe (CUS-11 y CUS-14, DI-38). Para mostrar la lista y las cifras.
+  Future<Caja> consultarCajaDelDia(Tienda tienda) =>
+      _obtenerCajaDelDia(tienda, DateTime.now());
 
   /// Valida valor > 0, obtiene la caja de hoy, crea el [MovimientoCaja], lo
   /// agrega a la caja (rechaza si está cerrada) y lo guarda (RF-10).

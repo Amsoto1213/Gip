@@ -3,6 +3,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
+import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
+import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -48,14 +50,10 @@ void main() {
       MaterialApp(
         theme: TemaGip.claro(),
         home: ChangeNotifierProvider(
-          create: (_) => CajaViewModel(
-            coordinadores.registrarMovimientoCaja,
-            coordinadores.registrarCierreCaja,
-            (
-              usuario: usuario ?? Administrador('2222', 'Carmen', '1'),
-              tienda: tienda,
-            ),
-          )..cargarSaldo(),
+          create: (_) => CajaViewModel(coordinadores.registrarMovimientoCaja, (
+            usuario: usuario ?? Administrador('2222', 'Carmen', '1'),
+            tienda: tienda,
+          ))..cargar(),
           child: const CajaView(),
         ),
       ),
@@ -200,6 +198,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  /// Anota un movimiento de hoy antes de abrir la pantalla.
+  Future<void> sembrar(
+    WidgetTester tester,
+    TipoMovimientoCaja tipo,
+    ClasificacionMovimiento clase,
+    String valor,
+    String descripcion,
+  ) => tester.runAsync(
+    () =>
+        registrarCoordinadoresCaja(
+          registrarCaja(base).servicioCaja,
+          ServicioAcceso(AutenticacionFalsa(), SesionLocalFalsa()),
+        ).registrarMovimientoCaja.registrarMovimiento(
+          tienda,
+          tipo,
+          clase,
+          Decimal.parse(valor),
+          descripcion,
+          Administrador('2222', 'Carmen', '1'),
+        ),
+  );
+
   testWidgets('muestra lo que debe haber en caja y se actualiza al anotar', (
     tester,
   ) async {
@@ -216,10 +236,114 @@ void main() {
     await anotar(tester);
     await esperarBase(tester);
 
-    expect(find.text('\$ 100.000'), findsOneWidget);
+    expect(find.text('\$ 100.000'), findsWidgets);
   });
 
-  testWidgets('el empleado no ve el saldo ni el botón de cerrar', (
+  testWidgets('abre con lo contado al cerrar el día anterior y lo dice', (
+    tester,
+  ) async {
+    // La caja de ayer, cerrada con $ 315.000 contados.
+    final ayer = DateTime.now().subtract(const Duration(days: 1));
+    final dia = DateTime(ayer.year, ayer.month, ayer.day);
+    final repositorio = CajaRepositorioDrift(base);
+    await tester.runAsync(() async {
+      final caja = Caja(
+        ServicioCaja.idCaja(tienda, dia),
+        dia,
+        baseApertura: Decimal.zero,
+      );
+      await repositorio.crear(tienda, caja);
+      caja.cerrar(Decimal.parse('315000'));
+      await repositorio.cerrar(tienda, caja);
+    });
+
+    await abrir(tester, tamano: const Size(1280, 800));
+    await esperarBase(tester);
+
+    expect(find.text('Abrió con \$ 315.000'), findsOneWidget);
+    expect(find.byKey(const Key('caja_saldo_esperado')), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('caja_saldo_esperado'))).data,
+      '\$ 315.000',
+    );
+  });
+
+  testWidgets('en escritorio muestra las cifras y la tabla de hoy', (
+    tester,
+  ) async {
+    await sembrar(
+      tester,
+      TipoMovimientoCaja.ingreso,
+      ClasificacionMovimiento.negocio,
+      '268000',
+      'Venta',
+    );
+    await sembrar(
+      tester,
+      TipoMovimientoCaja.egreso,
+      ClasificacionMovimiento.negocio,
+      '12000',
+      'Hielo',
+    );
+    await sembrar(
+      tester,
+      TipoMovimientoCaja.egreso,
+      ClasificacionMovimiento.personal,
+      '40000',
+      'Retiro',
+    );
+
+    await abrir(tester, tamano: const Size(1280, 800));
+    await esperarBase(tester);
+
+    String texto(String clave) =>
+        tester.widget<Text>(find.byKey(Key(clave))).data!;
+    expect(texto('caja_saldo_esperado'), '\$ 216.000');
+    expect(texto('caja_entro_hoy'), '\$ 268.000');
+    expect(texto('caja_gastos'), '\$ 12.000');
+    expect(texto('caja_personal'), '\$ 40.000');
+    expect(find.text('1 movimiento'), findsOneWidget);
+    expect(find.text('Movimientos de hoy'), findsOneWidget);
+    expect(find.text('Hielo'), findsOneWidget);
+    expect(find.text('− \$ 12.000'), findsOneWidget);
+    expect(find.text('+ \$ 268.000'), findsOneWidget);
+    expect(find.text('Personal'), findsWidgets);
+    expect(find.byKey(const Key('caja_cerrar')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el movimiento recién anotado aparece primero en la lista', (
+    tester,
+  ) async {
+    await sembrar(
+      tester,
+      TipoMovimientoCaja.egreso,
+      ClasificacionMovimiento.negocio,
+      '6000',
+      'Bolsas',
+    );
+    await abrir(tester);
+    await esperarBase(tester);
+    expect(find.text('Hoy'), findsOneWidget);
+
+    await escribir(tester, 'valor', '12.000');
+    await escribir(tester, 'descripcion', 'Hielo');
+    await anotar(tester);
+    await esperarBase(tester);
+
+    final hielo = tester.getTopLeft(find.text('Hielo').last);
+    final bolsas = tester.getTopLeft(find.text('Bolsas'));
+    expect(hielo.dy, lessThan(bolsas.dy));
+  });
+
+  testWidgets('sin movimientos dice que todavía no hay', (tester) async {
+    await abrir(tester);
+    await esperarBase(tester);
+
+    expect(find.byKey(const Key('caja_sin_movimientos')), findsOneWidget);
+  });
+
+  testWidgets('el empleado no ve el saldo, las cifras ni la lista', (
     tester,
   ) async {
     await abrir(tester, usuario: Empleado('3333', 'Luis', '2'));
@@ -227,5 +351,7 @@ void main() {
 
     expect(find.text('Debe haber en caja'), findsNothing);
     expect(find.byKey(const Key('caja_cerrar')), findsNothing);
+    expect(find.byKey(const Key('caja_movimientos_hoy')), findsNothing);
+    expect(find.text('Abrió con'), findsNothing);
   });
 }

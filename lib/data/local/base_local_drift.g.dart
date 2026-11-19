@@ -2521,6 +2521,16 @@ class $CajasTable extends Cajas with TableInfo<$CajasTable, FilaCaja> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  @override
+  late final GeneratedColumnWithTypeConverter<Decimal, String> baseApertura =
+      GeneratedColumn<String>(
+        'base_apertura',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('0'),
+      ).withConverter<Decimal>($CajasTable.$converterbaseApertura);
   static const VerificationMeta _cerradaMeta = const VerificationMeta(
     'cerrada',
   );
@@ -2568,6 +2578,7 @@ class $CajasTable extends Cajas with TableInfo<$CajasTable, FilaCaja> {
     id,
     tiendaId,
     fecha,
+    baseApertura,
     cerrada,
     efectivoContado,
     diferencia,
@@ -2633,6 +2644,12 @@ class $CajasTable extends Cajas with TableInfo<$CajasTable, FilaCaja> {
         DriftSqlType.string,
         data['${effectivePrefix}fecha'],
       )!,
+      baseApertura: $CajasTable.$converterbaseApertura.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}base_apertura'],
+        )!,
+      ),
       cerrada: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}cerrada'],
@@ -2663,6 +2680,8 @@ class $CajasTable extends Cajas with TableInfo<$CajasTable, FilaCaja> {
     return $CajasTable(attachedDatabase, alias);
   }
 
+  static TypeConverter<Decimal, String> $converterbaseApertura =
+      const ConversorDecimal();
   static TypeConverter<Decimal, String> $converterefectivoContado =
       const ConversorDecimal();
   static TypeConverter<Decimal?, String?> $converterefectivoContadon =
@@ -2681,6 +2700,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
   final String id;
   final String tiendaId;
   final String fecha;
+  final Decimal baseApertura;
   final bool cerrada;
   final Decimal? efectivoContado;
   final Decimal? diferencia;
@@ -2689,6 +2709,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
     required this.id,
     required this.tiendaId,
     required this.fecha,
+    required this.baseApertura,
     required this.cerrada,
     this.efectivoContado,
     this.diferencia,
@@ -2700,6 +2721,11 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
     map['id'] = Variable<String>(id);
     map['tienda_id'] = Variable<String>(tiendaId);
     map['fecha'] = Variable<String>(fecha);
+    {
+      map['base_apertura'] = Variable<String>(
+        $CajasTable.$converterbaseApertura.toSql(baseApertura),
+      );
+    }
     map['cerrada'] = Variable<bool>(cerrada);
     if (!nullToAbsent || efectivoContado != null) {
       map['efectivo_contado'] = Variable<String>(
@@ -2724,6 +2750,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
       id: Value(id),
       tiendaId: Value(tiendaId),
       fecha: Value(fecha),
+      baseApertura: Value(baseApertura),
       cerrada: Value(cerrada),
       efectivoContado: efectivoContado == null && nullToAbsent
           ? const Value.absent()
@@ -2746,6 +2773,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
       id: serializer.fromJson<String>(json['id']),
       tiendaId: serializer.fromJson<String>(json['tiendaId']),
       fecha: serializer.fromJson<String>(json['fecha']),
+      baseApertura: serializer.fromJson<Decimal>(json['baseApertura']),
       cerrada: serializer.fromJson<bool>(json['cerrada']),
       efectivoContado: serializer.fromJson<Decimal?>(json['efectivoContado']),
       diferencia: serializer.fromJson<Decimal?>(json['diferencia']),
@@ -2759,6 +2787,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
       'id': serializer.toJson<String>(id),
       'tiendaId': serializer.toJson<String>(tiendaId),
       'fecha': serializer.toJson<String>(fecha),
+      'baseApertura': serializer.toJson<Decimal>(baseApertura),
       'cerrada': serializer.toJson<bool>(cerrada),
       'efectivoContado': serializer.toJson<Decimal?>(efectivoContado),
       'diferencia': serializer.toJson<Decimal?>(diferencia),
@@ -2770,6 +2799,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
     String? id,
     String? tiendaId,
     String? fecha,
+    Decimal? baseApertura,
     bool? cerrada,
     Value<Decimal?> efectivoContado = const Value.absent(),
     Value<Decimal?> diferencia = const Value.absent(),
@@ -2778,6 +2808,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
     id: id ?? this.id,
     tiendaId: tiendaId ?? this.tiendaId,
     fecha: fecha ?? this.fecha,
+    baseApertura: baseApertura ?? this.baseApertura,
     cerrada: cerrada ?? this.cerrada,
     efectivoContado: efectivoContado.present
         ? efectivoContado.value
@@ -2790,6 +2821,9 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
       id: data.id.present ? data.id.value : this.id,
       tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
       fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      baseApertura: data.baseApertura.present
+          ? data.baseApertura.value
+          : this.baseApertura,
       cerrada: data.cerrada.present ? data.cerrada.value : this.cerrada,
       efectivoContado: data.efectivoContado.present
           ? data.efectivoContado.value
@@ -2809,6 +2843,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
           ..write('id: $id, ')
           ..write('tiendaId: $tiendaId, ')
           ..write('fecha: $fecha, ')
+          ..write('baseApertura: $baseApertura, ')
           ..write('cerrada: $cerrada, ')
           ..write('efectivoContado: $efectivoContado, ')
           ..write('diferencia: $diferencia, ')
@@ -2822,6 +2857,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
     id,
     tiendaId,
     fecha,
+    baseApertura,
     cerrada,
     efectivoContado,
     diferencia,
@@ -2834,6 +2870,7 @@ class FilaCaja extends DataClass implements Insertable<FilaCaja> {
           other.id == this.id &&
           other.tiendaId == this.tiendaId &&
           other.fecha == this.fecha &&
+          other.baseApertura == this.baseApertura &&
           other.cerrada == this.cerrada &&
           other.efectivoContado == this.efectivoContado &&
           other.diferencia == this.diferencia &&
@@ -2844,6 +2881,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
   final Value<String> id;
   final Value<String> tiendaId;
   final Value<String> fecha;
+  final Value<Decimal> baseApertura;
   final Value<bool> cerrada;
   final Value<Decimal?> efectivoContado;
   final Value<Decimal?> diferencia;
@@ -2853,6 +2891,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
     this.id = const Value.absent(),
     this.tiendaId = const Value.absent(),
     this.fecha = const Value.absent(),
+    this.baseApertura = const Value.absent(),
     this.cerrada = const Value.absent(),
     this.efectivoContado = const Value.absent(),
     this.diferencia = const Value.absent(),
@@ -2863,6 +2902,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
     required String id,
     required String tiendaId,
     required String fecha,
+    this.baseApertura = const Value.absent(),
     this.cerrada = const Value.absent(),
     this.efectivoContado = const Value.absent(),
     this.diferencia = const Value.absent(),
@@ -2875,6 +2915,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
     Expression<String>? id,
     Expression<String>? tiendaId,
     Expression<String>? fecha,
+    Expression<String>? baseApertura,
     Expression<bool>? cerrada,
     Expression<String>? efectivoContado,
     Expression<String>? diferencia,
@@ -2885,6 +2926,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
       if (id != null) 'id': id,
       if (tiendaId != null) 'tienda_id': tiendaId,
       if (fecha != null) 'fecha': fecha,
+      if (baseApertura != null) 'base_apertura': baseApertura,
       if (cerrada != null) 'cerrada': cerrada,
       if (efectivoContado != null) 'efectivo_contado': efectivoContado,
       if (diferencia != null) 'diferencia': diferencia,
@@ -2897,6 +2939,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
     Value<String>? id,
     Value<String>? tiendaId,
     Value<String>? fecha,
+    Value<Decimal>? baseApertura,
     Value<bool>? cerrada,
     Value<Decimal?>? efectivoContado,
     Value<Decimal?>? diferencia,
@@ -2907,6 +2950,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
       id: id ?? this.id,
       tiendaId: tiendaId ?? this.tiendaId,
       fecha: fecha ?? this.fecha,
+      baseApertura: baseApertura ?? this.baseApertura,
       cerrada: cerrada ?? this.cerrada,
       efectivoContado: efectivoContado ?? this.efectivoContado,
       diferencia: diferencia ?? this.diferencia,
@@ -2926,6 +2970,11 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
     }
     if (fecha.present) {
       map['fecha'] = Variable<String>(fecha.value);
+    }
+    if (baseApertura.present) {
+      map['base_apertura'] = Variable<String>(
+        $CajasTable.$converterbaseApertura.toSql(baseApertura.value),
+      );
     }
     if (cerrada.present) {
       map['cerrada'] = Variable<bool>(cerrada.value);
@@ -2957,6 +3006,7 @@ class CajasCompanion extends UpdateCompanion<FilaCaja> {
           ..write('id: $id, ')
           ..write('tiendaId: $tiendaId, ')
           ..write('fecha: $fecha, ')
+          ..write('baseApertura: $baseApertura, ')
           ..write('cerrada: $cerrada, ')
           ..write('efectivoContado: $efectivoContado, ')
           ..write('diferencia: $diferencia, ')
@@ -9273,6 +9323,7 @@ typedef $$CajasTableCreateCompanionBuilder = CajasCompanion Function({
   required String id,
   required String tiendaId,
   required String fecha,
+  Value<Decimal> baseApertura,
   Value<bool> cerrada,
   Value<Decimal?> efectivoContado,
   Value<Decimal?> diferencia,
@@ -9283,6 +9334,7 @@ typedef $$CajasTableUpdateCompanionBuilder = CajasCompanion Function({
   Value<String> id,
   Value<String> tiendaId,
   Value<String> fecha,
+  Value<Decimal> baseApertura,
   Value<bool> cerrada,
   Value<Decimal?> efectivoContado,
   Value<Decimal?> diferencia,
@@ -9339,6 +9391,12 @@ class $$CajasTableFilterComposer
     column: $table.fecha,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnWithTypeConverterFilters<Decimal, Decimal, String> get baseApertura =>
+      $composableBuilder(
+        column: $table.baseApertura,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<bool> get cerrada => $composableBuilder(
     column: $table.cerrada,
@@ -9413,6 +9471,11 @@ class $$CajasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get baseApertura => $composableBuilder(
+    column: $table.baseApertura,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get cerrada => $composableBuilder(
     column: $table.cerrada,
     builder: (column) => ColumnOrderings(column),
@@ -9451,6 +9514,12 @@ class $$CajasTableAnnotationComposer
 
   GeneratedColumn<String> get fecha =>
       $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Decimal, String> get baseApertura =>
+      $composableBuilder(
+        column: $table.baseApertura,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<bool> get cerrada =>
       $composableBuilder(column: $table.cerrada, builder: (column) => column);
@@ -9530,6 +9599,7 @@ class $$CajasTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> tiendaId = const Value.absent(),
                 Value<String> fecha = const Value.absent(),
+                Value<Decimal> baseApertura = const Value.absent(),
                 Value<bool> cerrada = const Value.absent(),
                 Value<Decimal?> efectivoContado = const Value.absent(),
                 Value<Decimal?> diferencia = const Value.absent(),
@@ -9539,6 +9609,7 @@ class $$CajasTableTableManager
                 id: id,
                 tiendaId: tiendaId,
                 fecha: fecha,
+                baseApertura: baseApertura,
                 cerrada: cerrada,
                 efectivoContado: efectivoContado,
                 diferencia: diferencia,
@@ -9550,6 +9621,7 @@ class $$CajasTableTableManager
                 required String id,
                 required String tiendaId,
                 required String fecha,
+                Value<Decimal> baseApertura = const Value.absent(),
                 Value<bool> cerrada = const Value.absent(),
                 Value<Decimal?> efectivoContado = const Value.absent(),
                 Value<Decimal?> diferencia = const Value.absent(),
@@ -9559,6 +9631,7 @@ class $$CajasTableTableManager
                 id: id,
                 tiendaId: tiendaId,
                 fecha: fecha,
+                baseApertura: baseApertura,
                 cerrada: cerrada,
                 efectivoContado: efectivoContado,
                 diferencia: diferencia,

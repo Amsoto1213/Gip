@@ -4,6 +4,7 @@ import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/gestion_caja/tipo_movimiento_caja.dart';
 import 'package:gip/presentation/caja/caja_view_model.dart';
 import 'package:gip/presentation/caja/rutas_caja.dart';
+import 'package:gip/presentation/caja/widgets_caja.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
 import 'package:gip/presentation/comun/campo_gip.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
@@ -17,13 +18,15 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 /// Pantalla Caja (CUS-11 y CUS-14, mockups `mCaja` y `wCaja`, con los
-/// componentes del rediseño): lo que debe haber en caja con "Cerrar caja" y el
-/// formulario "Anotar movimiento" del propietario.
+/// componentes del rediseño): con qué abrió la caja, lo que debe haber con
+/// "Cerrar caja", las cifras del día, los movimientos de hoy y el formulario
+/// "Anotar movimiento" del propietario (DI-38).
 ///
-/// No se muestran "Entró hoy", "Gastos del negocio", "Para la casa",
-/// "Movimientos de hoy", "Ventas de hoy" ni "Abierta desde": ningún caso de uso
-/// implementado los entrega (la lista de hoy y "Ventas de hoy" llegan con
-/// CUS-20, DI-36 y DI-37).
+/// No se muestran "Ventas de hoy" (CUS-20), la hora de apertura ("Abierta
+/// desde": la caja solo guarda el día), el nombre de quien anotó cada
+/// movimiento (no se guarda) ni "Al día" (DI-36 y DI-38). "Para la casa" se
+/// llama "Personal". Un empleado solo ve el formulario: la consulta se le
+/// rechaza.
 class CajaView extends StatefulWidget {
   const CajaView({super.key});
 
@@ -34,6 +37,10 @@ class CajaView extends StatefulWidget {
 class _CajaViewState extends State<CajaView> {
   final _valor = TextEditingController();
   final _descripcion = TextEditingController();
+
+  /// La tarjeta del formulario cambia de lugar cuando llegan las cifras; con
+  /// esta llave conserva lo que el tendero ya escribió y el foco.
+  final _claveAnotar = GlobalKey();
 
   @override
   void dispose() {
@@ -69,24 +76,33 @@ class _CajaViewState extends State<CajaView> {
                   ? const EdgeInsets.fromLTRB(44, 36, 44, 48)
                   : const EdgeInsets.fromLTRB(16, 28, 16, 24),
               children: [
-                EncabezadoPantalla(titulo: web ? 'Caja de hoy' : 'Caja'),
-                SizedBox(height: web ? 24 : 16),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (vm.saldoEsperado != null) ...[
-                          _tarjetaSaldo(vm),
-                          const SizedBox(height: 16),
-                        ],
-                        _tarjetaAnotar(vm, web),
-                      ],
-                    ),
-                  ),
+                EncabezadoPantalla(
+                  titulo: web ? 'Caja de hoy' : 'Caja',
+                  contexto: vm.baseApertura == null
+                      ? null
+                      : 'Abrió con ${pesos(vm.baseApertura!)}',
+                  accion: web && vm.desglose != null
+                      ? BotonSecundario(
+                          key: const Key('caja_cerrar'),
+                          texto: 'Cerrar caja',
+                          icono: Icons.lock_outline,
+                          onPressed: () => context.go(rutaCierreCaja),
+                        )
+                      : null,
                 ),
+                SizedBox(height: web ? 24 : 16),
+                if (vm.desglose == null)
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: _tarjetaAnotar(vm, web),
+                    ),
+                  )
+                else if (web)
+                  ..._cuerpoWeb(vm)
+                else
+                  ..._cuerpoMovil(vm),
               ],
             ),
           ),
@@ -95,6 +111,74 @@ class _CajaViewState extends State<CajaView> {
     );
   }
 
+  /// Cuatro cifras arriba; abajo la tabla de hoy y el formulario (`wCaja`).
+  List<Widget> _cuerpoWeb(CajaViewModel vm) {
+    final d = vm.desglose!;
+    final gastos = d.cantidadEgresosNegocio;
+    return [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TarjetaCifra(
+              etiqueta: 'Debe haber en caja',
+              valor: pesos(d.saldoEsperado),
+              valorKey: const Key('caja_saldo_esperado'),
+              detalle: 'efectivo',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TarjetaCifra(
+              etiqueta: 'Entró hoy',
+              valor: pesos(d.ingresosNegocio),
+              valorKey: const Key('caja_entro_hoy'),
+              detalle: 'ingresos del negocio',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TarjetaCifra(
+              etiqueta: 'Gastos del negocio',
+              valor: pesos(d.egresosNegocio),
+              valorKey: const Key('caja_gastos'),
+              detalle: gastos == 1 ? '1 movimiento' : '$gastos movimientos',
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TarjetaCifra(
+              etiqueta: 'Personal',
+              valor: pesos(d.egresosPersonales),
+              valorKey: const Key('caja_personal'),
+              detalle: 'aparte de la ganancia',
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 24),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TarjetaMovimientosHoy(movimientos: vm.movimientosDeHoy),
+          ),
+          const SizedBox(width: 24),
+          SizedBox(width: 400, child: _tarjetaAnotar(vm, true)),
+        ],
+      ),
+    ];
+  }
+
+  /// Saldo con "Cerrar caja", el formulario y la lista "Hoy" (`mCaja`).
+  List<Widget> _cuerpoMovil(CajaViewModel vm) => [
+    _tarjetaSaldo(vm),
+    const SizedBox(height: 16),
+    _tarjetaAnotar(vm, false),
+    const SizedBox(height: 24),
+    ListaMovimientosHoy(movimientos: vm.movimientosDeHoy),
+  ];
+
   /// "Debe haber en caja" con la entrada a Cierre de caja (CUS-14).
   Widget _tarjetaSaldo(CajaViewModel vm) {
     return Column(
@@ -102,7 +186,7 @@ class _CajaViewState extends State<CajaView> {
       children: [
         TarjetaCifra(
           etiqueta: 'Debe haber en caja',
-          valor: '\$ ${mostrarPrecio(vm.saldoEsperado!)}',
+          valor: pesos(vm.saldoEsperado!),
           valorKey: const Key('caja_saldo_esperado'),
           detalle: 'efectivo',
         ),
@@ -119,7 +203,6 @@ class _CajaViewState extends State<CajaView> {
   }
 
   Widget _tarjetaAnotar(CajaViewModel vm, bool web) {
-    final tema = Theme.of(context);
     final habilitado = !vm.guardando;
     final valor = CampoGip(
       etiqueta: 'Valor',
@@ -140,6 +223,21 @@ class _CajaViewState extends State<CajaView> {
       onSubmitted: (_) => _anotar(),
     );
     final registrado = vm.registrado;
+    return KeyedSubtree(
+      key: _claveAnotar,
+      child: _tarjetaAnotarContenido(vm, web, valor, descripcion, registrado),
+    );
+  }
+
+  Widget _tarjetaAnotarContenido(
+    CajaViewModel vm,
+    bool web,
+    Widget valor,
+    Widget descripcion,
+    MovimientoCaja? registrado,
+  ) {
+    final tema = Theme.of(context);
+    final habilitado = !vm.guardando;
     return TarjetaGip(
       key: const Key('caja_tarjeta_anotar'),
       padding: EdgeInsets.all(web ? 24 : 20),

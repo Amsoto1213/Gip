@@ -127,8 +127,10 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - El cliente nuevo se guarda en su propia transacción: queda aunque la venta no se confirme.
 - [ ] **CUS-10**: nota de que el periodo es el día local `[00:00, 00:00 del día siguiente)` (DI-29 a).
 - [ ] **CUS-13**: nota de que `VistaVenta` usa dos coordinadores (`RegistrarVentaCoordinator` y `RegistrarVentaPerdidaCoordinator`), única excepción a "una vista, un coordinador" (DI-30 c).
-- [ ] **CUS-14** (DI-37 a, c, d):
-  - `Caja`: el constructor acepta, como opcionales, los movimientos y los datos del cierre para armar una caja guardada.
+- [ ] **CUS-14** (DI-37 a, c, d; DI-38):
+  - `Caja`: el constructor acepta, como opcionales, la base de apertura, los movimientos y los datos del cierre para armar una caja guardada. Atributo nuevo `baseApertura`; `calcularSaldoEsperado` suma la base; operación nueva `calcularDesglose(): DesgloseCaja` y la clase `DesgloseCaja`.
+  - `ServicioCaja.obtenerCajaDelDia` (y el opt "Abrir caja" de CUS-11 y el paso 6 de CUS-14): al crear la caja, su base es lo contado en la caja anterior, o el saldo esperado de esa si no se cerró, o cero. `ICajaRepositorio`: `buscarUltimaAnterior(tienda, fecha)`.
+  - `ServicioCaja.consultarCajaDelDia(tienda)` y la misma operación, con `usuario`, en `RegistrarMovimientoCajaCoordinator` y en `RegistrarCierreCajaCoordinator`. Las pantallas Caja y Cierre de caja usan la caja completa en vez de `consultarSaldoEsperado` (pasos 2 a 11).
   - Entre los pasos 12 y 13, la vista muestra la diferencia que quedaría con el efectivo escrito (solo para mostrar).
   - Break "Efectivo no válido" ("Escribe cuánto efectivo contó") para un efectivo vacío, no numérico o negativo.
   - Nota: la diferencia cero se muestra como "La caja cuadra".

@@ -1,5 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
+import 'package:gip/business/entidades/gestion_caja/desglose_caja.dart';
 import 'package:gip/presentation/caja/cierre_caja_view_model.dart';
 import 'package:gip/presentation/caja/rutas_caja.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
@@ -18,9 +19,11 @@ import 'package:provider/provider.dart';
 /// componentes del rediseño): lo que debe haber en caja, el efectivo contado
 /// con la diferencia a la vista y el cierre.
 ///
-/// En "Lo que debe haber" va solo el total que entrega el caso de uso ("Saldo
-/// esperado"), sin el desglose "Abrió con", "Ventas en efectivo", etc., ni la
-/// frase "La diferencia queda en el reporte del día" (DI-37).
+/// "Lo que debe haber" muestra con qué abrió la caja, lo que entró y salió por
+/// clase y el total (DI-38). "Ventas" y "Abonos" van juntos en "Entró al
+/// negocio", y los renglones de dinero personal que entró y devoluciones por
+/// anulación solo salen si hay algo, para que siempre sumen. No lleva la frase
+/// "La diferencia queda en el reporte del día" (DI-37).
 class CierreCajaView extends StatefulWidget {
   const CierreCajaView({super.key});
 
@@ -104,7 +107,7 @@ class _CierreCajaViewState extends State<CierreCajaView> {
         ],
       );
     }
-    final debeHaber = _TarjetaDebeHaber(saldo: vm.saldoEsperado!, web: web);
+    final debeHaber = _TarjetaDebeHaber(desglose: vm.desglose!, web: web);
     final contado = _tarjetaContado(vm, web);
     if (!web) {
       return Column(
@@ -252,38 +255,88 @@ class _CierreCajaViewState extends State<CierreCajaView> {
   }
 }
 
-/// Tarjeta "Lo que debe haber" (mockup `wCierre`): por ahora solo el total.
+/// Tarjeta "Lo que debe haber" (mockup `wCierre`): con qué abrió, lo que entró
+/// y salió, y el total (DI-38).
 class _TarjetaDebeHaber extends StatelessWidget {
-  const _TarjetaDebeHaber({required this.saldo, required this.web});
+  const _TarjetaDebeHaber({required this.desglose, required this.web});
 
-  final Decimal saldo;
+  final DesgloseCaja desglose;
   final bool web;
+
+  static String _pesos(Decimal v) => '\$ ${mostrarPrecio(v)}';
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final cero = Decimal.zero;
+    final filas = <Widget>[
+      _FilaDesglose('Abrió con', _pesos(desglose.baseApertura)),
+      _FilaDesglose('+ Entró al negocio', _pesos(desglose.ingresosNegocio)),
+      if (desglose.ingresosPersonales != cero)
+        _FilaDesglose(
+          '+ Dinero personal que entró',
+          _pesos(desglose.ingresosPersonales),
+        ),
+      _FilaDesglose('− Gastos del negocio', _pesos(desglose.egresosNegocio)),
+      _FilaDesglose('− Personal', _pesos(desglose.egresosPersonales)),
+      if (desglose.devolucionesPorAnulacion != cero)
+        _FilaDesglose(
+          '− Devoluciones por anulación',
+          _pesos(desglose.devolucionesPorAnulacion),
+        ),
+    ];
     return TarjetaGip(
       key: const Key('cierre_tarjeta_debe_haber'),
       padding: EdgeInsets.all(web ? 24 : 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (web) ...[
             Text('Lo que debe haber', style: tema.textTheme.titleLarge),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
           ],
+          ...filas,
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: Text('Debe haber', style: tema.textTheme.titleMedium),
               ),
               Text(
-                '\$ ${mostrarPrecio(saldo)}',
+                _pesos(desglose.saldoEsperado),
                 key: const Key('cierre_saldo_esperado'),
                 style: tema.textTheme.headlineSmall?.cifrasTabulares,
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Un renglón del desglose: nombre a la izquierda y valor a la derecha, con
+/// una línea fina debajo.
+class _FilaDesglose extends StatelessWidget {
+  const _FilaDesglose(this.etiqueta, this.valor);
+
+  final String etiqueta;
+  final String valor;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    return Container(
+      constraints: const BoxConstraints(minHeight: 44),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: tema.colorScheme.outlineVariant),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(etiqueta, style: tema.textTheme.bodyLarge)),
+          Text(valor, style: tema.textTheme.bodyLarge?.cifrasTabulares),
         ],
       ),
     );
