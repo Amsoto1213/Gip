@@ -156,7 +156,7 @@ class GipApp extends StatefulWidget {
   State<GipApp> createState() => _GipAppState();
 }
 
-class _GipAppState extends State<GipApp> {
+class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
   late final IniciarSesionViewModel _sesion = IniciarSesionViewModel(
     widget.iniciarSesion,
   )..verificarSesionGuardada();
@@ -168,11 +168,20 @@ class _GipAppState extends State<GipApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _alertasDiarias = DisparadorAlertasDiarias(_sesion, widget.generarAlertas);
+  }
+
+  /// Al volver del segundo plano, con internet, se comprueba que el
+  /// propietario no haya desactivado al usuario mientras tanto (DI-44).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    if (estado == AppLifecycleState.resumed) _sesion.revisarUsuarioActivo();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _alertasDiarias.dispose();
     _router.dispose();
     _sesion.dispose();

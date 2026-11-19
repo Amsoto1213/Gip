@@ -11,6 +11,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`IAutenticacion`** (interface) en `Interfaces/InfoTienda`. Inicio de sesión con Supabase Auth (DI-05, DI-11).
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`: inicia sesión y devuelve el usuario con su tienda y su rol (la fila de `usuarios` con ese correo).
   - `+ haySesionGuardada(): bool`
+  - `+ usuarioSigueActivo(idUsuario: String): bool?`: lo que dice el servidor sobre si el usuario sigue activo; nulo si no se puede saber (DI-44).
   - `+ cerrarSesion(): void`
 - [ ] **`ISesionLocal`** (interface) en `Interfaces/InfoTienda`. Guarda el usuario activo en el dispositivo para entrar sin internet (DI-12).
   - `+ guardar(usuarioActivo: UsuarioActivo): void`
@@ -20,6 +21,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `+ IniciarSesionCoordinator(servicioAcceso: ServicioAcceso)`
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`
   - `+ sesionGuardada(): UsuarioActivo?`
+  - `+ revisarUsuarioActivo(activo: UsuarioActivo): bool` (DI-44)
   - `+ cerrarSesion(): void`
 - [ ] **`ICuentaAcceso`** (interface) en `Interfaces/InfoTienda`. Crea la cuenta con la que se inicia sesión (correo y contraseña); la implementa la Data Layer con Supabase Auth (DI-43).
   - `+ crear(correo: String, clave: String): void`: crea la cuenta sin abrir sesión con ella. Si ya existe una con ese correo y la misma contraseña (un intento anterior que no alcanzó a guardar al empleado) la da por buena; si la contraseña es otra, rechaza con "Ese correo ya tiene una cuenta".
@@ -40,6 +42,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - Atributos `- autenticacion: IAutenticacion` y `- sesionLocal: ISesionLocal`; constructor `ServicioAcceso(autenticacion, sesionLocal)`.
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`: valida que lleguen correo y clave, inicia sesión, rechaza al usuario inactivo y guarda el usuario activo con `sesionLocal.guardar`.
   - `+ sesionGuardada(): UsuarioActivo?`: el usuario guardado en el dispositivo, sin usar la red.
+  - `+ revisarUsuarioActivo(activo: UsuarioActivo): bool` (DI-44): vuelve a preguntar si el usuario de la sesión guardada sigue activo; devuelve falso y cierra la sesión solo si el servidor dice que está desactivado; sin internet o ante una falla devuelve verdadero.
   - `+ cerrarSesion(): void`: borra primero la sesión local y luego la de Auth, para que un fallo sin internet no deje entrar sola la app.
 
 - [ ] **`ServicioExportacion`** (DI-41 a, e): constructor con `reloj` opcional (la fecha de `DatosExportacion`); descripción de `exportar`: el periodo es `[desde, hasta)`, los fiados salen todos (no solo los del periodo) y con `desde > hasta` lanza "Periodo no válido" sin leer nada.

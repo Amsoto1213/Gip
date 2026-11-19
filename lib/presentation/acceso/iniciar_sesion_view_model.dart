@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
 
 /// Estado de la pantalla de inicio de sesión (DI-05). Llama solo a
@@ -12,6 +15,8 @@ class IniciarSesionViewModel extends ChangeNotifier {
 
   bool _verificandoSesion = true;
   bool _enviando = false;
+  bool _revisando = false;
+  bool _descartado = false;
   String? _error;
   UsuarioActivo? _usuarioActivo;
 
@@ -22,6 +27,8 @@ class IniciarSesionViewModel extends ChangeNotifier {
   UsuarioActivo? get usuarioActivo => _usuarioActivo;
 
   /// Si el dispositivo guarda una sesión, entra directo (también sin internet).
+  /// Con internet, en segundo plano, vuelve a comprobar que el usuario no haya
+  /// sido desactivado (DI-44): no demora la entrada.
   Future<void> verificarSesionGuardada() async {
     try {
       _usuarioActivo = await _coordinator.sesionGuardada();
@@ -29,6 +36,43 @@ class IniciarSesionViewModel extends ChangeNotifier {
       _verificandoSesion = false;
       notifyListeners();
     }
+    if (_usuarioActivo != null) unawaited(revisarUsuarioActivo());
+  }
+
+  /// Pregunta al servidor si el usuario de la sesión sigue activo. Si el
+  /// propietario lo desactivó, cierra la sesión y la app vuelve al inicio de
+  /// sesión con el aviso (CUS-15, DI-44). Sin internet, o ante cualquier
+  /// falla, no cambia nada. La app la llama al abrirse y al volver del segundo
+  /// plano.
+  Future<void> revisarUsuarioActivo() async {
+    final activo = _usuarioActivo;
+    if (activo == null || _revisando) return;
+    _revisando = true;
+    try {
+      final sigue = await _coordinator.revisarUsuarioActivo(activo);
+      // Si mientras tanto salió o entró otra persona, esta respuesta ya no
+      // le toca.
+      final actual = _usuarioActivo;
+      if (sigue ||
+          _descartado ||
+          actual == null ||
+          actual.usuario.getId() != activo.usuario.getId()) {
+        return;
+      }
+      _usuarioActivo = null;
+      _error = const ExcepcionUsuarioInactivo().mensaje;
+      notifyListeners();
+    } catch (_) {
+      // No se pudo comprobar: la sesión sigue como estaba.
+    } finally {
+      _revisando = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _descartado = true;
+    super.dispose();
   }
 
   Future<void> iniciarSesion(String correo, String clave) async {

@@ -42,6 +42,30 @@ class ServicioAcceso {
     return _sesionLocal.leer();
   }
 
+  /// Vuelve a preguntar al servidor si el usuario de la sesión guardada sigue
+  /// activo, porque el propietario pudo desactivarlo después de que entró
+  /// (CUS-15, DI-44). Devuelve `false` y cierra la sesión solo si el servidor
+  /// dice que **está desactivado**; si no se puede saber (sin internet, sin su
+  /// fila o cualquier falla) devuelve `true` y la sesión sigue: entrar sin
+  /// internet no se bloquea (RNF-08).
+  Future<bool> revisarUsuarioActivo(UsuarioActivo activo) async {
+    final bool? sigueActivo;
+    try {
+      sigueActivo = await _autenticacion.usuarioSigueActivo(
+        activo.usuario.getId(),
+      );
+    } catch (_) {
+      return true;
+    }
+    if (sigueActivo != false) return true;
+    try {
+      await cerrarSesion();
+    } catch (_) {
+      // Lo local ya se borró primero (ver cerrarSesion): igual quedó fuera.
+    }
+    return false;
+  }
+
   /// Borra primero el usuario guardado en el dispositivo: aunque Auth falle
   /// (p. ej. sin internet), al volver a abrir la app no entra sola.
   Future<void> cerrarSesion() async {
