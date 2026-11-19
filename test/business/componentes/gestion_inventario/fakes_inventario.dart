@@ -14,6 +14,7 @@ class MovimientoRepositorioFalso
     implements IMovimientoInventarioRepositorio, Restaurable {
   final Map<String, List<MovimientoInventario>> datos = {};
   Map<String, List<MovimientoInventario>> _copia = {};
+  Map<String, EstadoMovimiento> _copiaEstados = {};
 
   final List<bool> guardadosEnTransaccion = [];
   UnidadTrabajoFalsa? unidad;
@@ -22,19 +23,48 @@ class MovimientoRepositorioFalso
       datos.putIfAbsent(t.getId(), () => []);
 
   @override
-  void tomarCopia() =>
-      _copia = {for (final e in datos.entries) e.key: List.of(e.value)};
+  void tomarCopia() {
+    _copia = {for (final e in datos.entries) e.key: List.of(e.value)};
+    _copiaEstados = {
+      for (final m in datos.values.expand((l) => l)) m.getId(): m.getEstado(),
+    };
+  }
 
   @override
-  void restaurar() => datos
-    ..clear()
-    ..addAll(_copia);
+  void restaurar() {
+    datos
+      ..clear()
+      ..addAll(_copia);
+    for (final m in datos.values.expand((l) => l)) {
+      final estado = _copiaEstados[m.getId()];
+      if (estado != null) m.setEstado(estado);
+    }
+  }
 
   @override
   Future<void> guardar(Tienda tienda, MovimientoInventario movimiento) async {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     de(tienda).add(movimiento);
   }
+
+  /// Los movimientos de la tienda con fecha en `[desde, hasta)`, del más
+  /// antiguo al más reciente (CUS-23).
+  @override
+  Future<List<MovimientoInventario>> listarPorTienda(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async =>
+      de(tienda)
+          .where(
+            (m) =>
+                !m.getFecha().isBefore(desde) && m.getFecha().isBefore(hasta),
+          )
+          .toList()
+        ..sort((a, b) {
+          final porFecha = a.getFecha().compareTo(b.getFecha());
+          return porFecha != 0 ? porFecha : a.getId().compareTo(b.getId());
+        });
 
   /// Movimientos guardados con actualizarEstado, en orden de llegada.
   final List<MovimientoInventario> estadosActualizados = [];

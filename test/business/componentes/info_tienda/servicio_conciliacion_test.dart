@@ -45,7 +45,7 @@ void main() {
     }, eventos)..unidad = unidad;
     deAbonos = ResolutorFalso({TipoConflicto.abonoExcedeSaldo}, eventos)
       ..unidad = unidad;
-    servicio = ServicioConciliacion(conflictos, unidad, [
+    servicio = crearServicioConciliacion(conflictos, unidad, [
       deMovimientos,
       deAbonos,
     ]);
@@ -125,7 +125,7 @@ void main() {
 
     test('si varios lo admiten, gana el primero de la lista', () async {
       final otro = ResolutorFalso({TipoConflicto.posibleDuplicado});
-      final servicio2 = ServicioConciliacion(conflictos, unidad, [
+      final servicio2 = crearServicioConciliacion(conflictos, unidad, [
         otro,
         deMovimientos,
       ]);
@@ -167,7 +167,9 @@ void main() {
       final registrando = ResolutorFalso({
         TipoConflicto.posibleDuplicado,
       }, eventos)..unidad = unidad;
-      final servicio2 = ServicioConciliacion(conflictos, unidad, [registrando]);
+      final servicio2 = crearServicioConciliacion(conflictos, unidad, [
+        registrando,
+      ]);
 
       await servicio2.resolverConflicto(tienda, c, []);
       eventos.add(conflictos.marcados.isNotEmpty ? 'marcado' : 'sin marcar');

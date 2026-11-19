@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
-import 'package:gip/business/componentes/info_tienda/servicio_conciliacion.dart';
 import 'package:gip/business/entidades/info_tienda/conflicto_sincronizacion.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/tipo_conflicto.dart';
@@ -45,7 +44,7 @@ void main() {
     );
     conflictos.sembrar(tienda, duplicado);
     coordinador = RevisarConflictosCoordinator(
-      ServicioConciliacion(conflictos, unidad, [resolutor]),
+      crearServicioConciliacion(conflictos, unidad, [resolutor]),
       ServicioAcceso(AutenticacionFalsa(), SesionLocalFalsa()),
     );
   });

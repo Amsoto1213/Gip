@@ -65,6 +65,10 @@ class FiadoQueFallaDespues implements IFiadoRepositorio {
       _real.buscarPorId(tienda, id);
 
   @override
+  Future<List<Fiado>> listarModificadosDesde(Tienda tienda, DateTime desde) =>
+      _real.listarModificadosDesde(tienda, desde);
+
+  @override
   Future<void> anularAbono(Tienda tienda, Fiado fiado, Abono abono) =>
       _real.anularAbono(tienda, fiado, abono);
 }

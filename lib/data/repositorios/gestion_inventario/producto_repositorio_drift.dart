@@ -151,9 +151,9 @@ class ProductoRepositorioDrift implements IProductoRepositorio {
     }
   }
 
-  /// TODO(CUS-22): códigos cuyo valor quedó en más de un producto al
-  /// sincronizar. Sin sincronización todavía no puede pasar: la regla de no
-  /// repetir la valida `ServicioCatalogo.asociarCodigo`.
+  /// Sin uso: la conciliación (CUS-23) busca los códigos repetidos agrupando
+  /// `listar`, porque también revisa los códigos internos (DI-46). Devuelve
+  /// vacío.
   @override
   Future<List<CodigoProducto>> listarCodigosRepetidos(Tienda tienda) async =>
       const [];

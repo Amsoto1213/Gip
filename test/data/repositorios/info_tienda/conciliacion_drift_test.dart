@@ -71,12 +71,21 @@ void main() {
   late ItemInventario itemHuevo;
 
   ServicioConciliacion servicio([IConflictoRepositorio? repoConflictos]) =>
-      ServicioConciliacion(repoConflictos ?? conflictos, unidad, [
-        ResolutorMovimientos(movimientos, inventario),
-        ResolutorAbonoExcedido(fiados, servicioCaja),
-        ResolutorCodigoRepetido(productos),
-        ResolutorCajaCerrada(cajas),
-      ]);
+      ServicioConciliacion(
+        repoConflictos ?? conflictos,
+        movimientos,
+        fiados,
+        cajas,
+        productos,
+        inventario,
+        unidad,
+        [
+          ResolutorMovimientos(movimientos, inventario),
+          ResolutorAbonoExcedido(fiados, servicioCaja),
+          ResolutorCodigoRepetido(productos),
+          ResolutorCajaCerrada(cajas),
+        ],
+      );
 
   setUp(() async {
     base = BaseLocalDrift(NativeDatabase.memory());
@@ -802,7 +811,7 @@ class _ConflictosQueFallanAlMarcar implements IConflictoRepositorio {
   final IConflictoRepositorio _real;
 
   @override
-  Future<void> guardar(Tienda tienda, ConflictoSincronizacion conflicto) =>
+  Future<bool> guardar(Tienda tienda, ConflictoSincronizacion conflicto) =>
       _real.guardar(tienda, conflicto);
 
   @override

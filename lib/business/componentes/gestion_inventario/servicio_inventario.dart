@@ -282,9 +282,11 @@ class ServicioInventario {
   /// Suma los movimientos VIGENTES de todo el historial del ítem que devuelve
   /// movimientos.listarPorItem (los EN_REVISION y los ANULADOS no cuentan),
   /// asigna el resultado con item.setStockActual y lo guarda con
-  /// items.guardarItem. Devuelve el stock, que puede ser negativo: eso es justo
-  /// lo que la conciliación muestra al propietario (ERS 3.2.1 c, DA-48, DI-45).
-  /// Se une a la transacción abierta, si la hay.
+  /// items.guardarItem. Si el stock no cambió no escribe nada: cada escritura
+  /// entra a la cola de sincronización y la conciliación recalcula en cada
+  /// sincronización (DI-46). Devuelve el stock, que puede ser negativo: eso es
+  /// justo lo que la conciliación muestra al propietario (ERS 3.2.1 c, DA-48,
+  /// DI-45). Se une a la transacción abierta, si la hay.
   Future<Decimal> recalcularStock(Tienda tienda, ItemInventario item) async {
     final historial = await _movimientos.listarPorItem(
       item,
@@ -294,8 +296,10 @@ class ServicioInventario {
     final stock = historial
         .where((m) => m.getEstado() == EstadoMovimiento.vigente)
         .fold(Decimal.zero, (suma, m) => suma + m.getCantidad());
-    item.setStockActual(stock);
-    await _items.guardarItem(tienda, item);
+    if (item.getStockActual() != stock) {
+      item.setStockActual(stock);
+      await _items.guardarItem(tienda, item);
+    }
     return stock;
   }
 
