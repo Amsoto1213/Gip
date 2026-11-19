@@ -60,3 +60,22 @@ class ExcepcionClienteConSaldo extends ExcepcionNegocio {
   const ExcepcionClienteConSaldo()
     : super('No se pueden eliminar los datos: el cliente aún debe');
 }
+
+/// Anular una venta que ya estaba anulada (CUS-20, pasos 20 a 22).
+class ExcepcionVentaYaAnulada extends ExcepcionNegocio {
+  const ExcepcionVentaYaAnulada() : super('La venta ya estaba anulada');
+}
+
+/// Anular una venta sin escribir el motivo (CUS-20; la pantalla lo pide
+/// obligatorio, DI-39).
+class ExcepcionMotivoAnulacionObligatorio extends ExcepcionNegocio {
+  const ExcepcionMotivoAnulacionObligatorio()
+    : super('Escribe el motivo de la anulación');
+}
+
+/// Anular un fiado que ya tiene abonos (CUS-20, paso 35): la venta no se puede
+/// anular.
+class ExcepcionFiadoConAbonos extends ExcepcionNegocio {
+  const ExcepcionFiadoConAbonos()
+    : super('No se puede anular la venta: el fiado ya tiene abonos');
+}

@@ -3,12 +3,13 @@ import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/venta.dart';
 
 /// Indirection, Protected Variations y DIP: contrato de acceso al historial de
 /// movimientos de inventario; la Data Layer lo implementa (RNF-08).
 ///
-/// Por ahora solo las operaciones de CUS-01, CUS-24, CUS-09, CUS-10 y CUS-25;
-/// las demás de EA llegan con su caso de uso (DI-20, DI-25, DI-32).
+/// Las operaciones de CUS-01, CUS-24, CUS-09, CUS-10, CUS-25 y CUS-20; las demás
+/// de EA llegan con su caso de uso (DI-20, DI-25, DI-32, DI-39).
 abstract interface class IMovimientoInventarioRepositorio {
   /// Agrega el movimiento al historial; nunca lo modifica (RF-01 a RF-04).
   Future<void> guardar(Tienda tienda, MovimientoInventario movimiento);
@@ -58,4 +59,18 @@ abstract interface class IMovimientoInventarioRepositorio {
   /// si no tiene: marca el inicio de su historial para los días con datos del
   /// consumo (DI-25; no está en EA).
   Future<DateTime?> buscarFechaPrimerMovimiento(ItemInventario item);
+
+  /// Salidas por venta de las [ventas] dadas, en cualquier estado (VIGENTE o
+  /// ANULADO), cada una con su ítem y su producto. Sirve para anular las
+  /// salidas de una venta y para mostrar sus productos (CUS-20). En EA es
+  /// `listarSalidasPorVenta(venta)`: aquí recibe la tienda y varias ventas
+  /// juntas (DI-39).
+  Future<List<SalidaVenta>> listarSalidasPorVentas(
+    Tienda tienda,
+    List<Venta> ventas,
+  );
+
+  /// Guarda solo el estado del movimiento (VIGENTE, EN_REVISION o ANULADO);
+  /// nunca reescribe lo demás (RNF-15). Se une a la transacción abierta.
+  Future<void> actualizarEstado(Tienda tienda, MovimientoInventario movimiento);
 }

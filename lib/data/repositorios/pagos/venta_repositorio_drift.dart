@@ -1,6 +1,8 @@
 import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/info_tienda/usuario.dart';
+import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
@@ -14,7 +16,8 @@ import 'package:gip/data/repositorios/pagos/mapeo_fiado.dart';
 
 /// [IVentaRepositorio] sobre la base local (drift). La venta y sus formas de
 /// pago solo se agregan (RNF-15); las formas van en la tabla única
-/// `formas_pago` con columna `tipo` (DI-21).
+/// `formas_pago` con columna `tipo` (DI-21). La anulación es una fila aparte en
+/// `anulaciones_venta` y no modifica la venta (CUS-20, DI-39).
 class VentaRepositorioDrift implements IVentaRepositorio {
   VentaRepositorioDrift(this._base);
 
@@ -22,6 +25,7 @@ class VentaRepositorioDrift implements IVentaRepositorio {
 
   static const _tablaVentas = 'ventas';
   static const _tablaFormas = 'formas_pago';
+  static const _tablaAnulaciones = 'anulaciones_venta';
 
   /// Inserta la venta y sus formas de pago, y anota cada fila en
   /// `cola_pendientes` en la misma transacción (DA-33). Se une a la
@@ -48,8 +52,8 @@ class VentaRepositorioDrift implements IVentaRepositorio {
   );
 
   /// Ventas de la tienda con fecha en `[desde, hasta)` con sus formas de pago
-  /// (CUS-10, DI-29). El fiado se arma con su cliente, sin abonos: el reporte
-  /// solo necesita el monto que cubre.
+  /// (CUS-10, DI-29), con su anulación si la tiene. El fiado se arma con su
+  /// cliente y sus abonos (CUS-20, DI-39).
   @override
   Future<List<Venta>> listarPorPeriodo(
     Tienda tienda,
@@ -81,10 +85,72 @@ class VentaRepositorioDrift implements IVentaRepositorio {
         porVenta.putIfAbsent(forma.ventaId, () => []).add(entidad);
       }
     }
+    final anulaciones = await _anulacionesDe(tienda, ids);
     return [
       for (final v in filas)
-        Venta(v.id, porVenta[v.id] ?? const [], v.total, v.fecha),
+        Venta(
+          v.id,
+          porVenta[v.id] ?? const [],
+          v.total,
+          v.fecha,
+          anulacion: anulaciones[v.id],
+        ),
     ];
+  }
+
+  /// Inserta la anulación y la anota en `cola_pendientes` en la misma
+  /// transacción (DA-33); la venta no se toca (RNF-15). Se une a la
+  /// transacción de ServicioVentas.anular.
+  @override
+  Future<void> registrarAnulacion(
+    Tienda tienda,
+    Venta venta,
+    AnulacionVenta anulacion,
+  ) => _base.transaction(() async {
+    final usuario = anulacion.getUsuario();
+    await _base
+        .into(_base.anulacionesVenta)
+        .insert(
+          AnulacionesVentaCompanion.insert(
+            id: anulacion.getId(),
+            tiendaId: tienda.getId(),
+            ventaId: venta.getId(),
+            usuarioId: usuario.getId(),
+            usuarioNombre: usuario.getNombre(),
+            fecha: anulacion.getFecha(),
+            motivo: anulacion.getMotivo(),
+          ),
+        );
+    await _anotar(tienda, _tablaAnulaciones, anulacion.getId());
+  });
+
+  /// La anulación de cada venta, por el id de la venta; si hubiera dos (dos
+  /// equipos sin conexión), vale la más antigua (DI-39). Quien anula es el
+  /// propietario: se arma como [Administrador] con el id y el nombre guardados.
+  Future<Map<String, AnulacionVenta>> _anulacionesDe(
+    Tienda tienda,
+    List<String> ventaIds,
+  ) async {
+    final filas =
+        await (_base.select(_base.anulacionesVenta)
+              ..where(
+                (a) =>
+                    a.tiendaId.equals(tienda.getId()) &
+                    a.ventaId.isIn(ventaIds),
+              )
+              ..orderBy([(a) => OrderingTerm.desc(a.fecha)]))
+            .get();
+    // Del más reciente al más antiguo: la última que se escribe es la más
+    // antigua.
+    return {
+      for (final a in filas)
+        a.ventaId: AnulacionVenta(
+          a.id,
+          Administrador(a.usuarioId, a.usuarioNombre, ''),
+          a.fecha,
+          a.motivo,
+        ),
+    };
   }
 
   Future<Map<String, Fiado>> _fiadosDe(
@@ -101,6 +167,17 @@ class VentaRepositorioDrift implements IVentaRepositorio {
     final consulta = _base.select(f).join([
       innerJoin(c, c.id.equalsExp(f.clienteId)),
     ])..where(f.tiendaId.equals(tienda.getId()) & f.id.isIn(ids));
+    // Con sus abonos: para anular la venta hay que saber si el fiado ya tiene
+    // (CUS-20, DI-39).
+    final abonos =
+        await (_base.select(_base.abonos)..where(
+              (a) => a.tiendaId.equals(tienda.getId()) & a.fiadoId.isIn(ids),
+            ))
+            .get();
+    final porFiado = <String, List<FilaAbono>>{};
+    for (final a in abonos) {
+      porFiado.putIfAbsent(a.fiadoId, () => []).add(a);
+    }
     return {
       for (final r in await consulta.get())
         r.readTable(f).id: MapeoFiado.aEntidad(
@@ -110,6 +187,7 @@ class VentaRepositorioDrift implements IVentaRepositorio {
             r.readTable(c).nombre,
             r.readTable(c).telefono,
           ),
+          porFiado[r.readTable(f).id] ?? const [],
         ),
     };
   }

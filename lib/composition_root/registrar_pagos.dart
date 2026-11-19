@@ -1,4 +1,5 @@
 import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
+import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
 import 'package:gip/business/componentes/pagos/procesador_fiado.dart';
 import 'package:gip/business/componentes/pagos/procesador_nequi.dart';
@@ -7,6 +8,7 @@ import 'package:gip/business/componentes/pagos/servicio_abonos.dart';
 import 'package:gip/business/componentes/pagos/servicio_clientes.dart';
 import 'package:gip/business/componentes/pagos/servicio_fiados.dart';
 import 'package:gip/business/componentes/pagos/servicio_ventas.dart';
+import 'package:gip/business/workflow/pagos/anular_venta_coordinator.dart';
 import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
@@ -23,6 +25,7 @@ typedef CoordinadoresPagos = ({
   RegistrarFiadoCoordinator registrarFiado,
   RegistrarAbonoCoordinator registrarAbono,
   ConsultarClienteCoordinator consultarCliente,
+  ServicioVentas servicioVentas,
 });
 
 /// Arma el módulo de pagos. Recibe los servicios de inventario y caja ya
@@ -57,5 +60,13 @@ CoordinadoresPagos registrarPagos(
       servicioClientes,
       servicioFiados,
     ),
+    servicioVentas: servicioVentas,
   );
 }
+
+/// Coordinador de la anulación de ventas del propietario (CUS-20), con el
+/// [ServicioVentas] ya armado.
+AnularVentaCoordinator registrarAnularVenta(
+  ServicioVentas servicioVentas,
+  ServicioAcceso servicioAcceso,
+) => AnularVentaCoordinator(servicioVentas, servicioAcceso);

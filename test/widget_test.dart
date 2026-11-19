@@ -97,6 +97,7 @@ void main() {
     generarReporteDiario: GenerarReporteDiarioFalso(),
     registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
     registrarCierreCaja: RegistrarCierreCajaFalso(),
+    anularVenta: AnularVentaFalso(),
   );
 
   /// Abre la app en una pantalla de teléfono (barra de pestañas abajo).

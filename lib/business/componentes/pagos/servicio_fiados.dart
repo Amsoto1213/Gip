@@ -10,8 +10,8 @@ import 'package:uuid/uuid.dart';
 /// crea en memoria y lo guarda cuando se confirma la venta. No depende de la
 /// caja ni de los clientes (DA-69).
 ///
-/// `anularFiado`, `listarFiados` y `buscarFiadosPorCliente` llegan con CUS-20
-/// y CUS-19 (DI-26).
+/// Anula un fiado con [anularFiado] (CUS-20). `listarFiados` y
+/// `buscarFiadosPorCliente` llegan con CUS-19 (DI-26).
 class ServicioFiados {
   ServicioFiados(this._fiados);
 
@@ -31,5 +31,21 @@ class ServicioFiados {
   Future<void> registrarFiado(Tienda tienda, Fiado fiado) async {
     fiado.getCliente().agregarFiado(fiado);
     await _fiados.crear(tienda, fiado);
+  }
+
+  /// Llama a fiado.anular() (rechaza si ya tiene abonos) y guarda con
+  /// fiados.actualizarSaldo. Lo invoca ProcesadorFiado.revertir dentro de la
+  /// transacción de ServicioVentas.anular (CUS-20). Si el guardado falla, el
+  /// fiado conserva su saldo y su estado anteriores.
+  Future<void> anularFiado(Tienda tienda, Fiado fiado) async {
+    final saldoAnterior = fiado.getSaldoPendiente();
+    final estadoAnterior = fiado.getEstado();
+    fiado.anular();
+    try {
+      await _fiados.actualizarSaldo(tienda, fiado);
+    } catch (_) {
+      fiado.restaurar(saldoAnterior, estadoAnterior);
+      rethrow;
+    }
   }
 }

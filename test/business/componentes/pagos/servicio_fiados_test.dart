@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/pagos/procesador_fiado.dart';
 import 'package:gip/business/componentes/pagos/servicio_fiados.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/abono.dart';
+import 'package:gip/business/entidades/pagos/medio_pago.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/estado_fiado.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
@@ -80,6 +82,87 @@ void main() {
       await procesador.procesar(tienda, venta, fiado);
 
       expect(fiados.de(tienda), [fiado]);
+    });
+  });
+
+  group('anularFiado (CUS-20)', () {
+    test('anula el fiado sin abonos y guarda su saldo y su estado', () async {
+      final fiado = servicio.crearFiado(maria, d('8400'));
+
+      await servicio.anularFiado(tienda, fiado);
+
+      expect(fiado.getEstado(), EstadoFiado.anulado);
+      expect(fiado.getSaldoPendiente(), Decimal.zero);
+      expect(fiados.actualizados, [fiado]);
+    });
+
+    test('con abonos se rechaza y no guarda nada', () async {
+      final fiado = servicio.crearFiado(maria, d('8400'))
+        ..registrarAbono(
+          Abono(
+            'a1',
+            d('1000'),
+            DateTime.utc(2026, 11, 15),
+            MedioPago.efectivo,
+            null,
+          ),
+        );
+
+      await expectLater(
+        servicio.anularFiado(tienda, fiado),
+        throwsA(isA<ExcepcionFiadoConAbonos>()),
+      );
+
+      expect(fiado.getEstado(), EstadoFiado.pendiente);
+      expect(fiado.getSaldoPendiente(), d('7400'));
+      expect(fiados.actualizados, isEmpty);
+    });
+
+    test(
+      'si falla el guardado, el fiado conserva su saldo y su estado',
+      () async {
+        final fiado = servicio.crearFiado(maria, d('8400'));
+        fiados.fallar = true;
+
+        await expectLater(
+          servicio.anularFiado(tienda, fiado),
+          throwsStateError,
+        );
+
+        expect(fiado.getEstado(), EstadoFiado.pendiente);
+        expect(fiado.getSaldoPendiente(), d('8400'));
+      },
+    );
+  });
+
+  group('ProcesadorFiado.revertir (CUS-20)', () {
+    test('anula el fiado de la venta y no mueve la caja', () async {
+      final fiado = servicio.crearFiado(maria, d('8400'));
+      final venta = Venta('v1', [fiado], d('8400'), DateTime.utc(2026, 11, 15));
+
+      await ProcesadorFiado(servicio).revertir(tienda, venta, fiado);
+
+      expect(fiado.getEstado(), EstadoFiado.anulado);
+      expect(fiados.actualizados, [fiado]);
+    });
+
+    test('con abonos rechaza la reversión', () async {
+      final fiado = servicio.crearFiado(maria, d('8400'))
+        ..registrarAbono(
+          Abono(
+            'a1',
+            d('1'),
+            DateTime.utc(2026, 11, 15),
+            MedioPago.nequi,
+            null,
+          ),
+        );
+      final venta = Venta('v1', [fiado], d('8400'), DateTime.utc(2026, 11, 15));
+
+      await expectLater(
+        ProcesadorFiado(servicio).revertir(tienda, venta, fiado),
+        throwsA(isA<ExcepcionFiadoConAbonos>()),
+      );
     });
   });
 }

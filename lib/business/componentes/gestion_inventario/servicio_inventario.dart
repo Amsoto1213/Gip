@@ -1,12 +1,15 @@
 import 'package:decimal/decimal.dart';
 import 'package:gip/business/entidades/gestion_inventario/ajuste_conteo.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
+import 'package:gip/business/entidades/gestion_inventario/estado_movimiento.dart';
 import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_producto_repositorio.dart';
@@ -19,8 +22,9 @@ import 'package:uuid/uuid.dart';
 /// (ERS 3.2.1).
 ///
 /// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01), la pérdida
-/// o devolución (CUS-03), el conteo físico (CUS-04) y la consulta de
-/// existencias e historial (CUS-25).
+/// o devolución (CUS-03), el conteo físico (CUS-04), la consulta de
+/// existencias e historial (CUS-25) y la anulación de las salidas de una venta
+/// (CUS-20).
 ///
 /// [_productos] no está en EA: la entrada actualiza el precio de compra del
 /// producto con su costo (DI-33).
@@ -245,5 +249,61 @@ class ServicioInventario {
       item.setStockActual(stockAnterior);
       rethrow;
     }
+  }
+
+  /// Dentro de unidadTrabajo.ejecutar: marca el movimiento ANULADO y devuelve su
+  /// efecto al stock (stock nuevo = stock actual − cantidad); guarda con
+  /// movimientos.actualizarEstado e items.guardarItem. Rechaza si el stock
+  /// quedaría negativo. Si algo falla no se guarda nada y el movimiento y el
+  /// ítem conservan su estado y su stock anteriores (CUS-20, RNF-15).
+  Future<void> anularMovimiento(
+    Tienda tienda,
+    MovimientoInventario movimiento,
+  ) async {
+    final item = movimiento.getItem();
+    final stockAnterior = item.getStockActual();
+    final estadoAnterior = movimiento.getEstado();
+    final nuevoStock = stockAnterior - movimiento.getCantidad();
+    if (nuevoStock < Decimal.zero) throw const ExcepcionStockNegativo();
+    try {
+      await _unidadTrabajo.ejecutar(() async {
+        movimiento.setEstado(EstadoMovimiento.anulado);
+        item.setStockActual(nuevoStock);
+        await _movimientos.actualizarEstado(tienda, movimiento);
+        await _items.guardarItem(tienda, item);
+      });
+    } catch (_) {
+      movimiento.setEstado(estadoAnterior);
+      item.setStockActual(stockAnterior);
+      rethrow;
+    }
+  }
+
+  /// Busca las salidas de la venta con movimientos.listarSalidasPorVentas y
+  /// llama a [anularMovimiento] por cada una que siga vigente: el stock vuelve
+  /// (CUS-20).
+  Future<void> anularSalidas(Tienda tienda, Venta venta) async {
+    final salidas = await _movimientos.listarSalidasPorVentas(tienda, [venta]);
+    for (final salida in salidas) {
+      if (salida.getEstado() == EstadoMovimiento.vigente) {
+        await anularMovimiento(tienda, salida);
+      }
+    }
+  }
+
+  /// Salidas de las [ventas], agrupadas por el id de cada venta, en cualquier
+  /// estado: con ellas la pantalla muestra los productos de cada venta
+  /// (CUS-20, DI-39).
+  Future<Map<String, List<SalidaVenta>>> listarSalidasDeVentas(
+    Tienda tienda,
+    List<Venta> ventas,
+  ) async {
+    if (ventas.isEmpty) return const {};
+    final salidas = await _movimientos.listarSalidasPorVentas(tienda, ventas);
+    final porVenta = <String, List<SalidaVenta>>{};
+    for (final s in salidas) {
+      porVenta.putIfAbsent(s.getVenta().getId(), () => []).add(s);
+    }
+    return porVenta;
   }
 }

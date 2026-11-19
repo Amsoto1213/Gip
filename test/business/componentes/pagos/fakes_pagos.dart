@@ -1,5 +1,6 @@
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/pagos/abono.dart';
+import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
@@ -18,6 +19,12 @@ class VentaRepositorioFalso implements IVentaRepositorio, Restaurable {
   final List<bool> guardadosEnTransaccion = [];
   UnidadTrabajoFalsa? unidad;
 
+  /// Anulaciones guardadas con registrarAnulacion, en orden de llegada.
+  final List<AnulacionVenta> anulaciones = [];
+
+  /// Si es verdadero, registrarAnulacion falla (para probar el rollback).
+  bool fallarAnulacion = false;
+
   List<Venta> de(Tienda t) => datos.putIfAbsent(t.getId(), () => []);
 
   @override
@@ -33,6 +40,17 @@ class VentaRepositorioFalso implements IVentaRepositorio, Restaurable {
   Future<void> guardar(Tienda tienda, Venta venta) async {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     de(tienda).add(venta);
+  }
+
+  @override
+  Future<void> registrarAnulacion(
+    Tienda tienda,
+    Venta venta,
+    AnulacionVenta anulacion,
+  ) async {
+    if (fallarAnulacion) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    anulaciones.add(anulacion);
   }
 
   @override
@@ -122,6 +140,16 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
     if (fallar) throw StateError('falla del disco');
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     de(tienda).add(fiado);
+  }
+
+  /// Fiados guardados con actualizarSaldo, en orden de llegada.
+  final List<Fiado> actualizados = [];
+
+  @override
+  Future<void> actualizarSaldo(Tienda tienda, Fiado fiado) async {
+    if (fallar) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    actualizados.add(fiado);
   }
 
   /// Los abonos no guardan su tienda: se filtran solo por fecha.

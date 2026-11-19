@@ -19,6 +19,7 @@ import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
 import 'package:gip/presentation/caja/cierre_caja_view.dart';
+import 'package:gip/presentation/caja/ventas_hoy_view.dart';
 import 'package:gip/presentation/comun/marco_navegacion.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/comun/encabezado_pantalla.dart';
@@ -107,6 +108,7 @@ void main() {
         generarReporteDiario: GenerarReporteDiarioFalso(),
         registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
         registrarCierreCaja: RegistrarCierreCajaFalso(),
+        anularVenta: AnularVentaFalso(),
       ),
     );
     await tester.pumpAndSettle();
@@ -254,8 +256,12 @@ void main() {
     await tester.tap(find.text('Caja').first);
     await tester.pumpAndSettle();
     expect(find.text('Movimientos'), findsOneWidget);
+    expect(find.text('Ventas de hoy'), findsOneWidget);
     expect(find.text('Cierre de caja'), findsOneWidget);
 
+    await tester.tap(find.text('Ventas de hoy'));
+    await tester.pumpAndSettle();
+    expect(find.byType(VentasHoyView), findsOneWidget);
     await tester.tap(find.text('Cierre de caja'));
     await tester.pumpAndSettle();
     expect(find.byType(CierreCajaView), findsOneWidget);

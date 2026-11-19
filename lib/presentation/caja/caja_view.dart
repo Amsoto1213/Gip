@@ -176,7 +176,10 @@ class _CajaViewState extends State<CajaView> {
     const SizedBox(height: 16),
     _tarjetaAnotar(vm, false),
     const SizedBox(height: 24),
-    ListaMovimientosHoy(movimientos: vm.movimientosDeHoy),
+    ListaMovimientosHoy(
+      movimientos: vm.movimientosDeHoy,
+      onVerVentas: () => context.go(rutaVentasHoy),
+    ),
   ];
 
   /// "Debe haber en caja" con la entrada a Cierre de caja (CUS-14).

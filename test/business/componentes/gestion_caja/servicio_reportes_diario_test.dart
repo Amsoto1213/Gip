@@ -17,6 +17,8 @@ import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/medio_pago.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
+import 'package:gip/business/entidades/info_tienda/usuario.dart';
+import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
 
@@ -329,6 +331,32 @@ void main() {
 
     expect(r.getTotalVentas(), d('1000'));
     expect(r.getFecha(), dia);
+  });
+
+  test('las ventas anuladas no cuentan (CUS-20)', () async {
+    await vender('v1', temprano, [
+      PagoContado('p1', d('5000'), d('0')),
+    ], '5000');
+    await ventas.guardar(
+      tienda,
+      Venta(
+        'v2',
+        [PagoNequi('p2', d('3000'), null)],
+        d('3000'),
+        tarde,
+        anulacion: AnulacionVenta(
+          'a1',
+          Administrador('u1', 'Carmen', '1'),
+          tarde,
+          'Error al cobrar',
+        ),
+      ),
+    );
+
+    final r = await servicio.generarReporteDiario(tienda, dia);
+
+    expect(r.getTotalVentas(), d('5000'));
+    expect(r.getVentasNequi(), Decimal.zero);
   });
 }
 
