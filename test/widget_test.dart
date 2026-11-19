@@ -26,6 +26,7 @@ import 'package:mocktail/mocktail.dart';
 import 'presentation/negocio/alertas_falsos.dart';
 import 'presentation/negocio/margen_falsos.dart';
 import 'presentation/negocio/exportar_falsos.dart';
+import 'presentation/negocio/usuarios_falsos.dart';
 import 'presentation/negocio/rotacion_falsos.dart';
 import 'presentation/negocio/reporte_falsos.dart';
 import 'presentation/surtido/existencias_falsos.dart';
@@ -98,6 +99,7 @@ void main() {
     consultarMargen: ConsultarMargenFalso(),
     consultarRotacion: ConsultarRotacionFalso(),
     exportarDatos: ExportarDatosFalso(),
+    gestionarUsuarios: GestionarUsuariosFalso(),
     generarReporteDiario: GenerarReporteDiarioFalso(),
     registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
     registrarCierreCaja: RegistrarCierreCajaFalso(),
@@ -170,6 +172,46 @@ void main() {
     expect(titulo('Vender'), findsOneWidget);
     expect(find.text('Hola, Carmen'), findsOneWidget);
     expect(find.text('Entrar'), findsNothing);
+  });
+
+  testWidgets(
+    'con sesión guardada de un usuario desactivado, la app lo saca al '
+    'iniciar y le explica por qué',
+    (tester) async {
+      when(() => autenticacion.haySesionGuardada()).thenReturn(true);
+      when(() => sesionLocal.leer()).thenAnswer((_) async => carmen);
+      when(() => autenticacion.usuarioSigueActivo('2222'))
+          .thenAnswer((_) async => false);
+
+      await abrir(tester);
+      await tester.pumpAndSettle();
+
+      verify(() => sesionLocal.borrar()).called(1);
+      verify(() => autenticacion.cerrarSesion()).called(1);
+      expect(find.text('Entrar'), findsOneWidget);
+      expect(barra(), findsNothing);
+      expect(
+        find.text(
+          'Tu usuario está desactivado. Habla con el propietario de la tienda',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('con sesión guardada y sin internet, entra igual (RNF-08)', (
+    tester,
+  ) async {
+    when(() => autenticacion.haySesionGuardada()).thenReturn(true);
+    when(() => sesionLocal.leer()).thenAnswer((_) async => carmen);
+    when(() => autenticacion.usuarioSigueActivo(any()))
+        .thenAnswer((_) async => null);
+
+    await abrir(tester);
+    await tester.pumpAndSettle();
+
+    expectCincoPestanas();
+    verifyNever(() => sesionLocal.borrar());
   });
 
   testWidgets('con la clave mala muestra el mensaje y se queda', (

@@ -43,6 +43,23 @@ class AutenticacionSupabase implements IAutenticacion {
   @override
   bool haySesionGuardada() => _cliente.auth.currentSession != null;
 
+  /// Lee `activo` de la fila del usuario. Cualquier falla (sin internet, sesión
+  /// vencida, sin la fila) es "no se sabe": nulo, no "desactivado" (DI-44).
+  @override
+  Future<bool?> usuarioSigueActivo(String idUsuario) async {
+    try {
+      final filas = await _cliente
+          .from('usuarios')
+          .select('activo')
+          .eq('id', idUsuario)
+          .limit(1);
+      if (filas.isEmpty) return null;
+      return filas.first['activo'] as bool?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Future<void> cerrarSesion() async {
     try {

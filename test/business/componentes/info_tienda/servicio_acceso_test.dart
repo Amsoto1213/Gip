@@ -117,6 +117,78 @@ void main() {
     });
   });
 
+  group('revisarUsuarioActivo (DI-44)', () {
+    test('pregunta por el id del usuario de la sesión', () async {
+      when(() => autenticacion.usuarioSigueActivo(any()))
+          .thenAnswer((_) async => true);
+
+      await servicio.revisarUsuarioActivo(carmen);
+
+      verify(() => autenticacion.usuarioSigueActivo('2222')).called(1);
+    });
+
+    test('sigue activo: la sesión sigue y no se cierra nada', () async {
+      when(() => autenticacion.usuarioSigueActivo(any()))
+          .thenAnswer((_) async => true);
+
+      expect(await servicio.revisarUsuarioActivo(carmen), isTrue);
+
+      verifyNever(() => sesionLocal.borrar());
+      verifyNever(() => autenticacion.cerrarSesion());
+    });
+
+    test(
+      'desactivado: devuelve falso y cierra la sesión (local y Auth)',
+      () async {
+        when(() => autenticacion.usuarioSigueActivo(any()))
+            .thenAnswer((_) async => false);
+
+        expect(await servicio.revisarUsuarioActivo(carmen), isFalse);
+
+        verify(() => sesionLocal.borrar()).called(1);
+        verify(() => autenticacion.cerrarSesion()).called(1);
+      },
+    );
+
+    test(
+      'no se puede saber (nulo): la sesión sigue, también sin internet',
+      () async {
+        when(() => autenticacion.usuarioSigueActivo(any()))
+            .thenAnswer((_) async => null);
+
+        expect(await servicio.revisarUsuarioActivo(carmen), isTrue);
+
+        verifyNever(() => sesionLocal.borrar());
+        verifyNever(() => autenticacion.cerrarSesion());
+      },
+    );
+
+    test(
+      'si la consulta lanza, no es "desactivado": la sesión sigue',
+      () async {
+        when(() => autenticacion.usuarioSigueActivo(any()))
+            .thenThrow(StateError('sin red'));
+
+        expect(await servicio.revisarUsuarioActivo(carmen), isTrue);
+
+        verifyNever(() => sesionLocal.borrar());
+      },
+    );
+
+    test('desactivado y Auth no se puede cerrar: igual devuelve falso y lo '
+        'local ya se borró', () async {
+      when(() => autenticacion.usuarioSigueActivo(any()))
+          .thenAnswer((_) async => false);
+      when(() => autenticacion.cerrarSesion())
+          .thenThrow(const ExcepcionSinConexion());
+
+      expect(await servicio.revisarUsuarioActivo(carmen), isFalse);
+
+      // Lo local se borra primero, así al reabrir la app no entra sola.
+      verify(() => sesionLocal.borrar()).called(1);
+    });
+  });
+
   group('sesionGuardada', () {
     test('devuelve el usuario guardado si hay sesión', () async {
       when(() => autenticacion.haySesionGuardada()).thenReturn(true);

@@ -13,6 +13,11 @@ abstract interface class IAutenticacion {
   /// No usa la red.
   bool haySesionGuardada();
 
+  /// Si el servidor dice que el usuario sigue activo (`true`) o que el
+  /// propietario ya lo desactivó (`false`). Nulo si no se puede saber: sin
+  /// internet, sin sesión válida o sin su fila. Nunca lanza (DI-44).
+  Future<bool?> usuarioSigueActivo(String idUsuario);
+
   /// Cierra la sesión en este dispositivo.
   Future<void> cerrarSesion();
 }

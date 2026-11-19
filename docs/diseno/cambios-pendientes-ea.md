@@ -11,6 +11,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`IAutenticacion`** (interface) en `Interfaces/InfoTienda`. Inicio de sesión con Supabase Auth (DI-05, DI-11).
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`: inicia sesión y devuelve el usuario con su tienda y su rol (la fila de `usuarios` con ese correo).
   - `+ haySesionGuardada(): bool`
+  - `+ usuarioSigueActivo(idUsuario: String): bool?`: lo que dice el servidor sobre si el usuario sigue activo; nulo si no se puede saber (DI-44).
   - `+ cerrarSesion(): void`
 - [ ] **`ISesionLocal`** (interface) en `Interfaces/InfoTienda`. Guarda el usuario activo en el dispositivo para entrar sin internet (DI-12).
   - `+ guardar(usuarioActivo: UsuarioActivo): void`
@@ -20,7 +21,10 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `+ IniciarSesionCoordinator(servicioAcceso: ServicioAcceso)`
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`
   - `+ sesionGuardada(): UsuarioActivo?`
+  - `+ revisarUsuarioActivo(activo: UsuarioActivo): bool` (DI-44)
   - `+ cerrarSesion(): void`
+- [ ] **`ICuentaAcceso`** (interface) en `Interfaces/InfoTienda`. Crea la cuenta con la que se inicia sesión (correo y contraseña); la implementa la Data Layer con Supabase Auth (DI-43).
+  - `+ crear(correo: String, clave: String): void`: crea la cuenta sin abrir sesión con ella. Si ya existe una con ese correo y la misma contraseña (un intento anterior que no alcanzó a guardar al empleado) la da por buena; si la contraseña es otra, rechaza con "Ese correo ya tiene una cuenta".
 - [ ] **`UsuarioActivo`** en `Entidades/InfoTienda`: tipo de dato (registro) con `usuario: Usuario` y `tienda: Tienda`, sin operaciones. El rol es la subclase de `Usuario` (DI-11).
 - [ ] Opcional, si el diagrama de componentes muestra la Data Layer: `AutenticacionSupabase` implementa `IAutenticacion` y `SesionLocalPreferencias` implementa `ISesionLocal` (DI-05, DI-12).
 
@@ -30,6 +34,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 - [ ] **`Tienda`**: atributo `- id: String` (uuid; es el `tienda_id` de todas las tablas, y `codigo` sigue siendo el código visible), operación `+ getId(): String` y constructor `Tienda(id, codigo, nombre, direccion)` (DI-11).
 - [ ] **`Usuario`**, **`Empleado`** y **`Administrador`**: el constructor recibe `activo: bool` opcional, por defecto verdadero, para leer el usuario de la base (DI-11).
+- [ ] **`Usuario`**: atributo `- correo: String?` (con el que inicia sesión), operación `+ getCorreo(): String?` y el parámetro opcional `correo` en el constructor de `Usuario`, `Empleado` y `Administrador`. Nulo si no se conoce (DI-43).
 
 ### Componentes/InfoTienda
 
@@ -37,10 +42,17 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - Atributos `- autenticacion: IAutenticacion` y `- sesionLocal: ISesionLocal`; constructor `ServicioAcceso(autenticacion, sesionLocal)`.
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`: valida que lleguen correo y clave, inicia sesión, rechaza al usuario inactivo y guarda el usuario activo con `sesionLocal.guardar`.
   - `+ sesionGuardada(): UsuarioActivo?`: el usuario guardado en el dispositivo, sin usar la red.
+  - `+ revisarUsuarioActivo(activo: UsuarioActivo): bool` (DI-44): vuelve a preguntar si el usuario de la sesión guardada sigue activo; devuelve falso y cierra la sesión solo si el servidor dice que está desactivado; sin internet o ante una falla devuelve verdadero.
   - `+ cerrarSesion(): void`: borra primero la sesión local y luego la de Auth, para que un fallo sin internet no deje entrar sola la app.
 
 - [ ] **`ServicioExportacion`** (DI-41 a, e): constructor con `reloj` opcional (la fecha de `DatosExportacion`); descripción de `exportar`: el periodo es `[desde, hasta)`, los fiados salen todos (no solo los del periodo) y con `desde > hasta` lanza "Periodo no válido" sin leer nada.
 - [ ] **`IExportador.exportar`**, descripción (DI-41 b, c, d): arma el archivo **y lo entrega** (compartir o descargar) y devuelve el nombre. En Excel es un libro con tres hojas (Inventario, Ventas, Fiados); en CSV son tres archivos y devuelve el nombre base común. Una fila por fiado, con la cantidad de abonos, el total abonado y el saldo; una fila por venta (también las anuladas, marcadas).
+
+- [ ] **`ServicioUsuarios`** (DI-42 b, d; DI-43):
+  - Constructor `ServicioUsuarios(usuarios, cuentas: ICuentaAcceso)`.
+  - `crearEmpleado(tienda, nombre, cedula, correo: String, clave: String)`: quita los espacios del nombre, la cédula y el correo y pasa el correo a minúsculas; una cédula vacía también es "Datos no válidos"; la cédula repetida cuenta aunque el otro usuario esté inactivo, y la misma cédula en otra tienda se permite. Valida el correo (`algo@dominio.ext`) y que la contraseña tenga al menos 6 caracteres. Revisa todo y la cédula repetida **antes** de llamar a `cuentas.crear(correo, clave)`, y después crea el `Empleado` con ese correo y lo guarda.
+  - `desactivar`: si guardar falla el usuario ya quedó inactivo en memoria; quien llama vuelve a leer la lista. La cuenta de acceso no se toca.
+- [ ] **`IUsuarioRepositorio`**, descripción (DI-42 b; DI-43): los usuarios viven en el servidor y la pantalla necesita internet. `listar` trae primero al propietario y luego a los empleados, cada grupo por nombre. `buscarPorCedula` encuentra también al inactivo. `guardar` manda el correo solo si el usuario lo tiene: no borra el que ya hay.
 
 ### Entidades/GestionInventario
 
@@ -111,6 +123,10 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 - [ ] **`IFiadoRepositorio.listar`**, descripción: trae los fiados pendientes, saldados y anulados, con su cliente (el eliminado, anonimizado) y sus abonos, también los anulados (DI-41 a).
 
+### Workflow/InfoTienda
+
+- [ ] **`GestionarUsuariosCoordinator.crearEmpleado`**: `crearEmpleado(tienda, nombre, cedula, correo: String, clave: String, usuario: Usuario): Empleado`, que llama a `servicioUsuarios.crearEmpleado(tienda, nombre, cedula, correo, clave)` (DI-43).
+
 ### Workflow/Pagos
 
 - [ ] **`RegistrarFiadoCoordinator`**: `+ buscarClientes(tienda: Tienda, nombre: String): List<Cliente>`, que llama a `servicioClientes.buscarClientes`. En EA la búsqueda la da `ConsultarClienteCoordinator`, pero cada pantalla llama a un solo coordinador (DI-26 a).
@@ -149,6 +165,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - Break "Copias no válidas" ("Las copias deben estar entre 1 y 100") antes de generar las etiquetas.
   - Dice de qué código es la etiqueta: el QR del producto o, si no tiene, el primero que tenga.
   - Si falla el guardado del código nuevo, se quita del producto antes de relanzar el error.
+- [ ] **CUS-15** (DI-42 b, d; DI-43): `ingresarEmpleado(nombre, cedula, correo, clave)` y `crearEmpleado(tienda, nombre, cedula, correo, clave, usuario)`. En `ServicioUsuarios.crearEmpleado`, antes de crear al empleado: `breaks` "Correo no válido" ("Escribe un correo válido") y "Contraseña corta" ("La contraseña debe tener al menos 6 caracteres"), y un `ICuentaAcceso.crear(correo, clave)` (con su `break` "Ese correo ya tiene una cuenta") entre la revisión de la cédula y `Empleado(id, nombre, cedula, correo)`. El break "Datos no válidos" incluye la cédula vacía. Tras cada intento de agregar o desactivar, `VistaUsuarios` vuelve a llamar a `listarUsuarios`.
 - [ ] **CUS-16** (DI-41 b, c, e): el exportador entrega el archivo y `VistaExportacion` solo muestra "Datos exportados: " + nombre (sin tamaño ni botón de volver a compartir); en CSV son tres archivos y el nombre es el nombre base. Nota: el periodo es `[desde, hasta)`.
 - [ ] **CUS-20** (DI-39 a, b, d, e):
   - `Venta`: el constructor acepta, como opcional, la anulación para armar una venta guardada. `Fiado.restaurar(saldo, estado)`.
