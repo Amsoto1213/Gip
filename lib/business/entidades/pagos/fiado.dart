@@ -9,7 +9,7 @@ import 'package:gip/transversal/errores/errores_pagos.dart';
 /// (DA-04, DA-20). Se crea en memoria con saldo = monto y estado PENDIENTE y se
 /// guarda al confirmar la venta (CUS-07).
 ///
-/// `recalcularSaldo` llega con la conciliación (CUS-23, DI-27).
+/// `recalcularSaldo` lo usa la conciliación (CUS-22, DI-45).
 class Fiado extends FormaPago {
   Fiado(super.id, this._montoInicial, this._fechaInicio, this._cliente)
     : _saldoPendiente = _montoInicial,
@@ -77,6 +77,22 @@ class Fiado extends FormaPago {
     if (_abonos.isNotEmpty) throw const ExcepcionFiadoConAbonos();
     _saldoPendiente = Decimal.zero;
     _estado = EstadoFiado.anulado;
+  }
+
+  /// Information Expert: el saldo es lo que se debía menos los abonos que no
+  /// están anulados; puede quedar negativo si los abonos suman de más (conflicto
+  /// ABONO_EXCEDE_SALDO). Un fiado anulado conserva su estado y su saldo en cero
+  /// (CUS-20); en los demás, el estado es SALDADO si el saldo es cero o
+  /// negativo y PENDIENTE si no (DA-48, DI-45). Devuelve el saldo.
+  Decimal recalcularSaldo() {
+    if (_estado == EstadoFiado.anulado) return _saldoPendiente;
+    _saldoPendiente = _abonos
+        .where((a) => !a.isAnulado())
+        .fold(_montoInicial, (saldo, a) => saldo - a.getMonto());
+    _estado = _saldoPendiente <= Decimal.zero
+        ? EstadoFiado.saldado
+        : EstadoFiado.pendiente;
+    return _saldoPendiente;
   }
 
   /// Devuelve el saldo y el estado que tenía, cuando una operación que lo

@@ -53,6 +53,20 @@ class CajaRepositorioDrift implements ICajaRepositorio {
     return _armar(tienda, fila);
   }
 
+  /// Caja de la tienda con ese id, con todos sus movimientos (también los que
+  /// llegaron después del cierre) y los datos de su cierre (CUS-22, DI-45).
+  /// Filtra por `tienda_id`.
+  @override
+  Future<Caja?> buscarPorId(Tienda tienda, String id) async {
+    final fila =
+        await (_base.select(_base.cajas)..where(
+              (c) => c.tiendaId.equals(tienda.getId()) & c.id.equals(id),
+            ))
+            .getSingleOrNull();
+    if (fila == null) return null;
+    return _armar(tienda, fila);
+  }
+
   /// La caja más reciente con fecha anterior a [fecha] (DI-38). Las fechas son
   /// texto "AAAA-MM-DD", que ordena igual que los días.
   @override

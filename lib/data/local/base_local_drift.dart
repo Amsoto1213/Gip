@@ -9,6 +9,7 @@ import 'package:gip/data/local/tablas/anulaciones_venta.dart';
 import 'package:gip/data/local/tablas/cajas.dart';
 import 'package:gip/data/local/tablas/clientes.dart';
 import 'package:gip/data/local/tablas/codigos_producto.dart';
+import 'package:gip/data/local/tablas/conflictos_sincronizacion.dart';
 import 'package:gip/data/local/tablas/cola_pendientes.dart';
 import 'package:gip/data/local/tablas/fiados.dart';
 import 'package:gip/data/local/tablas/formas_pago.dart';
@@ -40,6 +41,7 @@ part 'base_local_drift.g.dart';
     Abonos,
     CodigosProducto,
     AnulacionesVenta,
+    ConflictosSincronizacion,
   ],
 )
 class BaseLocalDrift extends _$BaseLocalDrift {
@@ -70,7 +72,7 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// 12: columnas del cierre en cajas (CUS-14). 13: `base_apertura` en cajas
   /// (CUS-14, DI-38). 14: anulaciones_venta (CUS-20).
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -165,6 +167,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
         await m.createTable(anulacionesVenta);
         await m.createIndex(anulacionesVentaTiendaIdx);
         await m.createIndex(anulacionesVentaVentaIdx);
+      }
+      if (desde < 15) {
+        await m.createTable(conflictosSincronizacion);
+        await m.createIndex(conflictosSincronizacionTiendaIdx);
       }
     },
   );

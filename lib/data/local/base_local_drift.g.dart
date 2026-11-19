@@ -7291,6 +7291,543 @@ class AnulacionesVentaCompanion extends UpdateCompanion<FilaAnulacionVenta> {
   }
 }
 
+class $ConflictosSincronizacionTable extends ConflictosSincronizacion
+    with
+        TableInfo<$ConflictosSincronizacionTable, FilaConflictoSincronizacion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ConflictosSincronizacionTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tipoMeta = const VerificationMeta('tipo');
+  @override
+  late final GeneratedColumn<String> tipo = GeneratedColumn<String>(
+    'tipo',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descripcionMeta = const VerificationMeta(
+    'descripcion',
+  );
+  @override
+  late final GeneratedColumn<String> descripcion = GeneratedColumn<String>(
+    'descripcion',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _idsRegistrosMeta = const VerificationMeta(
+    'idsRegistros',
+  );
+  @override
+  late final GeneratedColumn<String> idsRegistros = GeneratedColumn<String>(
+    'ids_registros',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _etiquetasRegistrosMeta =
+      const VerificationMeta('etiquetasRegistros');
+  @override
+  late final GeneratedColumn<String> etiquetasRegistros =
+      GeneratedColumn<String>(
+        'etiquetas_registros',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fecha =
+      GeneratedColumn<DateTime>(
+        'fecha',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ConflictosSincronizacionTable.$converterfecha);
+  static const VerificationMeta _resueltoMeta = const VerificationMeta(
+    'resuelto',
+  );
+  @override
+  late final GeneratedColumn<bool> resuelto = GeneratedColumn<bool>(
+    'resuelto',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("resuelto" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    tipo,
+    descripcion,
+    idsRegistros,
+    etiquetasRegistros,
+    fecha,
+    resuelto,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'conflictos_sincronizacion';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaConflictoSincronizacion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('tipo')) {
+      context.handle(
+        _tipoMeta,
+        tipo.isAcceptableOrUnknown(data['tipo']!, _tipoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tipoMeta);
+    }
+    if (data.containsKey('descripcion')) {
+      context.handle(
+        _descripcionMeta,
+        descripcion.isAcceptableOrUnknown(
+          data['descripcion']!,
+          _descripcionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descripcionMeta);
+    }
+    if (data.containsKey('ids_registros')) {
+      context.handle(
+        _idsRegistrosMeta,
+        idsRegistros.isAcceptableOrUnknown(
+          data['ids_registros']!,
+          _idsRegistrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_idsRegistrosMeta);
+    }
+    if (data.containsKey('etiquetas_registros')) {
+      context.handle(
+        _etiquetasRegistrosMeta,
+        etiquetasRegistros.isAcceptableOrUnknown(
+          data['etiquetas_registros']!,
+          _etiquetasRegistrosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_etiquetasRegistrosMeta);
+    }
+    if (data.containsKey('resuelto')) {
+      context.handle(
+        _resueltoMeta,
+        resuelto.isAcceptableOrUnknown(data['resuelto']!, _resueltoMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaConflictoSincronizacion map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaConflictoSincronizacion(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      tipo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tipo'],
+      )!,
+      descripcion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}descripcion'],
+      )!,
+      idsRegistros: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ids_registros'],
+      )!,
+      etiquetasRegistros: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}etiquetas_registros'],
+      )!,
+      fecha: $ConflictosSincronizacionTable.$converterfecha.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha'],
+        )!,
+      ),
+      resuelto: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}resuelto'],
+      )!,
+    );
+  }
+
+  @override
+  $ConflictosSincronizacionTable createAlias(String alias) {
+    return $ConflictosSincronizacionTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterfecha =
+      const ConversorFechaUtc();
+}
+
+class FilaConflictoSincronizacion extends DataClass
+    implements Insertable<FilaConflictoSincronizacion> {
+  final String id;
+  final String tiendaId;
+  final String tipo;
+  final String descripcion;
+  final String idsRegistros;
+  final String etiquetasRegistros;
+  final DateTime fecha;
+  final bool resuelto;
+  const FilaConflictoSincronizacion({
+    required this.id,
+    required this.tiendaId,
+    required this.tipo,
+    required this.descripcion,
+    required this.idsRegistros,
+    required this.etiquetasRegistros,
+    required this.fecha,
+    required this.resuelto,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['tipo'] = Variable<String>(tipo);
+    map['descripcion'] = Variable<String>(descripcion);
+    map['ids_registros'] = Variable<String>(idsRegistros);
+    map['etiquetas_registros'] = Variable<String>(etiquetasRegistros);
+    {
+      map['fecha'] = Variable<DateTime>(
+        $ConflictosSincronizacionTable.$converterfecha.toSql(fecha),
+      );
+    }
+    map['resuelto'] = Variable<bool>(resuelto);
+    return map;
+  }
+
+  ConflictosSincronizacionCompanion toCompanion(bool nullToAbsent) {
+    return ConflictosSincronizacionCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      tipo: Value(tipo),
+      descripcion: Value(descripcion),
+      idsRegistros: Value(idsRegistros),
+      etiquetasRegistros: Value(etiquetasRegistros),
+      fecha: Value(fecha),
+      resuelto: Value(resuelto),
+    );
+  }
+
+  factory FilaConflictoSincronizacion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaConflictoSincronizacion(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      tipo: serializer.fromJson<String>(json['tipo']),
+      descripcion: serializer.fromJson<String>(json['descripcion']),
+      idsRegistros: serializer.fromJson<String>(json['idsRegistros']),
+      etiquetasRegistros: serializer.fromJson<String>(
+        json['etiquetasRegistros'],
+      ),
+      fecha: serializer.fromJson<DateTime>(json['fecha']),
+      resuelto: serializer.fromJson<bool>(json['resuelto']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'tipo': serializer.toJson<String>(tipo),
+      'descripcion': serializer.toJson<String>(descripcion),
+      'idsRegistros': serializer.toJson<String>(idsRegistros),
+      'etiquetasRegistros': serializer.toJson<String>(etiquetasRegistros),
+      'fecha': serializer.toJson<DateTime>(fecha),
+      'resuelto': serializer.toJson<bool>(resuelto),
+    };
+  }
+
+  FilaConflictoSincronizacion copyWith({
+    String? id,
+    String? tiendaId,
+    String? tipo,
+    String? descripcion,
+    String? idsRegistros,
+    String? etiquetasRegistros,
+    DateTime? fecha,
+    bool? resuelto,
+  }) => FilaConflictoSincronizacion(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    tipo: tipo ?? this.tipo,
+    descripcion: descripcion ?? this.descripcion,
+    idsRegistros: idsRegistros ?? this.idsRegistros,
+    etiquetasRegistros: etiquetasRegistros ?? this.etiquetasRegistros,
+    fecha: fecha ?? this.fecha,
+    resuelto: resuelto ?? this.resuelto,
+  );
+  FilaConflictoSincronizacion copyWithCompanion(
+    ConflictosSincronizacionCompanion data,
+  ) {
+    return FilaConflictoSincronizacion(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      tipo: data.tipo.present ? data.tipo.value : this.tipo,
+      descripcion: data.descripcion.present
+          ? data.descripcion.value
+          : this.descripcion,
+      idsRegistros: data.idsRegistros.present
+          ? data.idsRegistros.value
+          : this.idsRegistros,
+      etiquetasRegistros: data.etiquetasRegistros.present
+          ? data.etiquetasRegistros.value
+          : this.etiquetasRegistros,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      resuelto: data.resuelto.present ? data.resuelto.value : this.resuelto,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaConflictoSincronizacion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('tipo: $tipo, ')
+          ..write('descripcion: $descripcion, ')
+          ..write('idsRegistros: $idsRegistros, ')
+          ..write('etiquetasRegistros: $etiquetasRegistros, ')
+          ..write('fecha: $fecha, ')
+          ..write('resuelto: $resuelto')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    tipo,
+    descripcion,
+    idsRegistros,
+    etiquetasRegistros,
+    fecha,
+    resuelto,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaConflictoSincronizacion &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.tipo == this.tipo &&
+          other.descripcion == this.descripcion &&
+          other.idsRegistros == this.idsRegistros &&
+          other.etiquetasRegistros == this.etiquetasRegistros &&
+          other.fecha == this.fecha &&
+          other.resuelto == this.resuelto);
+}
+
+class ConflictosSincronizacionCompanion
+    extends UpdateCompanion<FilaConflictoSincronizacion> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> tipo;
+  final Value<String> descripcion;
+  final Value<String> idsRegistros;
+  final Value<String> etiquetasRegistros;
+  final Value<DateTime> fecha;
+  final Value<bool> resuelto;
+  final Value<int> rowid;
+  const ConflictosSincronizacionCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.tipo = const Value.absent(),
+    this.descripcion = const Value.absent(),
+    this.idsRegistros = const Value.absent(),
+    this.etiquetasRegistros = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.resuelto = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ConflictosSincronizacionCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String tipo,
+    required String descripcion,
+    required String idsRegistros,
+    required String etiquetasRegistros,
+    required DateTime fecha,
+    this.resuelto = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       tipo = Value(tipo),
+       descripcion = Value(descripcion),
+       idsRegistros = Value(idsRegistros),
+       etiquetasRegistros = Value(etiquetasRegistros),
+       fecha = Value(fecha);
+  static Insertable<FilaConflictoSincronizacion> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? tipo,
+    Expression<String>? descripcion,
+    Expression<String>? idsRegistros,
+    Expression<String>? etiquetasRegistros,
+    Expression<DateTime>? fecha,
+    Expression<bool>? resuelto,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (tipo != null) 'tipo': tipo,
+      if (descripcion != null) 'descripcion': descripcion,
+      if (idsRegistros != null) 'ids_registros': idsRegistros,
+      if (etiquetasRegistros != null) 'etiquetas_registros': etiquetasRegistros,
+      if (fecha != null) 'fecha': fecha,
+      if (resuelto != null) 'resuelto': resuelto,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ConflictosSincronizacionCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? tipo,
+    Value<String>? descripcion,
+    Value<String>? idsRegistros,
+    Value<String>? etiquetasRegistros,
+    Value<DateTime>? fecha,
+    Value<bool>? resuelto,
+    Value<int>? rowid,
+  }) {
+    return ConflictosSincronizacionCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      tipo: tipo ?? this.tipo,
+      descripcion: descripcion ?? this.descripcion,
+      idsRegistros: idsRegistros ?? this.idsRegistros,
+      etiquetasRegistros: etiquetasRegistros ?? this.etiquetasRegistros,
+      fecha: fecha ?? this.fecha,
+      resuelto: resuelto ?? this.resuelto,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (tipo.present) {
+      map['tipo'] = Variable<String>(tipo.value);
+    }
+    if (descripcion.present) {
+      map['descripcion'] = Variable<String>(descripcion.value);
+    }
+    if (idsRegistros.present) {
+      map['ids_registros'] = Variable<String>(idsRegistros.value);
+    }
+    if (etiquetasRegistros.present) {
+      map['etiquetas_registros'] = Variable<String>(etiquetasRegistros.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(
+        $ConflictosSincronizacionTable.$converterfecha.toSql(fecha.value),
+      );
+    }
+    if (resuelto.present) {
+      map['resuelto'] = Variable<bool>(resuelto.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConflictosSincronizacionCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('tipo: $tipo, ')
+          ..write('descripcion: $descripcion, ')
+          ..write('idsRegistros: $idsRegistros, ')
+          ..write('etiquetasRegistros: $etiquetasRegistros, ')
+          ..write('fecha: $fecha, ')
+          ..write('resuelto: $resuelto, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -7319,6 +7856,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   late final $AnulacionesVentaTable anulacionesVenta = $AnulacionesVentaTable(
     this,
   );
+  late final $ConflictosSincronizacionTable conflictosSincronizacion =
+      $ConflictosSincronizacionTable(this);
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -7411,6 +7950,10 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'anulaciones_venta_venta_idx',
     'CREATE INDEX anulaciones_venta_venta_idx ON anulaciones_venta (venta_id)',
   );
+  late final Index conflictosSincronizacionTiendaIdx = Index(
+    'conflictos_sincronizacion_tienda_idx',
+    'CREATE INDEX conflictos_sincronizacion_tienda_idx ON conflictos_sincronizacion (tienda_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7431,6 +7974,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     abonos,
     codigosProducto,
     anulacionesVenta,
+    conflictosSincronizacion,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -7454,6 +7998,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     codigosProductoProductoIdx,
     anulacionesVentaTiendaIdx,
     anulacionesVentaVentaIdx,
+    conflictosSincronizacionTiendaIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -13608,6 +14153,301 @@ typedef $$AnulacionesVentaTableProcessedTableManager =
       FilaAnulacionVenta,
       PrefetchHooks Function({bool ventaId})
     >;
+typedef $$ConflictosSincronizacionTableCreateCompanionBuilder =
+    ConflictosSincronizacionCompanion Function({
+      required String id,
+      required String tiendaId,
+      required String tipo,
+      required String descripcion,
+      required String idsRegistros,
+      required String etiquetasRegistros,
+      required DateTime fecha,
+      Value<bool> resuelto,
+      Value<int> rowid,
+    });
+typedef $$ConflictosSincronizacionTableUpdateCompanionBuilder =
+    ConflictosSincronizacionCompanion Function({
+      Value<String> id,
+      Value<String> tiendaId,
+      Value<String> tipo,
+      Value<String> descripcion,
+      Value<String> idsRegistros,
+      Value<String> etiquetasRegistros,
+      Value<DateTime> fecha,
+      Value<bool> resuelto,
+      Value<int> rowid,
+    });
+
+class $$ConflictosSincronizacionTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $ConflictosSincronizacionTable> {
+  $$ConflictosSincronizacionTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tipo => $composableBuilder(
+    column: $table.tipo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get descripcion => $composableBuilder(
+    column: $table.descripcion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get idsRegistros => $composableBuilder(
+    column: $table.idsRegistros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get etiquetasRegistros => $composableBuilder(
+    column: $table.etiquetasRegistros,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get fecha =>
+      $composableBuilder(
+        column: $table.fecha,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<bool> get resuelto => $composableBuilder(
+    column: $table.resuelto,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ConflictosSincronizacionTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $ConflictosSincronizacionTable> {
+  $$ConflictosSincronizacionTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tipo => $composableBuilder(
+    column: $table.tipo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get descripcion => $composableBuilder(
+    column: $table.descripcion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get idsRegistros => $composableBuilder(
+    column: $table.idsRegistros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get etiquetasRegistros => $composableBuilder(
+    column: $table.etiquetasRegistros,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get resuelto => $composableBuilder(
+    column: $table.resuelto,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ConflictosSincronizacionTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $ConflictosSincronizacionTable> {
+  $$ConflictosSincronizacionTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get tipo =>
+      $composableBuilder(column: $table.tipo, builder: (column) => column);
+
+  GeneratedColumn<String> get descripcion => $composableBuilder(
+    column: $table.descripcion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get idsRegistros => $composableBuilder(
+    column: $table.idsRegistros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get etiquetasRegistros => $composableBuilder(
+    column: $table.etiquetasRegistros,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumn<bool> get resuelto =>
+      $composableBuilder(column: $table.resuelto, builder: (column) => column);
+}
+
+class $$ConflictosSincronizacionTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $ConflictosSincronizacionTable,
+          FilaConflictoSincronizacion,
+          $$ConflictosSincronizacionTableFilterComposer,
+          $$ConflictosSincronizacionTableOrderingComposer,
+          $$ConflictosSincronizacionTableAnnotationComposer,
+          $$ConflictosSincronizacionTableCreateCompanionBuilder,
+          $$ConflictosSincronizacionTableUpdateCompanionBuilder,
+          (
+            FilaConflictoSincronizacion,
+            BaseReferences<
+              _$BaseLocalDrift,
+              $ConflictosSincronizacionTable,
+              FilaConflictoSincronizacion
+            >,
+          ),
+          FilaConflictoSincronizacion,
+          PrefetchHooks Function()
+        > {
+  $$ConflictosSincronizacionTableTableManager(
+    _$BaseLocalDrift db,
+    $ConflictosSincronizacionTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ConflictosSincronizacionTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ConflictosSincronizacionTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ConflictosSincronizacionTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> tipo = const Value.absent(),
+                Value<String> descripcion = const Value.absent(),
+                Value<String> idsRegistros = const Value.absent(),
+                Value<String> etiquetasRegistros = const Value.absent(),
+                Value<DateTime> fecha = const Value.absent(),
+                Value<bool> resuelto = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ConflictosSincronizacionCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                tipo: tipo,
+                descripcion: descripcion,
+                idsRegistros: idsRegistros,
+                etiquetasRegistros: etiquetasRegistros,
+                fecha: fecha,
+                resuelto: resuelto,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String tipo,
+                required String descripcion,
+                required String idsRegistros,
+                required String etiquetasRegistros,
+                required DateTime fecha,
+                Value<bool> resuelto = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ConflictosSincronizacionCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                tipo: tipo,
+                descripcion: descripcion,
+                idsRegistros: idsRegistros,
+                etiquetasRegistros: etiquetasRegistros,
+                fecha: fecha,
+                resuelto: resuelto,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $ConflictosSincronizacionTable,
+                    FilaConflictoSincronizacion
+                  >(table),
+                  BaseReferences<
+                    _$BaseLocalDrift,
+                    $ConflictosSincronizacionTable,
+                    FilaConflictoSincronizacion
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ConflictosSincronizacionTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $ConflictosSincronizacionTable,
+      FilaConflictoSincronizacion,
+      $$ConflictosSincronizacionTableFilterComposer,
+      $$ConflictosSincronizacionTableOrderingComposer,
+      $$ConflictosSincronizacionTableAnnotationComposer,
+      $$ConflictosSincronizacionTableCreateCompanionBuilder,
+      $$ConflictosSincronizacionTableUpdateCompanionBuilder,
+      (
+        FilaConflictoSincronizacion,
+        BaseReferences<
+          _$BaseLocalDrift,
+          $ConflictosSincronizacionTable,
+          FilaConflictoSincronizacion
+        >,
+      ),
+      FilaConflictoSincronizacion,
+      PrefetchHooks Function()
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -13645,4 +14485,9 @@ class $BaseLocalDriftManager {
       $$CodigosProductoTableTableManager(_db, _db.codigosProducto);
   $$AnulacionesVentaTableTableManager get anulacionesVenta =>
       $$AnulacionesVentaTableTableManager(_db, _db.anulacionesVenta);
+  $$ConflictosSincronizacionTableTableManager get conflictosSincronizacion =>
+      $$ConflictosSincronizacionTableTableManager(
+        _db,
+        _db.conflictosSincronizacion,
+      );
 }

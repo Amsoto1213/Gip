@@ -152,6 +152,21 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
     actualizados.add(fiado);
   }
 
+  /// Fiado de la tienda con ese id (CUS-22).
+  @override
+  Future<Fiado?> buscarPorId(Tienda tienda, String id) async =>
+      de(tienda).where((f) => f.getId() == id).firstOrNull;
+
+  /// Abonos anulados con anularAbono, en orden de llegada.
+  final List<Abono> abonosAnulados = [];
+
+  @override
+  Future<void> anularAbono(Tienda tienda, Fiado fiado, Abono abono) async {
+    if (fallar) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    abonosAnulados.add(abono);
+  }
+
   /// Fiados de la tienda, del más reciente al más antiguo (CUS-16).
   @override
   Future<List<Fiado>> listar(Tienda tienda) async =>

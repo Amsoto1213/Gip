@@ -13,7 +13,8 @@ import 'package:gip/transversal/errores/errores_caja.dart';
 ///
 /// Se cierra una vez al día con [cerrar] (CUS-14): guarda lo que se contó, la
 /// diferencia con el saldo esperado y el instante del cierre; desde entonces
-/// rechaza nuevos movimientos. `recalcularDiferencia` llega con CUS-23.
+/// rechaza nuevos movimientos. `recalcularDiferencia` la usa la conciliación
+/// cuando llega un movimiento a una caja ya cerrada (CUS-22, DI-45).
 class Caja {
   /// [baseApertura] es el efectivo con el que abre (cero si no se dice).
   /// [movimientos] y los datos del cierre ([efectivoContado], [diferencia] y
@@ -116,6 +117,18 @@ class Caja {
       devolucionesPorAnulacion: devoluciones,
       saldoEsperado: calcularSaldoEsperado(),
     );
+  }
+
+  /// Information Expert: rechaza si la caja no está cerrada; si lo está, vuelve
+  /// a calcular la diferencia = efectivo contado − saldo esperado, que ya
+  /// incluye los movimientos que llegaron después del cierre. El efectivo
+  /// contado y la fecha del cierre no cambian (CUS-22, DA-66, DI-45). Devuelve
+  /// la diferencia.
+  Decimal recalcularDiferencia() {
+    final contado = _efectivoContado;
+    if (!_cerrada || contado == null) throw const ExcepcionCajaNoCerrada();
+    _diferencia = contado - calcularSaldoEsperado();
+    return _diferencia!;
   }
 
   /// Information Expert: rechaza si ya está cerrada; si no, diferencia =

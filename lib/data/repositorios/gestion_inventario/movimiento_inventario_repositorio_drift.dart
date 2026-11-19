@@ -313,6 +313,50 @@ class MovimientoInventarioRepositorioDrift
     fila.costoUnitario,
   )..setEstado(estado);
 
+  /// Movimientos de la tienda con esos ids, de cualquier tipo y en cualquier
+  /// estado, cada uno con su ítem (stock actual) y su producto (CUS-22,
+  /// DI-45). Cada ítem se arma una sola vez y lo comparten los movimientos del
+  /// mismo ítem, para recalcular el stock una vez por ítem. La venta de cada
+  /// salida trae solo id, fecha y total. Toda consulta filtra por `tienda_id`.
+  @override
+  Future<List<MovimientoInventario>> buscarPorIds(
+    Tienda tienda,
+    List<String> ids,
+  ) async {
+    if (ids.isEmpty) return const [];
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final p = _base.productos;
+    final v = _base.ventas;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+            ),
+            innerJoin(p, p.id.equalsExp(i.productoId)),
+            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
+          ])
+          ..where(m.tiendaId.equals(tienda.getId()) & m.id.isIn(ids))
+          ..orderBy([OrderingTerm.asc(m.fecha), OrderingTerm.asc(m.id)]);
+    final items = <String, ItemInventario>{};
+    return [
+      for (final r in await consulta.get())
+        _movimiento(
+          r.readTable(m),
+          r.readTableOrNull(v),
+          items.putIfAbsent(r.readTable(i).id, () {
+            final fila = r.readTable(i);
+            return ItemInventario(
+              fila.id,
+              MapeoProducto.aEntidad(r.readTable(p)),
+              fila.stockActual,
+            );
+          }),
+        ),
+    ];
+  }
+
   /// Guarda solo el estado del movimiento y lo anota en `cola_pendientes` como
   /// ACTUALIZAR en la misma transacción (DA-33, RNF-15); no toca lo demás. Se
   /// une a la transacción abierta.

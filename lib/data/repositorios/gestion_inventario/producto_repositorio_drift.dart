@@ -166,6 +166,34 @@ class ProductoRepositorioDrift implements IProductoRepositorio {
     return _unoConCodigos(fila);
   }
 
+  /// Borra el código del producto y anota el borrado en `cola_pendientes` como
+  /// ELIMINAR en la misma transacción (DA-33). Es la única operación que quita
+  /// un código: [guardar] nunca lo hace (DI-34, CUS-22, DI-45). Se une a la
+  /// transacción abierta.
+  @override
+  Future<void> quitarCodigo(
+    Tienda tienda,
+    Producto producto,
+    CodigoProducto codigo,
+  ) => _base.transaction(() async {
+    final borradas =
+        await (_base.delete(_base.codigosProducto)..where(
+              (c) =>
+                  c.id.equals(codigo.getId()) &
+                  c.tiendaId.equals(tienda.getId()) &
+                  c.productoId.equals(producto.getId()),
+            ))
+            .go();
+    if (borradas == 0) return;
+    await anotarEnCola(
+      _base,
+      tiendaId: tienda.getId(),
+      tabla: _tablaCodigos,
+      registroId: codigo.getId(),
+      operacion: OperacionCola.eliminar,
+    );
+  });
+
   static String _escaparLike(String texto) =>
       texto.replaceAllMapped(RegExp(r'[\\%_]'), (m) => '\\${m[0]}');
 }

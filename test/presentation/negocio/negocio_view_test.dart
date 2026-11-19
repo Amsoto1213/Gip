@@ -160,4 +160,27 @@ void main() {
       greaterThanOrEqualTo(44),
     );
   });
+
+  testWidgets('tiene la acción Revisar sincronización de 44 px o más', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => IniciarSesionViewModel(IniciarSesionFalso()),
+        child: MaterialApp(theme: TemaGip.claro(), home: const NegocioView()),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(TarjetaAccion, 'Revisar sincronización'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('negocio_conflictos'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
 }

@@ -114,6 +114,22 @@ class ProductoRepositorioFalso implements IProductoRepositorio, Restaurable {
   @override
   Future<List<CodigoProducto>> listarCodigosRepetidos(Tienda tienda) =>
       throw UnimplementedError();
+
+  /// Códigos quitados con quitarCodigo, en orden de llegada: (producto, código).
+  final List<(String, String)> codigosQuitados = [];
+
+  /// Borra el código del producto guardado (CUS-22).
+  @override
+  Future<void> quitarCodigo(
+    Tienda tienda,
+    Producto producto,
+    CodigoProducto codigo,
+  ) async {
+    if (fallar) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    codigosQuitados.add((producto.getId(), codigo.getId()));
+    _de(tienda)[producto.getId()]?.quitarCodigo(codigo);
+  }
 }
 
 class InventarioRepositorioFalso

@@ -29,4 +29,13 @@ abstract interface class IProductoRepositorio {
 
   /// Producto con sus códigos, o null.
   Future<Producto?> buscarPorId(Tienda tienda, String id);
+
+  /// Borra ese código del producto. [guardar] nunca borra códigos (un producto
+  /// leído por otro repositorio llega sin ellos), así que quitar uno tiene su
+  /// propia operación (CUS-22, DI-34, DI-45). Se une a la transacción abierta.
+  Future<void> quitarCodigo(
+    Tienda tienda,
+    Producto producto,
+    CodigoProducto codigo,
+  );
 }

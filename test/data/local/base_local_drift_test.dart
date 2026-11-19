@@ -70,8 +70,14 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 14 (CUS-20).
+    /// Quita lo que agregó la versión 15 (CUS-22).
+    Future<void> bajarDeLaVersion15(BaseLocalDrift base) async {
+      await base.customStatement('DROP TABLE conflictos_sincronizacion');
+    }
+
+    /// Quita lo que agregó la versión 14 (CUS-20), y antes la 15.
     Future<void> bajarDeLaVersion14(BaseLocalDrift base) async {
+      await bajarDeLaVersion15(base);
       await base.customStatement('DROP TABLE anulaciones_venta');
     }
 
@@ -151,7 +157,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 14);
+      expect(actual.schemaVersion, 15);
       expect(
         await tablas(actual),
         containsAll([
@@ -167,12 +173,14 @@ void main() {
           'clientes',
           'fiados',
           'abonos',
+          'conflictos_sincronizacion',
+          'conflictos_sincronizacion_tienda_idx',
         ]),
       );
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 14);
+      expect(version.read<int>('user_version'), 15);
       await actual.close();
     });
 
@@ -503,5 +511,32 @@ void main() {
         await v14.close();
       },
     );
+
+    test('de la versión 14 a la 15 crea conflictos_sincronizacion sin perder '
+        'datos', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v14 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion15(v14);
+      await v14.customStatement(
+        "INSERT INTO ventas (id, tienda_id, fecha, total) "
+        "VALUES ('v1', 't1', '2026-11-14T10:00:00.000Z', '5000')",
+      );
+      await v14.customStatement('PRAGMA user_version = 14');
+      expect(await tablas(v14), isNot(contains('conflictos_sincronizacion')));
+      await v14.close();
+
+      final v15 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(
+        await tablas(v15),
+        containsAll([
+          'conflictos_sincronizacion',
+          'conflictos_sincronizacion_tienda_idx',
+        ]),
+      );
+      expect((await v15.select(v15.ventas).get()).single.id, 'v1');
+      expect(await v15.select(v15.conflictosSincronizacion).get(), isEmpty);
+      await v15.close();
+    });
   });
 }

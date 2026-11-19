@@ -23,8 +23,8 @@ import 'package:uuid/uuid.dart';
 ///
 /// Tiene [crearItem] (CUS-18), la entrada de mercancía (CUS-01), la pérdida
 /// o devolución (CUS-03), el conteo físico (CUS-04), la consulta de
-/// existencias e historial (CUS-25) y la anulación de las salidas de una venta
-/// (CUS-20).
+/// existencias e historial (CUS-25), la anulación de las salidas de una venta
+/// (CUS-20) y el recálculo del stock de la conciliación (CUS-22).
 ///
 /// [_productos] no está en EA: la entrada actualiza el precio de compra del
 /// producto con su costo (DI-33).
@@ -277,6 +277,26 @@ class ServicioInventario {
       item.setStockActual(stockAnterior);
       rethrow;
     }
+  }
+
+  /// Suma los movimientos VIGENTES de todo el historial del ítem que devuelve
+  /// movimientos.listarPorItem (los EN_REVISION y los ANULADOS no cuentan),
+  /// asigna el resultado con item.setStockActual y lo guarda con
+  /// items.guardarItem. Devuelve el stock, que puede ser negativo: eso es justo
+  /// lo que la conciliación muestra al propietario (ERS 3.2.1 c, DA-48, DI-45).
+  /// Se une a la transacción abierta, si la hay.
+  Future<Decimal> recalcularStock(Tienda tienda, ItemInventario item) async {
+    final historial = await _movimientos.listarPorItem(
+      item,
+      DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      DateTime.utc(9999),
+    );
+    final stock = historial
+        .where((m) => m.getEstado() == EstadoMovimiento.vigente)
+        .fold(Decimal.zero, (suma, m) => suma + m.getCantidad());
+    item.setStockActual(stock);
+    await _items.guardarItem(tienda, item);
+    return stock;
   }
 
   /// Busca las salidas de la venta con movimientos.listarSalidasPorVentas y

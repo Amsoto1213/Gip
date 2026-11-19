@@ -150,6 +150,13 @@ class MovimientoRepositorioFalso
       )
       .toList();
 
+  /// Los de la tienda con esos ids, en cualquier estado (CUS-22).
+  @override
+  Future<List<MovimientoInventario>> buscarPorIds(
+    Tienda tienda,
+    List<String> ids,
+  ) async => de(tienda).where((m) => ids.contains(m.getId())).toList();
+
   @override
   Future<DateTime?> buscarFechaPrimerMovimiento(ItemInventario item) async {
     final fechas = _delItem(item).map((m) => m.getFecha()).toList()..sort();

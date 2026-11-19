@@ -8,8 +8,9 @@ import 'package:gip/business/entidades/pagos/venta.dart';
 /// Indirection, Protected Variations y DIP: contrato de acceso al historial de
 /// movimientos de inventario; la Data Layer lo implementa (RNF-08).
 ///
-/// Las operaciones de CUS-01, CUS-24, CUS-09, CUS-10, CUS-25 y CUS-20; las demás
-/// de EA llegan con su caso de uso (DI-20, DI-25, DI-32, DI-39).
+/// Las operaciones de CUS-01, CUS-24, CUS-09, CUS-10, CUS-25, CUS-20 y CUS-22;
+/// las demás de EA llegan con su caso de uso (DI-20, DI-25, DI-32, DI-39,
+/// DI-45).
 abstract interface class IMovimientoInventarioRepositorio {
   /// Agrega el movimiento al historial; nunca lo modifica (RF-01 a RF-04).
   Future<void> guardar(Tienda tienda, MovimientoInventario movimiento);
@@ -68,6 +69,15 @@ abstract interface class IMovimientoInventarioRepositorio {
   Future<List<SalidaVenta>> listarSalidasPorVentas(
     Tienda tienda,
     List<Venta> ventas,
+  );
+
+  /// Movimientos de la tienda con esos ids, en cualquier estado (VIGENTE,
+  /// EN_REVISION o ANULADO), cada uno con su ítem y su producto. Los usa la
+  /// resolución de un conflicto de entradas repetidas o de stock negativo
+  /// (CUS-22, DI-45). Los ids que no existan no aparecen.
+  Future<List<MovimientoInventario>> buscarPorIds(
+    Tienda tienda,
+    List<String> ids,
   );
 
   /// Guarda solo el estado del movimiento (VIGENTE, EN_REVISION o ANULADO);

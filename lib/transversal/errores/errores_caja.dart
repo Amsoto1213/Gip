@@ -7,6 +7,13 @@ class ExcepcionCajaCerrada extends ExcepcionNegocio {
   const ExcepcionCajaCerrada() : super('La caja de hoy ya está cerrada');
 }
 
+/// Se pidió recalcular la diferencia de una caja que no está cerrada
+/// (CUS-22, DI-45).
+class ExcepcionCajaNoCerrada extends ExcepcionNegocio {
+  const ExcepcionCajaNoCerrada()
+    : super('La caja todavía no se ha cerrado: no hay diferencia que revisar');
+}
+
 /// Un movimiento de caja con valor cero o negativo (ServicioCaja).
 class ExcepcionValorMovimientoNoValido extends ExcepcionNegocio {
   const ExcepcionValorMovimientoNoValido()

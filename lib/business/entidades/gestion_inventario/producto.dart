@@ -18,7 +18,7 @@ class Producto {
   ) : _actualizadoEn = DateTime.now().toUtc();
 
   final String _id;
-  final String _codigo;
+  String _codigo;
   String _nombre;
   UnidadMedida _unidadMedida;
   Decimal? _precioCompra;
@@ -29,7 +29,8 @@ class Producto {
   /// Identificador único del objeto (DA-43).
   String getId() => _id;
 
-  /// Código interno de la tienda; no se edita (DA-59).
+  /// Código interno de la tienda; solo lo cambia la resolución de un
+  /// CODIGO_REPETIDO (DA-59, DI-45).
   String getCodigo() => _codigo;
 
   String getNombre() => _nombre;
@@ -61,6 +62,10 @@ class Producto {
       _actualizadoEn = actualizadoEn.toUtc();
 
   void agregarCodigo(CodigoProducto codigo) => _codigos.add(codigo);
+
+  /// Cambia el código interno cuando dos productos quedaron con el mismo
+  /// (CUS-22, DA-66, DI-45). El servicio escoge uno que no exista.
+  void cambiarCodigoInterno(String codigo) => _codigo = codigo;
 
   /// Quita el código de su lista. Lo usa la resolución de un CODIGO_REPETIDO
   /// (DA-66).
