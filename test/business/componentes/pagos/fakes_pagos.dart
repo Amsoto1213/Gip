@@ -152,6 +152,12 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
     actualizados.add(fiado);
   }
 
+  /// Fiados de la tienda, del más reciente al más antiguo (CUS-16).
+  @override
+  Future<List<Fiado>> listar(Tienda tienda) async =>
+      List.of(de(tienda))
+        ..sort((a, b) => b.getFechaInicio().compareTo(a.getFechaInicio()));
+
   /// Los abonos no guardan su tienda: se filtran solo por fecha.
   @override
   Future<List<Abono>> listarAbonos(

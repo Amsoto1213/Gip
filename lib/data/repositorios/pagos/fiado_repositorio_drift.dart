@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/pagos/abono.dart';
+import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/interfaces/pagos/i_fiado_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
@@ -135,5 +136,43 @@ class FiadoRepositorioDrift implements IFiadoRepositorio {
               ..orderBy([(a) => OrderingTerm.asc(a.fecha)]))
             .get();
     return filas.map(MapeoFiado.abonoAEntidad).toList();
+  }
+
+  /// Todos los fiados de la tienda (también los saldados y los anulados), del
+  /// más reciente al más antiguo, cada uno con su cliente y sus abonos, del más
+  /// antiguo al más reciente (CUS-16, DI-41). Toda consulta filtra por
+  /// `tienda_id`.
+  @override
+  Future<List<Fiado>> listar(Tienda tienda) async {
+    final filas =
+        await (_base.select(_base.fiados)
+              ..where((f) => f.tiendaId.equals(tienda.getId()))
+              ..orderBy([(f) => OrderingTerm.desc(f.fechaInicio)]))
+            .get();
+    if (filas.isEmpty) return const [];
+
+    final clientes = {
+      for (final c in await (_base.select(
+        _base.clientes,
+      )..where((c) => c.tiendaId.equals(tienda.getId()))).get())
+        c.id: Cliente(c.id, c.nombre, c.telefono),
+    };
+    final abonos =
+        await (_base.select(_base.abonos)
+              ..where((a) => a.tiendaId.equals(tienda.getId()))
+              ..orderBy([(a) => OrderingTerm.asc(a.fecha)]))
+            .get();
+    final porFiado = <String, List<FilaAbono>>{};
+    for (final a in abonos) {
+      porFiado.putIfAbsent(a.fiadoId, () => []).add(a);
+    }
+    return [
+      for (final fila in filas)
+        MapeoFiado.aEntidad(
+          fila,
+          clientes[fila.clienteId] ?? Cliente(fila.clienteId, '', ''),
+          porFiado[fila.id] ?? const [],
+        ),
+    ];
   }
 }

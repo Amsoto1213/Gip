@@ -25,6 +25,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'presentation/negocio/alertas_falsos.dart';
 import 'presentation/negocio/margen_falsos.dart';
+import 'presentation/negocio/exportar_falsos.dart';
 import 'presentation/negocio/rotacion_falsos.dart';
 import 'presentation/negocio/reporte_falsos.dart';
 import 'presentation/surtido/existencias_falsos.dart';
@@ -96,6 +97,7 @@ void main() {
     registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
     consultarMargen: ConsultarMargenFalso(),
     consultarRotacion: ConsultarRotacionFalso(),
+    exportarDatos: ExportarDatosFalso(),
     generarReporteDiario: GenerarReporteDiarioFalso(),
     registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
     registrarCierreCaja: RegistrarCierreCajaFalso(),
@@ -210,6 +212,8 @@ void main() {
   ) async {
     await entrarANegocio(tester);
 
+    // Con cinco acciones en Negocio, el botón queda bajo el pliegue.
+    await tester.scrollUntilVisible(find.text('Cerrar sesión'), 200);
     await tester.tap(find.text('Cerrar sesión'));
     await tester.pumpAndSettle();
 
@@ -226,6 +230,7 @@ void main() {
           .thenThrow(const ExcepcionSinConexion());
       await entrarANegocio(tester);
 
+      await tester.scrollUntilVisible(find.text('Cerrar sesión'), 200);
       await tester.tap(find.text('Cerrar sesión'));
       await tester.pumpAndSettle();
 

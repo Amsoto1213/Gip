@@ -3,10 +3,13 @@ import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.
 import 'package:gip/business/workflow/gestion_caja/consultar_rotacion_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
+import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/negocio/alertas_view.dart';
 import 'package:gip/presentation/negocio/alertas_view_model.dart';
+import 'package:gip/presentation/negocio/exportar_view.dart';
+import 'package:gip/presentation/negocio/exportar_view_model.dart';
 import 'package:gip/presentation/negocio/margen_view.dart';
 import 'package:gip/presentation/negocio/margen_view_model.dart';
 import 'package:gip/presentation/negocio/negocio_view.dart';
@@ -31,6 +34,9 @@ const rutaReporte = '$rutaPrincipalNegocio/reporte';
 /// Pantalla Rotación de productos (CUS-12).
 const rutaRotacion = '$rutaPrincipalNegocio/rotacion';
 
+/// Pantalla Exportar datos (CUS-16).
+const rutaExportar = '$rutaPrincipalNegocio/exportar';
+
 /// Subsecciones de Negocio en el menú lateral: solo las que ya tienen
 /// pantalla (DI-23). Se listan para todos; al empleado la pantalla le dice que
 /// la consulta es solo para el propietario (CUS-05, paso 7).
@@ -39,6 +45,7 @@ const subseccionesNegocio = <Subseccion>[
   (etiqueta: 'Reporte del día', ruta: rutaReporte),
   (etiqueta: 'Ganancia por producto', ruta: rutaMargen),
   (etiqueta: 'Rotación', ruta: rutaRotacion),
+  (etiqueta: 'Exportar datos', ruta: rutaExportar),
 ];
 
 /// Rama de la sección Negocio en la navegación principal. Las pantallas de la
@@ -80,6 +87,16 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
           ),
         ),
         GoRoute(
+          path: 'exportar',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => ExportarViewModel(
+              context.read<ExportarDatosCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!,
+            ),
+            child: const ExportarView(),
+          ),
+        ),
+        GoRoute(
           path: 'reporte',
           builder: (context, _) => ChangeNotifierProvider(
             create: (context) => ReporteDiarioViewModel(
@@ -105,3 +122,6 @@ void abrirMargen(BuildContext context) => context.push(rutaMargen);
 
 /// Abre la pantalla Rotación de productos.
 void abrirRotacion(BuildContext context) => context.push(rutaRotacion);
+
+/// Abre la pantalla Exportar datos.
+void abrirExportar(BuildContext context) => context.push(rutaExportar);
