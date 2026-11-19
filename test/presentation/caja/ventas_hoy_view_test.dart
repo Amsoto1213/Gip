@@ -32,6 +32,7 @@ import 'package:gip/data/repositorios/pagos/fiado_repositorio_drift.dart';
 import 'package:gip/data/repositorios/pagos/venta_repositorio_drift.dart';
 import 'package:gip/presentation/caja/ventas_hoy_view.dart';
 import 'package:gip/presentation/caja/ventas_hoy_view_model.dart';
+import 'package:gip/presentation/comun/idioma_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
@@ -132,6 +133,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: TemaGip.claro(),
+        locale: idiomasGip.first,
+        supportedLocales: idiomasGip,
+        localizationsDelegates: delegadosIdiomaGip,
         home: ChangeNotifierProvider(
           create: (_) => VentasHoyViewModel(pagos, (
             usuario: usuario ?? Administrador('2222', 'Carmen Ruiz', '1'),
@@ -326,6 +330,28 @@ void main() {
 
     expect(find.text('Ventas de ayer'), findsWidgets);
     expect(find.text('No hay ventas en este periodo.'), findsOneWidget);
+  });
+
+  testWidgets('"Fechas" abre el selector de rango, en español (antes no se '
+      'veía nada)', (tester) async {
+    await ventaDeContado(tester);
+    await abrir(tester);
+
+    await tester.tap(find.text('Fechas'));
+    await tester.pumpAndSettle();
+
+    // El selector del sistema se abrió, en español (a pantalla completa o como
+    // diálogo).
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+    // La "X" es la inicial del miércoles en español; no depende de la fecha.
+    expect(find.text('X'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    // Cancelar no cambia el periodo.
+    await tester.tap(find.byType(CloseButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(DateRangePickerDialog), findsNothing);
+    expect(find.text('Ventas de hoy'), findsWidgets);
   });
 
   testWidgets('el empleado ve el rechazo y no puede anular', (tester) async {

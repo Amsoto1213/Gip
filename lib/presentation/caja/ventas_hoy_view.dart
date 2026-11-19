@@ -38,7 +38,6 @@ class VentasHoyView extends StatelessWidget {
       firstDate: DateTime(2020),
       lastDate: DateTime(hoy.year, hoy.month, hoy.day),
       initialDateRange: DateTimeRange(start: vm.desde, end: vm.hasta),
-      locale: const Locale('es'),
     );
     if (rango != null) await vm.elegirFechas(rango.start, rango.end);
   }
