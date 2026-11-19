@@ -5,6 +5,7 @@ import 'package:gip/data/local/conversores/conversor_decimal.dart';
 import 'package:gip/data/local/conversores/conversor_fecha_utc.dart';
 import 'package:gip/data/local/tablas/abonos.dart';
 import 'package:gip/data/local/tablas/alertas_reabastecimiento.dart';
+import 'package:gip/data/local/tablas/anulaciones_venta.dart';
 import 'package:gip/data/local/tablas/cajas.dart';
 import 'package:gip/data/local/tablas/clientes.dart';
 import 'package:gip/data/local/tablas/codigos_producto.dart';
@@ -38,6 +39,7 @@ part 'base_local_drift.g.dart';
     Fiados,
     Abonos,
     CodigosProducto,
+    AnulacionesVenta,
   ],
 )
 class BaseLocalDrift extends _$BaseLocalDrift {
@@ -66,9 +68,9 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// 8: clientes y fiados (CUS-07). 9: abonos (CUS-08). 10: columna
   /// `eliminado_en` de clientes (CUS-21). 11: codigos_producto (CUS-17).
   /// 12: columnas del cierre en cajas (CUS-14). 13: `base_apertura` en cajas
-  /// (CUS-14, DI-38).
+  /// (CUS-14, DI-38). 14: anulaciones_venta (CUS-20).
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -158,6 +160,11 @@ class BaseLocalDrift extends _$BaseLocalDrift {
       // Si la tabla se acaba de crear en el paso 4, ya trae la columna.
       if (desde >= 4 && desde < 13) {
         await m.addColumn(cajas, cajas.baseApertura);
+      }
+      if (desde < 14) {
+        await m.createTable(anulacionesVenta);
+        await m.createIndex(anulacionesVentaTiendaIdx);
+        await m.createIndex(anulacionesVentaVentaIdx);
       }
     },
   );

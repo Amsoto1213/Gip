@@ -90,6 +90,32 @@ class FiadoRepositorioDrift implements IFiadoRepositorio {
         );
       });
 
+  /// Guarda solo el saldo y el estado del fiado y lo anota en `cola_pendientes`
+  /// como ACTUALIZAR en la misma transacción (DA-33); no toca los abonos
+  /// (CUS-20). Se une a la transacción abierta.
+  @override
+  Future<void> actualizarSaldo(Tienda tienda, Fiado fiado) => _base.transaction(
+    () async {
+      await (_base.update(_base.fiados)..where(
+            (f) =>
+                f.id.equals(fiado.getId()) & f.tiendaId.equals(tienda.getId()),
+          ))
+          .write(
+            FiadosCompanion(
+              saldoPendiente: Value(fiado.getSaldoPendiente()),
+              estado: Value(MapeoFiado.estadoATexto(fiado.getEstado())),
+            ),
+          );
+      await anotarEnCola(
+        _base,
+        tiendaId: tienda.getId(),
+        tabla: _tabla,
+        registroId: fiado.getId(),
+        operacion: OperacionCola.actualizar,
+      );
+    },
+  );
+
   /// Abonos de la tienda con fecha en `[desde, hasta)`, con los anulados
   /// (CUS-10, DI-29). Toda consulta filtra por `tienda_id`.
   @override

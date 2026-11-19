@@ -249,6 +249,97 @@ class MovimientoInventarioRepositorioDrift
     fila.costoUnitario,
   );
 
+  /// Salidas por venta de las [ventas] dadas, en cualquier estado, con su
+  /// ítem (stock actual) y su producto (CUS-20, DI-39). Cada ítem se arma una
+  /// sola vez y lo comparten las salidas del mismo ítem, para que anular varias
+  /// salidas de un mismo ítem sume sobre el mismo stock. Toda consulta filtra
+  /// por `tienda_id`.
+  @override
+  Future<List<SalidaVenta>> listarSalidasPorVentas(
+    Tienda tienda,
+    List<Venta> ventas,
+  ) async {
+    if (ventas.isEmpty) return const [];
+    final porId = {for (final v in ventas) v.getId(): v};
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final p = _base.productos;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+            ),
+            innerJoin(p, p.id.equalsExp(i.productoId)),
+          ])
+          ..where(
+            m.tiendaId.equals(tienda.getId()) &
+                m.tipo.equals(_tipoSalidaVenta) &
+                m.ventaId.isIn(porId.keys.toList()),
+          )
+          ..orderBy([OrderingTerm.asc(m.fecha)]);
+    final items = <String, ItemInventario>{};
+    final estados = _estados.map((k, v) => MapEntry(v, k));
+    return [
+      for (final r in await consulta.get())
+        _salidaDeVenta(
+          r.readTable(m),
+          porId[r.readTable(m).ventaId]!,
+          items.putIfAbsent(r.readTable(i).id, () {
+            final fila = r.readTable(i);
+            return ItemInventario(
+              fila.id,
+              MapeoProducto.aEntidad(r.readTable(p)),
+              fila.stockActual,
+            );
+          }),
+          estados[r.readTable(m).estado]!,
+        ),
+    ];
+  }
+
+  SalidaVenta _salidaDeVenta(
+    FilaMovimientoInventario fila,
+    Venta venta,
+    ItemInventario item,
+    EstadoMovimiento estado,
+  ) => SalidaVenta(
+    fila.id,
+    item,
+    fila.cantidad,
+    fila.fecha,
+    venta,
+    fila.precioUnitario ?? Decimal.zero,
+    fila.costoUnitario,
+  )..setEstado(estado);
+
+  /// Guarda solo el estado del movimiento y lo anota en `cola_pendientes` como
+  /// ACTUALIZAR en la misma transacción (DA-33, RNF-15); no toca lo demás. Se
+  /// une a la transacción abierta.
+  @override
+  Future<void> actualizarEstado(
+    Tienda tienda,
+    MovimientoInventario movimiento,
+  ) => _base.transaction(() async {
+    await (_base.update(_base.movimientosInventario)..where(
+          (m) =>
+              m.id.equals(movimiento.getId()) &
+              m.tiendaId.equals(tienda.getId()),
+        ))
+        .write(
+          MovimientosInventarioCompanion(
+            estado: Value(_estados[movimiento.getEstado()]!),
+          ),
+        );
+    await anotarEnCola(
+      _base,
+      tiendaId: tienda.getId(),
+      tabla: _tabla,
+      registroId: movimiento.getId(),
+      operacion: OperacionCola.actualizar,
+    );
+  });
+
   /// Entradas VIGENTES de la tienda con fecha en `[desde, hasta)` (CUS-10,
   /// DI-29). Cada ítem y producto se arma una sola vez.
   @override

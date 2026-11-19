@@ -20,8 +20,9 @@ class ProcesadorFiado implements ProcesadorPago {
   Future<void> procesar(Tienda tienda, Venta venta, FormaPago forma) =>
       _servicioFiados.registrarFiado(tienda, forma as Fiado);
 
-  /// En EA llama a servicioFiados.anularFiado, que llega con CUS-20 (DI-26).
+  /// Llama a servicioFiados.anularFiado(tienda, forma as Fiado): rechaza si el
+  /// fiado ya tiene abonos (CUS-20).
   @override
   Future<void> revertir(Tienda tienda, Venta venta, FormaPago forma) =>
-      throw UnsupportedError('La anulación del fiado llega con CUS-20');
+      _servicioFiados.anularFiado(tienda, forma as Fiado);
 }

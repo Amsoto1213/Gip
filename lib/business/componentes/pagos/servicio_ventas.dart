@@ -4,6 +4,8 @@ import 'package:gip/business/componentes/pagos/procesador_pago.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/info_tienda/usuario.dart';
+import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
@@ -19,7 +21,7 @@ import 'package:uuid/uuid.dart';
 /// guarda estado: recibe las líneas y las formas de pago en cada operación
 /// (DA-54, DA-57).
 ///
-/// `listarVentas` y `anular` llegan con su caso de uso (DI-21).
+/// Lista y anula ventas (CUS-20, DI-39).
 class ServicioVentas {
   ServicioVentas(
     this._servicioInventario,
@@ -164,4 +166,53 @@ class ServicioVentas {
   ProcesadorPago _procesadorPara(FormaPago forma) =>
       _procesadores.where((p) => p.admite(forma)).firstOrNull ??
       (throw StateError('Sin procesador para ${forma.runtimeType}'));
+
+  /// Ventas del periodo con sus formas de pago y su estado (anulada o no);
+  /// delega en ventas.listarPorPeriodo (CUS-20, pasos 5 a 8).
+  Future<List<Venta>> listarVentas(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) => _ventas.listarPorPeriodo(tienda, desde, hasta);
+
+  /// Las salidas de cada venta, por el id de la venta, para mostrar sus
+  /// productos; no está en EA (CUS-20, DI-39).
+  Future<Map<String, List<SalidaVenta>>> listarSalidas(
+    Tienda tienda,
+    List<Venta> ventas,
+  ) => _servicioInventario.listarSalidasDeVentas(tienda, ventas);
+
+  /// Creator de [AnulacionVenta]. Rechaza si la venta ya está anulada o si el
+  /// motivo está vacío; dentro de unidadTrabajo.ejecutar registra la
+  /// anulación, devuelve las salidas al stock y revierte cada forma de pago
+  /// (RNF-15, RNF-04). Si la caja de hoy está cerrada, el fiado ya tiene
+  /// abonos o algo falla al guardar, no se guarda nada. La venta recibe su
+  /// anulación al final, cuando todo se guardó (CUS-20).
+  Future<AnulacionVenta> anular(
+    Tienda tienda,
+    Venta venta,
+    String motivo,
+    Usuario usuario,
+  ) async {
+    if (venta.isAnulada()) throw const ExcepcionVentaYaAnulada();
+    final motivoLimpio = motivo.trim();
+    if (motivoLimpio.isEmpty) {
+      throw const ExcepcionMotivoAnulacionObligatorio();
+    }
+    final anulacion = AnulacionVenta(
+      const Uuid().v4(),
+      usuario,
+      DateTime.now().toUtc(),
+      motivoLimpio,
+    );
+    await _unidadTrabajo.ejecutar(() async {
+      await _ventas.registrarAnulacion(tienda, venta, anulacion);
+      await _servicioInventario.anularSalidas(tienda, venta);
+      for (final forma in venta.getFormasPago()) {
+        await _procesadorPara(forma).revertir(tienda, venta, forma);
+      }
+    });
+    venta.anular(anulacion);
+    return anulacion;
+  }
 }

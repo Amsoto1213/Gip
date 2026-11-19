@@ -9,8 +9,7 @@ import 'package:gip/transversal/errores/errores_pagos.dart';
 /// (DA-04, DA-20). Se crea en memoria con saldo = monto y estado PENDIENTE y se
 /// guarda al confirmar la venta (CUS-07).
 ///
-/// `registrarAbono` llega con CUS-08; `recalcularSaldo` y `anular`, con la
-/// conciliación y CUS-20 (DI-27).
+/// `recalcularSaldo` llega con la conciliación (CUS-23, DI-27).
 class Fiado extends FormaPago {
   Fiado(super.id, this._montoInicial, this._fechaInicio, this._cliente)
     : _saldoPendiente = _montoInicial,
@@ -71,4 +70,19 @@ class Fiado extends FormaPago {
   /// Devuelve getMontoInicial(): lo que la venta quedó debiendo (DA-72).
   @override
   Decimal calcularMontoCubierto() => _montoInicial;
+
+  /// Information Expert: rechaza si ya tiene abonos; si no, el saldo queda en
+  /// cero y el estado en ANULADO (CUS-20, DA-51).
+  void anular() {
+    if (_abonos.isNotEmpty) throw const ExcepcionFiadoConAbonos();
+    _saldoPendiente = Decimal.zero;
+    _estado = EstadoFiado.anulado;
+  }
+
+  /// Devuelve el saldo y el estado que tenía, cuando una operación que lo
+  /// cambió en memoria no pudo guardarse (rollback de CUS-20). No está en EA.
+  void restaurar(Decimal saldoPendiente, EstadoFiado estado) {
+    _saldoPendiente = saldoPendiente;
+    _estado = estado;
+  }
 }

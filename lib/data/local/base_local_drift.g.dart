@@ -6819,6 +6819,478 @@ class CodigosProductoCompanion extends UpdateCompanion<FilaCodigoProducto> {
   }
 }
 
+class $AnulacionesVentaTable extends AnulacionesVenta
+    with TableInfo<$AnulacionesVentaTable, FilaAnulacionVenta> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AnulacionesVentaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ventaIdMeta = const VerificationMeta(
+    'ventaId',
+  );
+  @override
+  late final GeneratedColumn<String> ventaId = GeneratedColumn<String>(
+    'venta_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ventas (id)',
+    ),
+  );
+  static const VerificationMeta _usuarioIdMeta = const VerificationMeta(
+    'usuarioId',
+  );
+  @override
+  late final GeneratedColumn<String> usuarioId = GeneratedColumn<String>(
+    'usuario_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usuarioNombreMeta = const VerificationMeta(
+    'usuarioNombre',
+  );
+  @override
+  late final GeneratedColumn<String> usuarioNombre = GeneratedColumn<String>(
+    'usuario_nombre',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> fecha =
+      GeneratedColumn<DateTime>(
+        'fecha',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($AnulacionesVentaTable.$converterfecha);
+  static const VerificationMeta _motivoMeta = const VerificationMeta('motivo');
+  @override
+  late final GeneratedColumn<String> motivo = GeneratedColumn<String>(
+    'motivo',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tiendaId,
+    ventaId,
+    usuarioId,
+    usuarioNombre,
+    fecha,
+    motivo,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'anulaciones_venta';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaAnulacionVenta> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('venta_id')) {
+      context.handle(
+        _ventaIdMeta,
+        ventaId.isAcceptableOrUnknown(data['venta_id']!, _ventaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ventaIdMeta);
+    }
+    if (data.containsKey('usuario_id')) {
+      context.handle(
+        _usuarioIdMeta,
+        usuarioId.isAcceptableOrUnknown(data['usuario_id']!, _usuarioIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_usuarioIdMeta);
+    }
+    if (data.containsKey('usuario_nombre')) {
+      context.handle(
+        _usuarioNombreMeta,
+        usuarioNombre.isAcceptableOrUnknown(
+          data['usuario_nombre']!,
+          _usuarioNombreMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_usuarioNombreMeta);
+    }
+    if (data.containsKey('motivo')) {
+      context.handle(
+        _motivoMeta,
+        motivo.isAcceptableOrUnknown(data['motivo']!, _motivoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_motivoMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FilaAnulacionVenta map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaAnulacionVenta(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      ventaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}venta_id'],
+      )!,
+      usuarioId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}usuario_id'],
+      )!,
+      usuarioNombre: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}usuario_nombre'],
+      )!,
+      fecha: $AnulacionesVentaTable.$converterfecha.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}fecha'],
+        )!,
+      ),
+      motivo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}motivo'],
+      )!,
+    );
+  }
+
+  @override
+  $AnulacionesVentaTable createAlias(String alias) {
+    return $AnulacionesVentaTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterfecha =
+      const ConversorFechaUtc();
+}
+
+class FilaAnulacionVenta extends DataClass
+    implements Insertable<FilaAnulacionVenta> {
+  final String id;
+  final String tiendaId;
+  final String ventaId;
+  final String usuarioId;
+  final String usuarioNombre;
+  final DateTime fecha;
+  final String motivo;
+  const FilaAnulacionVenta({
+    required this.id,
+    required this.tiendaId,
+    required this.ventaId,
+    required this.usuarioId,
+    required this.usuarioNombre,
+    required this.fecha,
+    required this.motivo,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['venta_id'] = Variable<String>(ventaId);
+    map['usuario_id'] = Variable<String>(usuarioId);
+    map['usuario_nombre'] = Variable<String>(usuarioNombre);
+    {
+      map['fecha'] = Variable<DateTime>(
+        $AnulacionesVentaTable.$converterfecha.toSql(fecha),
+      );
+    }
+    map['motivo'] = Variable<String>(motivo);
+    return map;
+  }
+
+  AnulacionesVentaCompanion toCompanion(bool nullToAbsent) {
+    return AnulacionesVentaCompanion(
+      id: Value(id),
+      tiendaId: Value(tiendaId),
+      ventaId: Value(ventaId),
+      usuarioId: Value(usuarioId),
+      usuarioNombre: Value(usuarioNombre),
+      fecha: Value(fecha),
+      motivo: Value(motivo),
+    );
+  }
+
+  factory FilaAnulacionVenta.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaAnulacionVenta(
+      id: serializer.fromJson<String>(json['id']),
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      ventaId: serializer.fromJson<String>(json['ventaId']),
+      usuarioId: serializer.fromJson<String>(json['usuarioId']),
+      usuarioNombre: serializer.fromJson<String>(json['usuarioNombre']),
+      fecha: serializer.fromJson<DateTime>(json['fecha']),
+      motivo: serializer.fromJson<String>(json['motivo']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'ventaId': serializer.toJson<String>(ventaId),
+      'usuarioId': serializer.toJson<String>(usuarioId),
+      'usuarioNombre': serializer.toJson<String>(usuarioNombre),
+      'fecha': serializer.toJson<DateTime>(fecha),
+      'motivo': serializer.toJson<String>(motivo),
+    };
+  }
+
+  FilaAnulacionVenta copyWith({
+    String? id,
+    String? tiendaId,
+    String? ventaId,
+    String? usuarioId,
+    String? usuarioNombre,
+    DateTime? fecha,
+    String? motivo,
+  }) => FilaAnulacionVenta(
+    id: id ?? this.id,
+    tiendaId: tiendaId ?? this.tiendaId,
+    ventaId: ventaId ?? this.ventaId,
+    usuarioId: usuarioId ?? this.usuarioId,
+    usuarioNombre: usuarioNombre ?? this.usuarioNombre,
+    fecha: fecha ?? this.fecha,
+    motivo: motivo ?? this.motivo,
+  );
+  FilaAnulacionVenta copyWithCompanion(AnulacionesVentaCompanion data) {
+    return FilaAnulacionVenta(
+      id: data.id.present ? data.id.value : this.id,
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      ventaId: data.ventaId.present ? data.ventaId.value : this.ventaId,
+      usuarioId: data.usuarioId.present ? data.usuarioId.value : this.usuarioId,
+      usuarioNombre: data.usuarioNombre.present
+          ? data.usuarioNombre.value
+          : this.usuarioNombre,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      motivo: data.motivo.present ? data.motivo.value : this.motivo,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaAnulacionVenta(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('ventaId: $ventaId, ')
+          ..write('usuarioId: $usuarioId, ')
+          ..write('usuarioNombre: $usuarioNombre, ')
+          ..write('fecha: $fecha, ')
+          ..write('motivo: $motivo')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tiendaId,
+    ventaId,
+    usuarioId,
+    usuarioNombre,
+    fecha,
+    motivo,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaAnulacionVenta &&
+          other.id == this.id &&
+          other.tiendaId == this.tiendaId &&
+          other.ventaId == this.ventaId &&
+          other.usuarioId == this.usuarioId &&
+          other.usuarioNombre == this.usuarioNombre &&
+          other.fecha == this.fecha &&
+          other.motivo == this.motivo);
+}
+
+class AnulacionesVentaCompanion extends UpdateCompanion<FilaAnulacionVenta> {
+  final Value<String> id;
+  final Value<String> tiendaId;
+  final Value<String> ventaId;
+  final Value<String> usuarioId;
+  final Value<String> usuarioNombre;
+  final Value<DateTime> fecha;
+  final Value<String> motivo;
+  final Value<int> rowid;
+  const AnulacionesVentaCompanion({
+    this.id = const Value.absent(),
+    this.tiendaId = const Value.absent(),
+    this.ventaId = const Value.absent(),
+    this.usuarioId = const Value.absent(),
+    this.usuarioNombre = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.motivo = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AnulacionesVentaCompanion.insert({
+    required String id,
+    required String tiendaId,
+    required String ventaId,
+    required String usuarioId,
+    required String usuarioNombre,
+    required DateTime fecha,
+    required String motivo,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tiendaId = Value(tiendaId),
+       ventaId = Value(ventaId),
+       usuarioId = Value(usuarioId),
+       usuarioNombre = Value(usuarioNombre),
+       fecha = Value(fecha),
+       motivo = Value(motivo);
+  static Insertable<FilaAnulacionVenta> custom({
+    Expression<String>? id,
+    Expression<String>? tiendaId,
+    Expression<String>? ventaId,
+    Expression<String>? usuarioId,
+    Expression<String>? usuarioNombre,
+    Expression<DateTime>? fecha,
+    Expression<String>? motivo,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (ventaId != null) 'venta_id': ventaId,
+      if (usuarioId != null) 'usuario_id': usuarioId,
+      if (usuarioNombre != null) 'usuario_nombre': usuarioNombre,
+      if (fecha != null) 'fecha': fecha,
+      if (motivo != null) 'motivo': motivo,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AnulacionesVentaCompanion copyWith({
+    Value<String>? id,
+    Value<String>? tiendaId,
+    Value<String>? ventaId,
+    Value<String>? usuarioId,
+    Value<String>? usuarioNombre,
+    Value<DateTime>? fecha,
+    Value<String>? motivo,
+    Value<int>? rowid,
+  }) {
+    return AnulacionesVentaCompanion(
+      id: id ?? this.id,
+      tiendaId: tiendaId ?? this.tiendaId,
+      ventaId: ventaId ?? this.ventaId,
+      usuarioId: usuarioId ?? this.usuarioId,
+      usuarioNombre: usuarioNombre ?? this.usuarioNombre,
+      fecha: fecha ?? this.fecha,
+      motivo: motivo ?? this.motivo,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (ventaId.present) {
+      map['venta_id'] = Variable<String>(ventaId.value);
+    }
+    if (usuarioId.present) {
+      map['usuario_id'] = Variable<String>(usuarioId.value);
+    }
+    if (usuarioNombre.present) {
+      map['usuario_nombre'] = Variable<String>(usuarioNombre.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(
+        $AnulacionesVentaTable.$converterfecha.toSql(fecha.value),
+      );
+    }
+    if (motivo.present) {
+      map['motivo'] = Variable<String>(motivo.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnulacionesVentaCompanion(')
+          ..write('id: $id, ')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('ventaId: $ventaId, ')
+          ..write('usuarioId: $usuarioId, ')
+          ..write('usuarioNombre: $usuarioNombre, ')
+          ..write('fecha: $fecha, ')
+          ..write('motivo: $motivo, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -6842,6 +7314,9 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   late final $FiadosTable fiados = $FiadosTable(this);
   late final $AbonosTable abonos = $AbonosTable(this);
   late final $CodigosProductoTable codigosProducto = $CodigosProductoTable(
+    this,
+  );
+  late final $AnulacionesVentaTable anulacionesVenta = $AnulacionesVentaTable(
     this,
   );
   late final Index productosTiendaCodigoIdx = Index(
@@ -6928,6 +7403,14 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     'codigos_producto_producto_idx',
     'CREATE INDEX codigos_producto_producto_idx ON codigos_producto (producto_id)',
   );
+  late final Index anulacionesVentaTiendaIdx = Index(
+    'anulaciones_venta_tienda_idx',
+    'CREATE INDEX anulaciones_venta_tienda_idx ON anulaciones_venta (tienda_id)',
+  );
+  late final Index anulacionesVentaVentaIdx = Index(
+    'anulaciones_venta_venta_idx',
+    'CREATE INDEX anulaciones_venta_venta_idx ON anulaciones_venta (venta_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6947,6 +7430,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     fiados,
     abonos,
     codigosProducto,
+    anulacionesVenta,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -6968,6 +7452,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     abonosFiadoIdx,
     codigosProductoTiendaValorIdx,
     codigosProductoProductoIdx,
+    anulacionesVentaTiendaIdx,
+    anulacionesVentaVentaIdx,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -8399,6 +8885,27 @@ final class $$VentasTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$AnulacionesVentaTable, List<FilaAnulacionVenta>>
+  _anulacionesVentaRefsTable(_$BaseLocalDrift db) =>
+      MultiTypedResultKey.fromTable(
+        db.anulacionesVenta,
+        aliasName: 'ventas__id__anulaciones_venta__venta_id',
+      );
+
+  $$AnulacionesVentaTableProcessedTableManager get anulacionesVentaRefs {
+    final manager = $$AnulacionesVentaTableTableManager(
+      $_db,
+      $_db.anulacionesVenta,
+    ).filter((f) => f.ventaId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _anulacionesVentaRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$VentasTableFilterComposer
@@ -8474,6 +8981,31 @@ class $$VentasTableFilterComposer
           }) => $$FormasPagoTableFilterComposer(
             $db: $db,
             $table: $db.formasPago,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> anulacionesVentaRefs(
+    Expression<bool> Function($$AnulacionesVentaTableFilterComposer f) f,
+  ) {
+    final $$AnulacionesVentaTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.anulacionesVenta,
+      getReferencedColumn: (t) => t.ventaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnulacionesVentaTableFilterComposer(
+            $db: $db,
+            $table: $db.anulacionesVenta,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8585,6 +9117,31 @@ class $$VentasTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> anulacionesVentaRefs<T extends Object>(
+    Expression<T> Function($$AnulacionesVentaTableAnnotationComposer a) f,
+  ) {
+    final $$AnulacionesVentaTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.anulacionesVenta,
+      getReferencedColumn: (t) => t.ventaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnulacionesVentaTableAnnotationComposer(
+            $db: $db,
+            $table: $db.anulacionesVenta,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$VentasTableTableManager
@@ -8603,6 +9160,7 @@ class $$VentasTableTableManager
           PrefetchHooks Function({
             bool movimientosInventarioRefs,
             bool formasPagoRefs,
+            bool anulacionesVentaRefs,
           })
         > {
   $$VentasTableTableManager(_$BaseLocalDrift db, $VentasTable table)
@@ -8653,12 +9211,17 @@ class $$VentasTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({movimientosInventarioRefs = false, formasPagoRefs = false}) {
+              ({
+                movimientosInventarioRefs = false,
+                formasPagoRefs = false,
+                anulacionesVentaRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (movimientosInventarioRefs) db.movimientosInventario,
                     if (formasPagoRefs) db.formasPago,
+                    if (anulacionesVentaRefs) db.anulacionesVenta,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -8703,6 +9266,26 @@ class $$VentasTableTableManager
                           referencedColumn: 'venta_id',
                           typedResults: items,
                         ),
+                      if (anulacionesVentaRefs)
+                        await $_getPrefetchedDataByColumns<
+                          FilaVenta,
+                          $VentasTable,
+                          FilaAnulacionVenta,
+                          $AnulacionesVentaTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VentasTableReferences
+                              ._anulacionesVentaRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VentasTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).anulacionesVentaRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'venta_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -8726,6 +9309,7 @@ typedef $$VentasTableProcessedTableManager =
       PrefetchHooks Function({
         bool movimientosInventarioRefs,
         bool formasPagoRefs,
+        bool anulacionesVentaRefs,
       })
     >;
 typedef $$MovimientosInventarioTableCreateCompanionBuilder =
@@ -12655,6 +13239,375 @@ typedef $$CodigosProductoTableProcessedTableManager =
       FilaCodigoProducto,
       PrefetchHooks Function({bool productoId})
     >;
+typedef $$AnulacionesVentaTableCreateCompanionBuilder =
+    AnulacionesVentaCompanion Function({
+      required String id,
+      required String tiendaId,
+      required String ventaId,
+      required String usuarioId,
+      required String usuarioNombre,
+      required DateTime fecha,
+      required String motivo,
+      Value<int> rowid,
+    });
+typedef $$AnulacionesVentaTableUpdateCompanionBuilder =
+    AnulacionesVentaCompanion Function({
+      Value<String> id,
+      Value<String> tiendaId,
+      Value<String> ventaId,
+      Value<String> usuarioId,
+      Value<String> usuarioNombre,
+      Value<DateTime> fecha,
+      Value<String> motivo,
+      Value<int> rowid,
+    });
+
+final class $$AnulacionesVentaTableReferences
+    extends
+        BaseReferences<
+          _$BaseLocalDrift,
+          $AnulacionesVentaTable,
+          FilaAnulacionVenta
+        > {
+  $$AnulacionesVentaTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $VentasTable _ventaIdTable(_$BaseLocalDrift db) =>
+      db.ventas.createAlias('anulaciones_venta__venta_id__ventas__id');
+
+  $$VentasTableProcessedTableManager get ventaId {
+    final $_column = $_itemColumn<String>('venta_id')!;
+
+    final manager = $$VentasTableTableManager(
+      $_db,
+      $_db.ventas,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ventaIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$AnulacionesVentaTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $AnulacionesVentaTable> {
+  $$AnulacionesVentaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get usuarioNombre => $composableBuilder(
+    column: $table.usuarioNombre,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get fecha =>
+      $composableBuilder(
+        column: $table.fecha,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get motivo => $composableBuilder(
+    column: $table.motivo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VentasTableFilterComposer get ventaId {
+    final $$VentasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableFilterComposer(
+            $db: $db,
+            $table: $db.ventas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AnulacionesVentaTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $AnulacionesVentaTable> {
+  $$AnulacionesVentaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get usuarioId => $composableBuilder(
+    column: $table.usuarioId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get usuarioNombre => $composableBuilder(
+    column: $table.usuarioNombre,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get motivo => $composableBuilder(
+    column: $table.motivo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VentasTableOrderingComposer get ventaId {
+    final $$VentasTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableOrderingComposer(
+            $db: $db,
+            $table: $db.ventas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AnulacionesVentaTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $AnulacionesVentaTable> {
+  $$AnulacionesVentaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get usuarioId =>
+      $composableBuilder(column: $table.usuarioId, builder: (column) => column);
+
+  GeneratedColumn<String> get usuarioNombre => $composableBuilder(
+    column: $table.usuarioNombre,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumn<String> get motivo =>
+      $composableBuilder(column: $table.motivo, builder: (column) => column);
+
+  $$VentasTableAnnotationComposer get ventaId {
+    final $$VentasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ventaId,
+      referencedTable: $db.ventas,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VentasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ventas,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AnulacionesVentaTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $AnulacionesVentaTable,
+          FilaAnulacionVenta,
+          $$AnulacionesVentaTableFilterComposer,
+          $$AnulacionesVentaTableOrderingComposer,
+          $$AnulacionesVentaTableAnnotationComposer,
+          $$AnulacionesVentaTableCreateCompanionBuilder,
+          $$AnulacionesVentaTableUpdateCompanionBuilder,
+          (FilaAnulacionVenta, $$AnulacionesVentaTableReferences),
+          FilaAnulacionVenta,
+          PrefetchHooks Function({bool ventaId})
+        > {
+  $$AnulacionesVentaTableTableManager(
+    _$BaseLocalDrift db,
+    $AnulacionesVentaTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AnulacionesVentaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AnulacionesVentaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AnulacionesVentaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> ventaId = const Value.absent(),
+                Value<String> usuarioId = const Value.absent(),
+                Value<String> usuarioNombre = const Value.absent(),
+                Value<DateTime> fecha = const Value.absent(),
+                Value<String> motivo = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnulacionesVentaCompanion(
+                id: id,
+                tiendaId: tiendaId,
+                ventaId: ventaId,
+                usuarioId: usuarioId,
+                usuarioNombre: usuarioNombre,
+                fecha: fecha,
+                motivo: motivo,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String tiendaId,
+                required String ventaId,
+                required String usuarioId,
+                required String usuarioNombre,
+                required DateTime fecha,
+                required String motivo,
+                Value<int> rowid = const Value.absent(),
+              }) => AnulacionesVentaCompanion.insert(
+                id: id,
+                tiendaId: tiendaId,
+                ventaId: ventaId,
+                usuarioId: usuarioId,
+                usuarioNombre: usuarioNombre,
+                fecha: fecha,
+                motivo: motivo,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AnulacionesVentaTable, FilaAnulacionVenta>(
+                    table,
+                  ),
+                  $$AnulacionesVentaTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({ventaId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (ventaId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.ventaId,
+                        referencedTable: $$AnulacionesVentaTableReferences
+                            ._ventaIdTable(db),
+                        referencedColumn: $$AnulacionesVentaTableReferences
+                            ._ventaIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$AnulacionesVentaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $AnulacionesVentaTable,
+      FilaAnulacionVenta,
+      $$AnulacionesVentaTableFilterComposer,
+      $$AnulacionesVentaTableOrderingComposer,
+      $$AnulacionesVentaTableAnnotationComposer,
+      $$AnulacionesVentaTableCreateCompanionBuilder,
+      $$AnulacionesVentaTableUpdateCompanionBuilder,
+      (FilaAnulacionVenta, $$AnulacionesVentaTableReferences),
+      FilaAnulacionVenta,
+      PrefetchHooks Function({bool ventaId})
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -12690,4 +13643,6 @@ class $BaseLocalDriftManager {
       $$AbonosTableTableManager(_db, _db.abonos);
   $$CodigosProductoTableTableManager get codigosProducto =>
       $$CodigosProductoTableTableManager(_db, _db.codigosProducto);
+  $$AnulacionesVentaTableTableManager get anulacionesVenta =>
+      $$AnulacionesVentaTableTableManager(_db, _db.anulacionesVenta);
 }

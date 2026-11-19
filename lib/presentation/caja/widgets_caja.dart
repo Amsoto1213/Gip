@@ -137,9 +137,16 @@ class TarjetaMovimientosHoy extends StatelessWidget {
 /// Lista "Hoy" del móvil (mockup `mCaja`): una tarjeta con una fila por
 /// movimiento, el más reciente primero.
 class ListaMovimientosHoy extends StatelessWidget {
-  const ListaMovimientosHoy({super.key, required this.movimientos});
+  const ListaMovimientosHoy({
+    super.key,
+    required this.movimientos,
+    this.onVerVentas,
+  });
 
   final List<MovimientoCaja> movimientos;
+
+  /// Abre "Ventas de hoy y anular" (CUS-20); sin él no se muestra el enlace.
+  final VoidCallback? onVerVentas;
 
   @override
   Widget build(BuildContext context) {
@@ -147,8 +154,28 @@ class ListaMovimientosHoy extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Hoy', style: tema.textTheme.titleLarge),
-        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: Text('Hoy', style: tema.textTheme.titleLarge)),
+            if (onVerVentas != null)
+              Flexible(
+                child: TextButton(
+                  key: const Key('caja_ver_ventas'),
+                  onPressed: onVerVentas,
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(44, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: const Text(
+                    'Ventas de hoy y anular ›',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
         TarjetaGip(
           key: const Key('caja_movimientos_hoy'),
           child: movimientos.isEmpty

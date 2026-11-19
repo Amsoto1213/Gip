@@ -70,8 +70,14 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 13 (CUS-14, DI-38).
+    /// Quita lo que agregó la versión 14 (CUS-20).
+    Future<void> bajarDeLaVersion14(BaseLocalDrift base) async {
+      await base.customStatement('DROP TABLE anulaciones_venta');
+    }
+
+    /// Quita lo que agregó la versión 13 (CUS-14, DI-38), y antes la 14.
     Future<void> bajarDeLaVersion13(BaseLocalDrift base) async {
+      await bajarDeLaVersion14(base);
       await base.customStatement('ALTER TABLE cajas DROP COLUMN base_apertura');
     }
 
@@ -145,7 +151,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 13);
+      expect(actual.schemaVersion, 14);
       expect(
         await tablas(actual),
         containsAll([
@@ -166,7 +172,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 13);
+      expect(version.read<int>('user_version'), 14);
       await actual.close();
     });
 
@@ -467,5 +473,35 @@ void main() {
       expect(caja.baseApertura, Decimal.zero);
       await v13.close();
     });
+
+    test(
+      'de la versión 13 a la 14 crea anulaciones_venta sin perder ventas',
+      () async {
+        final archivo = File('${carpeta.path}/gip.sqlite');
+
+        final v13 = BaseLocalDrift(NativeDatabase(archivo));
+        await bajarDeLaVersion14(v13);
+        await v13.customStatement(
+          "INSERT INTO ventas (id, tienda_id, fecha, total) "
+          "VALUES ('v1', 't1', '2026-11-14T10:00:00.000Z', '5000')",
+        );
+        await v13.customStatement('PRAGMA user_version = 13');
+        expect(await tablas(v13), isNot(contains('anulaciones_venta')));
+        await v13.close();
+
+        final v14 = BaseLocalDrift(NativeDatabase(archivo));
+        expect(
+          await tablas(v14),
+          containsAll([
+            'anulaciones_venta',
+            'anulaciones_venta_tienda_idx',
+            'anulaciones_venta_venta_idx',
+          ]),
+        );
+        expect((await v14.select(v14.ventas).get()).single.id, 'v1');
+        expect(await v14.select(v14.anulacionesVenta).get(), isEmpty);
+        await v14.close();
+      },
+    );
   });
 }

@@ -138,6 +138,7 @@ void main() {
         generarReporteDiario: GenerarReporteDiarioFalso(),
         registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
         registrarCierreCaja: RegistrarCierreCajaFalso(),
+        anularVenta: AnularVentaFalso(),
       ),
     );
     await tester.pumpAndSettle();

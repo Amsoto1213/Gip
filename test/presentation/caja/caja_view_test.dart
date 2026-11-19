@@ -354,4 +354,34 @@ void main() {
     expect(find.byKey(const Key('caja_movimientos_hoy')), findsNothing);
     expect(find.text('Abrió con'), findsNothing);
   });
+
+  testWidgets('en el móvil hay un enlace a "Ventas de hoy y anular" (CUS-20)', (
+    tester,
+  ) async {
+    await abrir(tester);
+    await esperarBase(tester);
+
+    expect(find.byKey(const Key('caja_ver_ventas')), findsOneWidget);
+    expect(find.text('Ventas de hoy y anular ›'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sin desbordes en 360×640 con el enlace a las ventas', (
+    tester,
+  ) async {
+    await abrir(tester, tamano: const Size(360, 640));
+    await esperarBase(tester);
+
+    final enlace = find.byKey(const Key('caja_ver_ventas'));
+    // La lista construye solo lo que se ve: hay que bajar hasta el enlace.
+    await tester.scrollUntilVisible(
+      enlace,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(enlace, findsOneWidget);
+    expect(tester.getSize(enlace).height, greaterThanOrEqualTo(44));
+    expect(tester.takeException(), isNull);
+  });
 }

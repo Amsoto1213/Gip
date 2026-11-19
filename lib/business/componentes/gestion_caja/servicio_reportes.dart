@@ -92,6 +92,8 @@ class ServicioReportes {
     var ventasFiadas = Decimal.zero;
     var ventasNequi = Decimal.zero;
     for (final venta in ventas) {
+      // Las ventas anuladas no cuentan (CUS-20, DI-39).
+      if (venta.isAnulada()) continue;
       totalVentas += venta.getTotal();
       for (final forma in venta.getFormasPago()) {
         if (forma is Fiado) ventasFiadas += forma.calcularMontoCubierto();

@@ -13,6 +13,7 @@ import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordi
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_venta_perdida_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/iniciar_sesion_coordinator.dart';
+import 'package:gip/business/workflow/pagos/anular_venta_coordinator.dart';
 import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
@@ -56,6 +57,10 @@ Future<void> main() async {
     caja.servicioCaja,
     acceso.servicioAcceso,
   );
+  final anularVenta = registrarAnularVenta(
+    pagos.servicioVentas,
+    acceso.servicioAcceso,
+  );
   final alertas = registrarAlertas(base, acceso.servicioAcceso);
   final reportes = registrarReportes(base, acceso.servicioAcceso);
   runApp(
@@ -78,6 +83,7 @@ Future<void> main() async {
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,
+      anularVenta: anularVenta,
     ),
   );
 }
@@ -103,6 +109,7 @@ class GipApp extends StatefulWidget {
     required this.generarReporteDiario,
     required this.registrarMovimientoCaja,
     required this.registrarCierreCaja,
+    required this.anularVenta,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -123,6 +130,7 @@ class GipApp extends StatefulWidget {
   final GenerarReporteDiarioCoordinator generarReporteDiario;
   final RegistrarMovimientoCajaCoordinator registrarMovimientoCaja;
   final RegistrarCierreCajaCoordinator registrarCierreCaja;
+  final AnularVentaCoordinator anularVenta;
 
   @override
   State<GipApp> createState() => _GipAppState();
@@ -172,6 +180,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.generarReporteDiario),
         Provider.value(value: widget.registrarMovimientoCaja),
         Provider.value(value: widget.registrarCierreCaja),
+        Provider.value(value: widget.anularVenta),
       ],
       child: MaterialApp.router(
         title: 'GIP',

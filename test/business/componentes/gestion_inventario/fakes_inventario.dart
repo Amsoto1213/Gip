@@ -4,6 +4,7 @@ import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
+import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 
 import 'fakes_catalogo.dart';
@@ -33,6 +34,35 @@ class MovimientoRepositorioFalso
   Future<void> guardar(Tienda tienda, MovimientoInventario movimiento) async {
     guardadosEnTransaccion.add(unidad?.abierta ?? false);
     de(tienda).add(movimiento);
+  }
+
+  /// Movimientos guardados con actualizarEstado, en orden de llegada.
+  final List<MovimientoInventario> estadosActualizados = [];
+
+  /// Si es verdadero, actualizarEstado falla (para probar el rollback).
+  bool fallarActualizarEstado = false;
+
+  @override
+  Future<void> actualizarEstado(
+    Tienda tienda,
+    MovimientoInventario movimiento,
+  ) async {
+    if (fallarActualizarEstado) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    estadosActualizados.add(movimiento);
+  }
+
+  /// Las salidas de las ventas dadas, en cualquier estado.
+  @override
+  Future<List<SalidaVenta>> listarSalidasPorVentas(
+    Tienda tienda,
+    List<Venta> ventas,
+  ) async {
+    final ids = ventas.map((v) => v.getId()).toSet();
+    return de(tienda)
+        .whereType<SalidaVenta>()
+        .where((s) => ids.contains(s.getVenta().getId()))
+        .toList();
   }
 
   /// La más reciente por fecha entre las VIGENTES del ítem (DI-20).

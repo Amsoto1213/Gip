@@ -47,6 +47,10 @@ class FiadoQueFallaDespues implements IFiadoRepositorio {
       _real.registrarAbono(tienda, fiado, abono);
 
   @override
+  Future<void> actualizarSaldo(Tienda tienda, Fiado fiado) =>
+      _real.actualizarSaldo(tienda, fiado);
+
+  @override
   Future<List<Abono>> listarAbonos(
     Tienda tienda,
     DateTime desde,
