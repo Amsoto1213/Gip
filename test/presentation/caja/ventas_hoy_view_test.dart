@@ -222,20 +222,20 @@ void main() {
 
     await tester.tap(find.text('Otro…'));
     await tester.pump();
-    BotonDeConfirmar() => tester.widget<OutlinedButton>(
+    botonDeConfirmar() => tester.widget<OutlinedButton>(
       find.descendant(
         of: find.byKey(const Key('anular_confirmar')),
         matching: find.byType(OutlinedButton),
       ),
     );
-    expect(BotonDeConfirmar().onPressed, isNull);
+    expect(botonDeConfirmar().onPressed, isNull);
 
     await tester.enterText(
       find.byKey(const Key('anular_motivo_otro')),
       'Producto vencido',
     );
     await tester.pump();
-    expect(BotonDeConfirmar().onPressed, isNotNull);
+    expect(botonDeConfirmar().onPressed, isNotNull);
     await tester.tap(find.byKey(const Key('anular_confirmar')));
     await esperarBase(tester);
 
