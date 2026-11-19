@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/gestion_caja/movimiento_caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -17,6 +18,14 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
 
   Map<String, Map<String, DateTime>> _copiaCajas = {};
   Map<String, List<(String, MovimientoCaja)>> _copiaMovs = {};
+  Map<String, Map<String, (Decimal, Decimal, DateTime)>> _copiaCierres = {};
+  Map<String, Map<String, Decimal>> _copiaBases = {};
+
+  /// Por tienda: id de caja → base de apertura.
+  final Map<String, Map<String, Decimal>> bases = {};
+
+  /// Por tienda: id de caja → (efectivo contado, diferencia, fecha de cierre).
+  final Map<String, Map<String, (Decimal, Decimal, DateTime)>> cierres = {};
 
   final List<bool> guardadosEnTransaccion = [];
   UnidadTrabajoFalsa? unidad;
@@ -31,6 +40,8 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
   void tomarCopia() {
     _copiaCajas = {for (final e in cajas.entries) e.key: Map.of(e.value)};
     _copiaMovs = {for (final e in movimientos.entries) e.key: List.of(e.value)};
+    _copiaCierres = {for (final e in cierres.entries) e.key: Map.of(e.value)};
+    _copiaBases = {for (final e in bases.entries) e.key: Map.of(e.value)};
   }
 
   @override
@@ -41,6 +52,12 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
     movimientos
       ..clear()
       ..addAll(_copiaMovs);
+    cierres
+      ..clear()
+      ..addAll(_copiaCierres);
+    bases
+      ..clear()
+      ..addAll(_copiaBases);
   }
 
   @override
@@ -49,12 +66,43 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
         .where((e) => e.value == fecha)
         .firstOrNull;
     if (entrada == null) return null;
-    final caja = Caja(entrada.key, entrada.value);
-    for (final (idCaja, m)
-        in movimientos[tienda.getId()] ?? const <(String, MovimientoCaja)>[]) {
-      if (idCaja == caja.getId()) caja.registrarMovimiento(m);
-    }
-    return caja;
+    final cierre = cierres[tienda.getId()]?[entrada.key];
+    return Caja(
+      entrada.key,
+      entrada.value,
+      baseApertura: bases[tienda.getId()]?[entrada.key],
+      movimientos: [
+        for (final (idCaja, m)
+            in movimientos[tienda.getId()] ??
+                const <(String, MovimientoCaja)>[])
+          if (idCaja == entrada.key) m,
+      ],
+      efectivoContado: cierre?.$1,
+      diferencia: cierre?.$2,
+      fechaCierre: cierre?.$3,
+    );
+  }
+
+  @override
+  Future<void> cerrar(Tienda tienda, Caja caja) async {
+    if (fallar) throw StateError('falla del disco');
+    guardadosEnTransaccion.add(unidad?.abierta ?? false);
+    cierres.putIfAbsent(tienda.getId(), () => {})[caja.getId()] = (
+      caja.getEfectivoContado()!,
+      caja.getDiferencia()!,
+      caja.getFechaCierre()!,
+    );
+  }
+
+  @override
+  Future<Caja?> buscarUltimaAnterior(Tienda tienda, DateTime fecha) async {
+    final anteriores =
+        (cajas[tienda.getId()] ?? {}).values
+            .where((f) => f.isBefore(fecha))
+            .toList()
+          ..sort();
+    if (anteriores.isEmpty) return null;
+    return buscarPorFecha(tienda, anteriores.last);
   }
 
   @override
@@ -63,6 +111,9 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
     cajas
         .putIfAbsent(tienda.getId(), () => {})
         .putIfAbsent(caja.getId(), () => caja.getFecha());
+    bases
+        .putIfAbsent(tienda.getId(), () => {})
+        .putIfAbsent(caja.getId(), () => caja.getBaseApertura());
   }
 
   @override

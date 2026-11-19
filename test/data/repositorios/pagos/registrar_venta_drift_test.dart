@@ -36,7 +36,14 @@ class CajaQueFalla implements ICajaRepositorio {
       _real.buscarPorFecha(tienda, fecha);
 
   @override
+  Future<Caja?> buscarUltimaAnterior(Tienda tienda, DateTime fecha) =>
+      _real.buscarUltimaAnterior(tienda, fecha);
+
+  @override
   Future<void> crear(Tienda tienda, Caja caja) => _real.crear(tienda, caja);
+
+  @override
+  Future<void> cerrar(Tienda tienda, Caja caja) => _real.cerrar(tienda, caja);
 
   @override
   Future<void> registrarMovimiento(

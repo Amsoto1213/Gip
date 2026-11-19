@@ -1,5 +1,6 @@
 import 'package:gip/business/componentes/gestion_caja/servicio_caja.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
+import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/repositorios/gestion_caja/caja_repositorio_drift.dart';
@@ -12,9 +13,10 @@ typedef ServiciosCaja = ({ServicioCaja servicioCaja});
 ServiciosCaja registrarCaja(BaseLocalDrift base) =>
     (servicioCaja: ServicioCaja(CajaRepositorioDrift(base)));
 
-/// Coordinadores de la caja del propietario (CUS-11; CUS-14 se suma después).
+/// Coordinadores de la caja del propietario (CUS-11 y CUS-14).
 typedef CoordinadoresCaja = ({
   RegistrarMovimientoCajaCoordinator registrarMovimientoCaja,
+  RegistrarCierreCajaCoordinator registrarCierreCaja,
 });
 
 /// Arma los coordinadores de la caja con el [ServicioCaja] ya creado.
@@ -23,6 +25,10 @@ CoordinadoresCaja registrarCoordinadoresCaja(
   ServicioAcceso servicioAcceso,
 ) => (
   registrarMovimientoCaja: RegistrarMovimientoCajaCoordinator(
+    servicioCaja,
+    servicioAcceso,
+  ),
+  registrarCierreCaja: RegistrarCierreCajaCoordinator(
     servicioCaja,
     servicioAcceso,
   ),

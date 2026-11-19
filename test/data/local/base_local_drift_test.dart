@@ -70,8 +70,27 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 11 (CUS-17).
+    /// Quita lo que agregó la versión 13 (CUS-14, DI-38).
+    Future<void> bajarDeLaVersion13(BaseLocalDrift base) async {
+      await base.customStatement('ALTER TABLE cajas DROP COLUMN base_apertura');
+    }
+
+    /// Quita lo que agregó la versión 12 (CUS-14), y antes la 13.
+    Future<void> bajarDeLaVersion12(BaseLocalDrift base) async {
+      await bajarDeLaVersion13(base);
+      for (final c in [
+        'cerrada',
+        'efectivo_contado',
+        'diferencia',
+        'fecha_cierre',
+      ]) {
+        await base.customStatement('ALTER TABLE cajas DROP COLUMN $c');
+      }
+    }
+
+    /// Quita lo que agregó la versión 11 (CUS-17), y antes la 12.
     Future<void> bajarDeLaVersion11(BaseLocalDrift base) async {
+      await bajarDeLaVersion12(base);
       await base.customStatement('DROP TABLE codigos_producto');
     }
 
@@ -126,7 +145,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 11);
+      expect(actual.schemaVersion, 13);
       expect(
         await tablas(actual),
         containsAll([
@@ -147,7 +166,7 @@ void main() {
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 11);
+      expect(version.read<int>('user_version'), 13);
       await actual.close();
     });
 
@@ -397,6 +416,56 @@ void main() {
       expect((await v11.select(v11.productos).get()).single.nombre, 'Leche');
       expect(await v11.select(v11.codigosProducto).get(), isEmpty);
       await v11.close();
+    });
+
+    test('de la versión 11 a la 12 agrega el cierre a cajas sin perder '
+        'cajas ni movimientos', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v11 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion12(v11);
+      await v11.customStatement(
+        "INSERT INTO cajas (id, tienda_id, fecha) "
+        "VALUES ('t1_2026-11-14', 't1', '2026-11-14')",
+      );
+      await v11.customStatement(
+        "INSERT INTO movimientos_caja (id, tienda_id, caja_id, tipo, "
+        "clasificacion, valor, descripcion, fecha) VALUES ('m1', 't1', "
+        "'t1_2026-11-14', 'INGRESO', 'NEGOCIO', '1000', 'Venta', "
+        "'2026-11-14T10:00:00.000Z')",
+      );
+      await v11.customStatement('PRAGMA user_version = 11');
+      await v11.close();
+
+      final v12 = BaseLocalDrift(NativeDatabase(archivo));
+      final caja = (await v12.select(v12.cajas).get()).single;
+      expect(caja.id, 't1_2026-11-14');
+      expect(caja.cerrada, isFalse);
+      expect(caja.efectivoContado, isNull);
+      expect(caja.diferencia, isNull);
+      expect(caja.fechaCierre, isNull);
+      expect(await v12.select(v12.movimientosCaja).get(), hasLength(1));
+      await v12.close();
+    });
+
+    test('de la versión 12 a la 13 agrega base_apertura (en 0) sin perder '
+        'cajas', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v12 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion13(v12);
+      await v12.customStatement(
+        "INSERT INTO cajas (id, tienda_id, fecha, cerrada) "
+        "VALUES ('t1_2026-11-14', 't1', '2026-11-14', 0)",
+      );
+      await v12.customStatement('PRAGMA user_version = 12');
+      await v12.close();
+
+      final v13 = BaseLocalDrift(NativeDatabase(archivo));
+      final caja = (await v13.select(v13.cajas).get()).single;
+      expect(caja.id, 't1_2026-11-14');
+      expect(caja.baseApertura, Decimal.zero);
+      await v13.close();
     });
   });
 }
