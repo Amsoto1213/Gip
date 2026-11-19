@@ -86,6 +86,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `+ diaLocal(momento: DateTime): DateTime` (estática): día local del dispositivo, sin hora.
 - [ ] **`Caja`**, descripción de `fecha`: es el día local, sin hora (un día calendario, no un instante) (DI-21 b).
 - [ ] **`ServicioReportes`**, descripción de `generarReporteDiario`: la fecha es un día local, de su 00:00 a la 00:00 del día siguiente sin incluirla (DI-29 a).
+- [ ] **`ServicioReportes.clasificarRotacion`**, descripción (DI-40 b, c): el periodo es `[desde, hasta)`. Con `n` productos ordenados de mayor a menor venta (empate por nombre), los primeros `ceil(n/3)` son ALTA, hasta `ceil(2n/3)` MEDIA y el resto BAJA; quien no vendió nada es BAJA aunque su lugar caiga en otro tercio. Las unidades se suman por id de producto. El `Map` que devuelve conserva el orden de venta.
 
 ### Entidades/Pagos
 
@@ -126,6 +127,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `VistaFiado` busca clientes con `RegistrarFiadoCoordinator.buscarClientes`, no con `ConsultarClienteCoordinator`.
   - El cliente nuevo se guarda en su propia transacción: queda aunque la venta no se confirme.
 - [ ] **CUS-10**: nota de que el periodo es el día local `[00:00, 00:00 del día siguiente)` (DI-29 a).
+- [ ] **CUS-12**: nota de que el periodo es `[desde, hasta)` y de que `rotacion` es un `Map` ordenado de mayor a menor venta, sin las unidades de cada producto (DI-40 b, c, e).
 - [ ] **CUS-13**: nota de que `VistaVenta` usa dos coordinadores (`RegistrarVentaCoordinator` y `RegistrarVentaPerdidaCoordinator`), única excepción a "una vista, un coordinador" (DI-30 c).
 - [ ] **CUS-14** (DI-37 a, c, d; DI-38):
   - `Caja`: el constructor acepta, como opcionales, la base de apertura, los movimientos y los datos del cierre para armar una caja guardada. Atributo nuevo `baseApertura`; `calcularSaldoEsperado` suma la base; operación nueva `calcularDesglose(): DesgloseCaja` y la clase `DesgloseCaja`.

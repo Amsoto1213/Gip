@@ -1,12 +1,14 @@
 import 'package:decimal/decimal.dart';
 import 'package:gip/business/entidades/gestion_caja/clasificacion_movimiento.dart';
 import 'package:gip/business/entidades/gestion_caja/reporte_diario.dart';
+import 'package:gip/business/entidades/gestion_caja/rotacion.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/medio_pago.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
 import 'package:gip/business/interfaces/gestion_caja/i_caja_repositorio.dart';
+import 'package:gip/business/interfaces/gestion_inventario/i_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/info_tienda/i_estado_sincronizacion.dart';
 import 'package:gip/business/interfaces/pagos/i_fiado_repositorio.dart';
@@ -17,8 +19,7 @@ import 'package:gip/business/interfaces/pagos/i_venta_repositorio.dart';
 /// (`SalidaVenta.calcularMargen`), con el precio y el costo guardados en cada
 /// salida (DA-61, DA-72).
 ///
-/// Recibe lo que necesitan CUS-09 y CUS-10; `items` (inventario) llega con
-/// CUS-12 (DI-28, DI-29).
+/// Recibe lo que necesitan CUS-09, CUS-10 y CUS-12 (DI-28, DI-29, DI-40).
 class ServicioReportes {
   ServicioReportes(
     this._ventas,
@@ -26,6 +27,7 @@ class ServicioReportes {
     this._cajas,
     this._fiados,
     this._estadoSincronizacion,
+    this._items,
   );
 
   final IVentaRepositorio _ventas;
@@ -33,6 +35,7 @@ class ServicioReportes {
   final ICajaRepositorio _cajas;
   final IFiadoRepositorio _fiados;
   final IEstadoSincronizacion _estadoSincronizacion;
+  final IInventarioRepositorio _items;
 
   /// Margen de ganancia por producto en `[desde, hasta)`: suma de
   /// `salida.calcularMargen()` de las salidas vigentes de cada producto (RF-08).
@@ -171,5 +174,66 @@ class ServicioReportes {
       incompleto,
       parcial,
     );
+  }
+
+  /// Rotación de cada producto de la tienda en `[desde, hasta)` (RF-11, DA-62,
+  /// DA-72). Parte de todos los productos con cero unidades, para que también
+  /// aparezcan los que no se vendieron, y suma `salida.calcularUnidades()` de
+  /// las salidas vigentes en el producto de la salida (agrupado por id, como en
+  /// [calcularMargenes]).
+  ///
+  /// Ordena de mayor a menor (el empate, por nombre) y reparte en tercios: los
+  /// primeros `ceil(n/3)` son ALTA, hasta `ceil(2n/3)` MEDIA y el resto BAJA.
+  /// Quien no vendió nada es BAJA aunque su lugar caiga en otro tercio. El mapa
+  /// conserva ese orden (DI-40). No se guarda (DA-40).
+  Future<Map<Producto, Rotacion>> clasificarRotacion(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final productos = <String, Producto>{};
+    final unidades = <String, Decimal>{};
+    for (final item in await _items.listarItems(tienda)) {
+      final producto = item.getProducto();
+      productos.putIfAbsent(producto.getId(), () => producto);
+      unidades.putIfAbsent(producto.getId(), () => Decimal.zero);
+    }
+
+    final salidas = await _movimientos.listarSalidasPorTienda(
+      tienda,
+      desde,
+      hasta,
+    );
+    for (final salida in salidas) {
+      final producto = salida.getItem().getProducto();
+      final id = producto.getId();
+      productos.putIfAbsent(id, () => producto);
+      final cantidad = salida.calcularUnidades();
+      unidades.update(id, (suma) => suma + cantidad, ifAbsent: () => cantidad);
+    }
+
+    final ordenados = unidades.keys.toList()
+      ..sort((a, b) {
+        final porUnidades = unidades[b]!.compareTo(unidades[a]!);
+        if (porUnidades != 0) return porUnidades;
+        final porNombre = productos[a]!.getNombre().compareTo(
+          productos[b]!.getNombre(),
+        );
+        return porNombre != 0 ? porNombre : a.compareTo(b);
+      });
+
+    final total = ordenados.length;
+    final finAlta = (total + 2) ~/ 3;
+    final finMedia = (2 * total + 2) ~/ 3;
+    return {
+      for (var i = 0; i < total; i++)
+        productos[ordenados[i]]!: unidades[ordenados[i]]! == Decimal.zero
+            ? Rotacion.baja
+            : i < finAlta
+            ? Rotacion.alta
+            : i < finMedia
+            ? Rotacion.media
+            : Rotacion.baja,
+    };
   }
 }

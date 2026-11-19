@@ -15,6 +15,10 @@ void main() {
   testWidgets('Cerrar sesión es un botón secundario que sale de la sesión', (
     tester,
   ) async {
+    // Pantalla alta: con cuatro acciones, el botón queda bajo el pliegue.
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     final coordinador = IniciarSesionFalso();
     when(coordinador.cerrarSesion).thenAnswer((_) async {});
     await tester.pumpWidget(
@@ -94,6 +98,26 @@ void main() {
     );
     expect(
       tester.getSize(find.byKey(const Key('negocio_ganancia'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('tiene la acción Rotación de productos de 44 px o más', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => IniciarSesionViewModel(IniciarSesionFalso()),
+        child: MaterialApp(theme: TemaGip.claro(), home: const NegocioView()),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(TarjetaAccion, 'Rotación de productos'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('negocio_rotacion'))).height,
       greaterThanOrEqualTo(44),
     );
   });

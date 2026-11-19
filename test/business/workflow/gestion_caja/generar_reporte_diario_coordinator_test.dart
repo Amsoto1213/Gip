@@ -13,6 +13,7 @@ import 'package:gip/transversal/errores/errores_acceso.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../componentes/gestion_caja/fakes_caja.dart';
+import '../../componentes/gestion_inventario/fakes_catalogo.dart';
 import '../../componentes/gestion_inventario/fakes_inventario.dart';
 import '../../componentes/pagos/fakes_pagos.dart';
 
@@ -37,6 +38,7 @@ void main() {
         CajaRepositorioFalso(),
         FiadoRepositorioFalso(),
         EstadoSincronizacionFalso(),
+        InventarioRepositorioFalso(),
       ),
       ServicioAcceso(AutenticacionFalsa(), SesionLocalFalsa()),
     );

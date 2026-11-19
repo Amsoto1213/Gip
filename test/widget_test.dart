@@ -25,6 +25,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'presentation/negocio/alertas_falsos.dart';
 import 'presentation/negocio/margen_falsos.dart';
+import 'presentation/negocio/rotacion_falsos.dart';
 import 'presentation/negocio/reporte_falsos.dart';
 import 'presentation/surtido/existencias_falsos.dart';
 import 'presentation/caja/caja_falsos.dart';
@@ -94,6 +95,7 @@ void main() {
     consultarAlertas: ConsultarAlertasFalso(),
     registrarVentaPerdida: RegistrarVentaPerdidaFalso(),
     consultarMargen: ConsultarMargenFalso(),
+    consultarRotacion: ConsultarRotacionFalso(),
     generarReporteDiario: GenerarReporteDiarioFalso(),
     registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
     registrarCierreCaja: RegistrarCierreCajaFalso(),
