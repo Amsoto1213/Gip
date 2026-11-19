@@ -11,6 +11,7 @@ import 'package:gip/data/local/tablas/clientes.dart';
 import 'package:gip/data/local/tablas/codigos_producto.dart';
 import 'package:gip/data/local/tablas/conflictos_sincronizacion.dart';
 import 'package:gip/data/local/tablas/cola_pendientes.dart';
+import 'package:gip/data/local/tablas/cursores_sincronizacion.dart';
 import 'package:gip/data/local/tablas/fiados.dart';
 import 'package:gip/data/local/tablas/formas_pago.dart';
 import 'package:gip/data/local/tablas/items_inventario.dart';
@@ -42,6 +43,7 @@ part 'base_local_drift.g.dart';
     CodigosProducto,
     AnulacionesVenta,
     ConflictosSincronizacion,
+    CursoresSincronizacion,
   ],
 )
 class BaseLocalDrift extends _$BaseLocalDrift {
@@ -70,9 +72,10 @@ class BaseLocalDrift extends _$BaseLocalDrift {
   /// 8: clientes y fiados (CUS-07). 9: abonos (CUS-08). 10: columna
   /// `eliminado_en` de clientes (CUS-21). 11: codigos_producto (CUS-17).
   /// 12: columnas del cierre en cajas (CUS-14). 13: `base_apertura` en cajas
-  /// (CUS-14, DI-38). 14: anulaciones_venta (CUS-20).
+  /// (CUS-14, DI-38). 14: anulaciones_venta (CUS-20). 15:
+  /// conflictos_sincronizacion (CUS-22). 16: cursores_sincronizacion (CUS-23).
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -171,6 +174,9 @@ class BaseLocalDrift extends _$BaseLocalDrift {
       if (desde < 15) {
         await m.createTable(conflictosSincronizacion);
         await m.createIndex(conflictosSincronizacionTiendaIdx);
+      }
+      if (desde < 16) {
+        await m.createTable(cursoresSincronizacion);
       }
     },
   );

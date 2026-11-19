@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_rotacion_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
@@ -30,11 +31,13 @@ import 'package:gip/composition_root/registrar_exportacion.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/composition_root/registrar_pagos.dart';
 import 'package:gip/composition_root/registrar_reportes.dart';
+import 'package:gip/composition_root/registrar_sincronizacion.dart';
 import 'package:gip/composition_root/registrar_usuarios.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/service_agents/cliente_supabase.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/comun/disparador_sincronizacion.dart';
 import 'package:gip/presentation/comun/idioma_gip.dart';
 import 'package:gip/presentation/comun/router.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
@@ -83,6 +86,11 @@ Future<void> main() async {
     caja.servicioCaja,
     acceso.servicioAcceso,
   );
+  final sincronizador = registrarSincronizacion(
+    base,
+    cliente,
+    conciliacion.conciliar,
+  );
   runApp(
     GipApp(
       iniciarSesion: acceso.iniciarSesion,
@@ -104,6 +112,10 @@ Future<void> main() async {
       exportarDatos: exportarDatos,
       gestionarUsuarios: gestionarUsuarios,
       revisarConflictos: conciliacion.revisarConflictos,
+      sincronizar: (tienda) async {
+        final resultado = await sincronizador.sincronizar(tienda);
+        debugPrint('Sincronización: $resultado');
+      },
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,
@@ -138,6 +150,7 @@ class GipApp extends StatefulWidget {
     required this.registrarMovimientoCaja,
     required this.registrarCierreCaja,
     required this.anularVenta,
+    this.sincronizar,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -164,6 +177,10 @@ class GipApp extends StatefulWidget {
   final RegistrarCierreCajaCoordinator registrarCierreCaja;
   final AnularVentaCoordinator anularVenta;
 
+  /// Sincroniza la tienda con Supabase (CUS-23, DI-47). Nulo en las pruebas de
+  /// pantallas, que no sincronizan.
+  final Future<void> Function(Tienda tienda)? sincronizar;
+
   @override
   State<GipApp> createState() => _GipAppState();
 }
@@ -177,11 +194,19 @@ class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
   /// CUS-24 en cada arranque con usuario activo, sin bloquear (DI-25).
   late final DisparadorAlertasDiarias _alertasDiarias;
 
+  /// CUS-23 mientras haya usuario activo: al entrar, al volver del segundo
+  /// plano, al recuperar la conexión y cada 5 minutos (DI-47).
+  DisparadorSincronizacion? _sincronizacion;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _alertasDiarias = DisparadorAlertasDiarias(_sesion, widget.generarAlertas);
+    final sincronizar = widget.sincronizar;
+    if (sincronizar != null) {
+      _sincronizacion = DisparadorSincronizacion(_sesion, sincronizar);
+    }
   }
 
   /// Al volver del segundo plano, con internet, se comprueba que el
@@ -195,6 +220,7 @@ class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _alertasDiarias.dispose();
+    _sincronizacion?.dispose();
     _router.dispose();
     _sesion.dispose();
     super.dispose();

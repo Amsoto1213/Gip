@@ -23,6 +23,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `+ sesionGuardada(): UsuarioActivo?`
   - `+ revisarUsuarioActivo(activo: UsuarioActivo): bool` (DI-44)
   - `+ cerrarSesion(): void`
+- [ ] **`Sincronizador`** (class, Service Agent en `Data/ServiceAgents`; hoy solo es un participante del diagrama de CUS-23) y la interfaz **`ServidorRemoto`** (DI-47 a, b, c): `+ sincronizar(tienda: Tienda): ResultadoSincronizacion` (una a la vez; nunca lanza). Constructor con `ServidorRemoto` y la función de conciliación (`ConciliarCoordinator.ejecutar`), para que la Data Layer no importe el Workflow. `ServidorRemoto`: `insertarSiNoExiste(tabla, filas)`, `guardar(tabla, filas)`, `borrar(tabla, id)` y `leerDesde(tabla, tienda, desde, limite, desplazamiento)`; lo implementa `ServidorRemotoSupabase`. `ResultadoSincronizacion`: `subidos`, `bajados`, `conflictosNuevos`, `pendientes`, `sinConexion`, `error`.
+- [ ] **`DisparadorSincronizacion`** (Presentation, `comun`; DI-47 g): llama al Sincronizador al tener usuario activo, al volver del segundo plano, al recuperar la conexión y cada 5 minutos.
 - [ ] **`ICuentaAcceso`** (interface) en `Interfaces/InfoTienda`. Crea la cuenta con la que se inicia sesión (correo y contraseña); la implementa la Data Layer con Supabase Auth (DI-43).
   - `+ crear(correo: String, clave: String): void`: crea la cuenta sin abrir sesión con ella. Si ya existe una con ese correo y la misma contraseña (un intento anterior que no alcanzó a guardar al empleado) la da por buena; si la contraseña es otra, rechaza con "Ese correo ya tiene una cuenta".
 - [ ] **`UsuarioActivo`** en `Entidades/InfoTienda`: tipo de dato (registro) con `usuario: Usuario` y `tienda: Tienda`, sin operaciones. El rol es la subclase de `Usuario` (DI-11).
@@ -192,6 +194,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
 - [ ] **CUS-22** (DI-45 g, h): `idsElegidos` depende del tipo: en POSIBLE_DUPLICADO son los registros que se **anulan** (los que el propietario no marcó como ocurridos); en ABONO_EXCEDE_SALDO, los abonos que se anulan; en CODIGO_REPETIDO, los productos que pierden el código; en STOCK_NEGATIVO y MOVIMIENTO_CAJA_CERRADA va vacío. La vista también ofrece "Ir al conteo" (abre CUS-04, no resuelve) y, tras cada intento, vuelve a pedir `consultarConflictos`.
 - [ ] **CUS-23** (DI-46 f, g): `desde` es la fecha del registro más antiguo que llegó al sincronizar; los detectores buscan la pareja de un duplicado hasta 1 día antes de `desde`. En el paso 6, la segunda entrada solo queda EN_REVISION si `conflictos.guardar` devuelve verdadero (paso 14 antes del efecto). Los pasos 8 a 9 no escriben el ítem si el stock no cambió.
+- [ ] **CUS-23**, pasos 1 a 3 (DI-47 b, c, f): `Sincronizador.sincronizar(tienda)` primero sube la cola de pendientes (por tabla, en lotes, padres antes que hijos; lo rechazado queda con un intento más), luego baja lo que cambió en el servidor desde el cursor de cada tabla (aplicado con las reglas de choque y sin anotarlo en la cola) y solo entonces llama a `coordinador.ejecutar(tienda, desde)`, con `desde` = fecha del registro más antiguo que llegó; si nada cambió, no concilia. Si la conciliación escribió algo, vuelve a subir.
 - [ ] **CUS-24** (DI-25 b, e):
   - El consumo usa `movimientos.buscarFechaPrimerMovimiento(item)` para los días con datos.
   - Disparo: mientras no exista el Sincronizador (CUS-23), lo lanza `DisparadorAlertasDiarias` en cuanto hay usuario activo, una vez por tienda y día en cada arranque de la app, sin bloquear la pantalla.
@@ -204,5 +207,6 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 ## 5. Lo que no va en EA
 
 - **Esquema de la base de datos.** El `.qea` no tiene tablas. El esquema está en `supabase/migrations/` (fuente de verdad) y en las tablas drift de `lib/data/local/tablas/`. Por ejemplo, la columna `clientes.eliminado_en` de DI-31 y la tabla `codigos_producto` de DI-34 ya están en las dos.
+- **Esquema local nuevo.** `cursores_sincronizacion` (drift versión 16, DI-47): hasta dónde bajó cada tabla; solo existe en la base local y nunca se sube.
 - **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e), DI-29 (f) y DI-34 (e, f) y DI-45 (h).
 - **Un detalle que se corrige en el código.** `ServicioAlertas.diaLocal` es pública, no está en EA y nadie la usa fuera de la clase: se vuelve privada.
