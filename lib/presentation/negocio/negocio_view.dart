@@ -9,8 +9,8 @@ import 'package:provider/provider.dart';
 
 /// Sección Negocio (pendiente: ver `docs/ui/pantallas.md`). Por ahora tiene
 /// Alertas de surtido (CUS-05), Reporte del día (CUS-10), Ganancia por
-/// producto (CUS-09), Rotación de productos (CUS-12) y "Cerrar sesión" (DI-05);
-/// al salir, el router vuelve al acceso.
+/// producto (CUS-09), Rotación de productos (CUS-12), Exportar datos (CUS-16) y
+/// "Cerrar sesión" (DI-05); al salir, el router vuelve al acceso.
 class NegocioView extends StatelessWidget {
   const NegocioView({super.key});
 
@@ -73,6 +73,20 @@ class NegocioView extends StatelessWidget {
               titulo: 'Rotación de productos',
               descripcion: 'Lo que más y lo que menos se vende',
               onTap: () => abrirRotacion(context),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: TarjetaAccion(
+              key: const Key('negocio_exportar'),
+              icono: Icons.file_download_outlined,
+              titulo: 'Exportar datos',
+              descripcion: 'Inventario, ventas y fiados en Excel o CSV',
+              onTap: () => abrirExportar(context),
             ),
           ),
         ),

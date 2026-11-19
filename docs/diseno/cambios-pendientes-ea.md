@@ -39,6 +39,9 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `+ sesionGuardada(): UsuarioActivo?`: el usuario guardado en el dispositivo, sin usar la red.
   - `+ cerrarSesion(): void`: borra primero la sesión local y luego la de Auth, para que un fallo sin internet no deje entrar sola la app.
 
+- [ ] **`ServicioExportacion`** (DI-41 a, e): constructor con `reloj` opcional (la fecha de `DatosExportacion`); descripción de `exportar`: el periodo es `[desde, hasta)`, los fiados salen todos (no solo los del periodo) y con `desde > hasta` lanza "Periodo no válido" sin leer nada.
+- [ ] **`IExportador.exportar`**, descripción (DI-41 b, c, d): arma el archivo **y lo entrega** (compartir o descargar) y devuelve el nombre. En Excel es un libro con tres hojas (Inventario, Ventas, Fiados); en CSV son tres archivos y devuelve el nombre base común. Una fila por fiado, con la cantidad de abonos, el total abonado y el saldo; una fila por venta (también las anuladas, marcadas).
+
 ### Entidades/GestionInventario
 
 - [ ] **`ItemInventario`**: `+ setStockActual(stockActual: Decimal): void`. El diagrama de CUS-01 (paso 27) ya la usa (DI-20 a).
@@ -104,6 +107,10 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 - [ ] **`ServicioVentas`**, descripción de `confirmar`: dentro de la transacción vuelve a leer el ítem de cada línea con `servicioInventario.obtenerItem` antes de crear la `SalidaVenta`. El ítem de la línea trae el stock del momento en que se agregó, y una entrada registrada con la venta abierta se perdería (DI-21 a).
 
+### Interfaces/Pagos
+
+- [ ] **`IFiadoRepositorio.listar`**, descripción: trae los fiados pendientes, saldados y anulados, con su cliente (el eliminado, anonimizado) y sus abonos, también los anulados (DI-41 a).
+
 ### Workflow/Pagos
 
 - [ ] **`RegistrarFiadoCoordinator`**: `+ buscarClientes(tienda: Tienda, nombre: String): List<Cliente>`, que llama a `servicioClientes.buscarClientes`. En EA la búsqueda la da `ConsultarClienteCoordinator`, pero cada pantalla llama a un solo coordinador (DI-26 a).
@@ -142,6 +149,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - Break "Copias no válidas" ("Las copias deben estar entre 1 y 100") antes de generar las etiquetas.
   - Dice de qué código es la etiqueta: el QR del producto o, si no tiene, el primero que tenga.
   - Si falla el guardado del código nuevo, se quita del producto antes de relanzar el error.
+- [ ] **CUS-16** (DI-41 b, c, e): el exportador entrega el archivo y `VistaExportacion` solo muestra "Datos exportados: " + nombre (sin tamaño ni botón de volver a compartir); en CSV son tres archivos y el nombre es el nombre base. Nota: el periodo es `[desde, hasta)`.
 - [ ] **CUS-20** (DI-39 a, b, d, e):
   - `Venta`: el constructor acepta, como opcional, la anulación para armar una venta guardada. `Fiado.restaurar(saldo, estado)`.
   - `ServicioVentas.anular`: `venta.anular(anulacion)` se llama después de la transacción, cuando todo se guardó, y no dentro. Break "Motivo obligatorio" ("Escribe el motivo de la anulación") antes de abrir la transacción.

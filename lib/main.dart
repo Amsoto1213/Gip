@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_rotacion_coordinator.dart';
+import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
@@ -22,6 +23,7 @@ import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/composition_root/registrar_acceso.dart';
 import 'package:gip/composition_root/registrar_alertas.dart';
 import 'package:gip/composition_root/registrar_caja.dart';
+import 'package:gip/composition_root/registrar_exportacion.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/composition_root/registrar_pagos.dart';
 import 'package:gip/composition_root/registrar_reportes.dart';
@@ -65,6 +67,7 @@ Future<void> main() async {
   );
   final alertas = registrarAlertas(base, acceso.servicioAcceso);
   final reportes = registrarReportes(base, acceso.servicioAcceso);
+  final exportarDatos = registrarExportacion(base, acceso.servicioAcceso);
   runApp(
     GipApp(
       iniciarSesion: acceso.iniciarSesion,
@@ -83,6 +86,7 @@ Future<void> main() async {
       registrarVentaPerdida: alertas.registrarVentaPerdida,
       consultarMargen: reportes.consultarMargen,
       consultarRotacion: reportes.consultarRotacion,
+      exportarDatos: exportarDatos,
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,
@@ -110,6 +114,7 @@ class GipApp extends StatefulWidget {
     required this.registrarVentaPerdida,
     required this.consultarMargen,
     required this.consultarRotacion,
+    required this.exportarDatos,
     required this.generarReporteDiario,
     required this.registrarMovimientoCaja,
     required this.registrarCierreCaja,
@@ -132,6 +137,7 @@ class GipApp extends StatefulWidget {
   final RegistrarVentaPerdidaCoordinator registrarVentaPerdida;
   final ConsultarMargenCoordinator consultarMargen;
   final ConsultarRotacionCoordinator consultarRotacion;
+  final ExportarDatosCoordinator exportarDatos;
   final GenerarReporteDiarioCoordinator generarReporteDiario;
   final RegistrarMovimientoCajaCoordinator registrarMovimientoCaja;
   final RegistrarCierreCajaCoordinator registrarCierreCaja;
@@ -183,6 +189,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.registrarVentaPerdida),
         Provider.value(value: widget.consultarMargen),
         Provider.value(value: widget.consultarRotacion),
+        Provider.value(value: widget.exportarDatos),
         Provider.value(value: widget.generarReporteDiario),
         Provider.value(value: widget.registrarMovimientoCaja),
         Provider.value(value: widget.registrarCierreCaja),

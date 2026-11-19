@@ -16,7 +16,7 @@ void main() {
     tester,
   ) async {
     // Pantalla alta: con cuatro acciones, el botón queda bajo el pliegue.
-    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final coordinador = IniciarSesionFalso();
@@ -118,6 +118,27 @@ void main() {
     );
     expect(
       tester.getSize(find.byKey(const Key('negocio_rotacion'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('tiene la acción Exportar datos de 44 px o más', (tester) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => IniciarSesionViewModel(IniciarSesionFalso()),
+        child: MaterialApp(theme: TemaGip.claro(), home: const NegocioView()),
+      ),
+    );
+
+    expect(
+      find.widgetWithText(TarjetaAccion, 'Exportar datos'),
+      findsOneWidget,
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('negocio_exportar'))).height,
       greaterThanOrEqualTo(44),
     );
   });
