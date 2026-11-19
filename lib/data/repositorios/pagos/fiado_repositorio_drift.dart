@@ -175,4 +175,58 @@ class FiadoRepositorioDrift implements IFiadoRepositorio {
         ),
     ];
   }
+
+  /// Fiado de la tienda con su cliente y todos sus abonos, del más antiguo al
+  /// más reciente y con los anulados (CUS-22, DI-45). Filtra por `tienda_id`.
+  @override
+  Future<Fiado?> buscarPorId(Tienda tienda, String id) async {
+    final fila =
+        await (_base.select(_base.fiados)..where(
+              (f) => f.tiendaId.equals(tienda.getId()) & f.id.equals(id),
+            ))
+            .getSingleOrNull();
+    if (fila == null) return null;
+    final c =
+        await (_base.select(_base.clientes)..where(
+              (c) =>
+                  c.tiendaId.equals(tienda.getId()) &
+                  c.id.equals(fila.clienteId),
+            ))
+            .getSingleOrNull();
+    final abonos =
+        await (_base.select(_base.abonos)
+              ..where(
+                (a) => a.tiendaId.equals(tienda.getId()) & a.fiadoId.equals(id),
+              )
+              ..orderBy([(a) => OrderingTerm.asc(a.fecha)]))
+            .get();
+    return MapeoFiado.aEntidad(
+      fila,
+      c == null
+          ? Cliente(fila.clienteId, '', '')
+          : Cliente(c.id, c.nombre, c.telefono),
+      abonos,
+    );
+  }
+
+  /// Guarda solo que el abono quedó anulado y lo anota en `cola_pendientes`
+  /// como ACTUALIZAR en la misma transacción (DA-33, RNF-15). No toca el saldo
+  /// del fiado ni los demás abonos. Se une a la transacción abierta.
+  @override
+  Future<void> anularAbono(Tienda tienda, Fiado fiado, Abono abono) =>
+      _base.transaction(() async {
+        await (_base.update(_base.abonos)..where(
+              (a) =>
+                  a.id.equals(abono.getId()) &
+                  a.tiendaId.equals(tienda.getId()),
+            ))
+            .write(const AbonosCompanion(anulado: Value(true)));
+        await anotarEnCola(
+          _base,
+          tiendaId: tienda.getId(),
+          tabla: 'abonos',
+          registroId: abono.getId(),
+          operacion: OperacionCola.actualizar,
+        );
+      });
 }

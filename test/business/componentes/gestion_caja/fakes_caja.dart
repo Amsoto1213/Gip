@@ -83,6 +83,13 @@ class CajaRepositorioFalso implements ICajaRepositorio, Restaurable {
     );
   }
 
+  /// La caja con ese id, con sus movimientos y su cierre (CUS-22).
+  @override
+  Future<Caja?> buscarPorId(Tienda tienda, String id) async {
+    final fecha = (cajas[tienda.getId()] ?? {})[id];
+    return fecha == null ? null : buscarPorFecha(tienda, fecha);
+  }
+
   @override
   Future<void> cerrar(Tienda tienda, Caja caja) async {
     if (fallar) throw StateError('falla del disco');

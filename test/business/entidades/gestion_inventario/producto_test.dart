@@ -44,4 +44,27 @@ void main() {
     final producto = galletas()..setPrecioCompra(null);
     expect(producto.getPrecioCompra(), isNull);
   });
+
+  group('cambiarCodigoInterno (CUS-22, DI-45)', () {
+    test('cambia el código interno y no toca lo demás', () {
+      final producto = galletas()
+        ..agregarCodigo(
+          CodigoProducto('c1', FormatoCodigo.ean13, '7701234567895'),
+        );
+
+      producto.cambiarCodigoInterno('GAL-6-2');
+
+      expect(producto.getCodigo(), 'GAL-6-2');
+      expect(producto.getNombre(), 'Galletas de coco x 6');
+      expect(producto.getCodigos(), hasLength(1));
+    });
+
+    test('se puede volver a cambiar', () {
+      final producto = galletas()
+        ..cambiarCodigoInterno('GAL-6-2')
+        ..cambiarCodigoInterno('GAL-6-3');
+
+      expect(producto.getCodigo(), 'GAL-6-3');
+    });
+  });
 }

@@ -5,10 +5,13 @@ import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordi
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/gestionar_usuarios_coordinator.dart';
+import 'package:gip/business/workflow/info_tienda/revisar_conflictos_coordinator.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/negocio/alertas_view.dart';
 import 'package:gip/presentation/negocio/alertas_view_model.dart';
+import 'package:gip/presentation/negocio/conflictos_view.dart';
+import 'package:gip/presentation/negocio/conflictos_view_model.dart';
 import 'package:gip/presentation/negocio/exportar_view.dart';
 import 'package:gip/presentation/negocio/exportar_view_model.dart';
 import 'package:gip/presentation/negocio/margen_view.dart';
@@ -43,6 +46,9 @@ const rutaExportar = '$rutaPrincipalNegocio/exportar';
 /// Pantalla Usuarios de la tienda (CUS-15).
 const rutaUsuarios = '$rutaPrincipalNegocio/usuarios';
 
+/// Pantalla Revisar sincronización (CUS-22).
+const rutaConflictos = '$rutaPrincipalNegocio/sincronizacion';
+
 /// Subsecciones de Negocio en el menú lateral: solo las que ya tienen
 /// pantalla (DI-23). Se listan para todos; al empleado la pantalla le dice que
 /// la consulta es solo para el propietario (CUS-05, paso 7).
@@ -52,6 +58,7 @@ const subseccionesNegocio = <Subseccion>[
   (etiqueta: 'Ganancia por producto', ruta: rutaMargen),
   (etiqueta: 'Rotación', ruta: rutaRotacion),
   (etiqueta: 'Usuarios', ruta: rutaUsuarios),
+  (etiqueta: 'Revisar sincronización', ruta: rutaConflictos),
   (etiqueta: 'Exportar datos', ruta: rutaExportar),
 ];
 
@@ -114,6 +121,16 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
           ),
         ),
         GoRoute(
+          path: 'sincronizacion',
+          builder: (context, _) => ChangeNotifierProvider(
+            create: (context) => ConflictosViewModel(
+              context.read<RevisarConflictosCoordinator>(),
+              context.read<IniciarSesionViewModel>().usuarioActivo!,
+            )..cargar(),
+            child: const ConflictosView(),
+          ),
+        ),
+        GoRoute(
           path: 'reporte',
           builder: (context, _) => ChangeNotifierProvider(
             create: (context) => ReporteDiarioViewModel(
@@ -145,3 +162,6 @@ void abrirExportar(BuildContext context) => context.push(rutaExportar);
 
 /// Abre la pantalla Usuarios de la tienda.
 void abrirUsuarios(BuildContext context) => context.push(rutaUsuarios);
+
+/// Abre la pantalla Revisar sincronización.
+void abrirConflictos(BuildContext context) => context.push(rutaConflictos);

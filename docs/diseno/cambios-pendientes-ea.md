@@ -54,6 +54,16 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `desactivar`: si guardar falla el usuario ya quedó inactivo en memoria; quien llama vuelve a leer la lista. La cuenta de acceso no se toca.
 - [ ] **`IUsuarioRepositorio`**, descripción (DI-42 b; DI-43): los usuarios viven en el servidor y la pantalla necesita internet. `listar` trae primero al propietario y luego a los empleados, cada grupo por nombre. `buscarPorCedula` encuentra también al inactivo. `guardar` manda el correo solo si el usuario lo tiene: no borra el que ya hay.
 
+### Entidades y componentes de conciliación (CUS-22)
+
+- [ ] **`IProductoRepositorio.quitarCodigo(tienda: Tienda, producto: Producto, codigo: CodigoProducto): void`** (DI-45 c): borra la fila del código y anota ELIMINAR en la cola; no hace nada si el código no estaba. La usa `ResolutorCodigoRepetido` (CUS-22); `guardar` no borra códigos.
+- [ ] **`ConflictoSincronizacion`** (DI-45 d): atributo `- etiquetasRegistros: List<String>` (uno por cada id de `idsRegistros`, mismo orden; por defecto "Registro N"), `+ getEtiquetasRegistros(): List<String>`, `+ getEtiquetaDe(id: String): String`, `+ isResuelto(): bool` y el constructor con `etiquetasRegistros` opcional. El `id` es texto determinista (tipo y registros), no UUID.
+- [ ] **`ServicioConciliacion`** (DI-45 a): constructor `ServicioConciliacion(conflictos, unidadTrabajo, resolutores: List<ResolutorConflicto>)` hasta CUS-23; después se completa con `movimientos`, `fiados`, `cajas`, `productos` y `servicioInventario`. `resolverConflicto` rechaza el conflicto ya resuelto (`ExcepcionConflictoYaResuelto`) o sin resolutor (`ExcepcionConflictoSinResolutor`) y, si la transacción falla, deja `setResuelto(false)`.
+- [ ] **`ResolutorMovimientos.resolver`**, descripción (DI-45 e): pasan a VIGENTE solo los movimientos que estaban EN_REVISION; el que ya estaba ANULADO y no se eligió sigue anulado. Si falta algún movimiento del conflicto lanza `ExcepcionRegistrosDelConflictoNoEncontrados`.
+- [ ] **`ResolutorAbonoExcedido.resolver`**, descripción (DI-45 f): antes de escribir comprueba que el saldo no quede negativo (`ExcepcionAbonoSigueExcedido`); no devuelve dos veces un abono ya anulado; el egreso de caja ("Devolución abono") solo se registra si el abono fue en efectivo.
+- [ ] **`ResolutorCodigoRepetido.resolver`**, descripción (DI-45 f): sin ningún producto elegido lanza `ExcepcionDecisionIncompleta`; el código interno nuevo es `codigo-n`, con el primer `n` desde 2 que ningún producto tenga; llama a `productos.quitarCodigo` para los códigos de barras y QR.
+- [ ] **`ResolutorCajaCerrada.resolver`**, descripción (DI-45 f): no cambia el efectivo contado ni la fecha del cierre.
+
 ### Entidades/GestionInventario
 
 - [ ] **`ItemInventario`**: `+ setStockActual(stockActual: Decimal): void`. El diagrama de CUS-01 (paso 27) ya la usa (DI-20 a).
@@ -173,6 +183,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `IMovimientoInventarioRepositorio.listarSalidasPorVenta(venta)` pasa a `listarSalidasPorVentas(tienda, ventas)` (con la tienda y varias ventas juntas). `ServicioInventario.listarSalidasDeVentas`, `ServicioVentas.listarSalidas` y `AnularVentaCoordinator.listarProductos`, para mostrar los productos de cada venta.
   - `IVentaRepositorio.listarPorPeriodo` trae también las ventas anuladas (los reportes las excluyen con `isAnulada`).
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
+- [ ] **CUS-22** (DI-45 g, h): `idsElegidos` depende del tipo: en POSIBLE_DUPLICADO son los registros que se **anulan** (los que el propietario no marcó como ocurridos); en ABONO_EXCEDE_SALDO, los abonos que se anulan; en CODIGO_REPETIDO, los productos que pierden el código; en STOCK_NEGATIVO y MOVIMIENTO_CAJA_CERRADA va vacío. La vista también ofrece "Ir al conteo" (abre CUS-04, no resuelve) y, tras cada intento, vuelve a pedir `consultarConflictos`.
 - [ ] **CUS-24** (DI-25 b, e):
   - El consumo usa `movimientos.buscarFechaPrimerMovimiento(item)` para los días con datos.
   - Disparo: mientras no exista el Sincronizador (CUS-23), lo lanza `DisparadorAlertasDiarias` en cuanto hay usuario activo, una vez por tienda y día en cada arranque de la app, sin bloquear la pantalla.
@@ -185,5 +196,5 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 ## 5. Lo que no va en EA
 
 - **Esquema de la base de datos.** El `.qea` no tiene tablas. El esquema está en `supabase/migrations/` (fuente de verdad) y en las tablas drift de `lib/data/local/tablas/`. Por ejemplo, la columna `clientes.eliminado_en` de DI-31 y la tabla `codigos_producto` de DI-34 ya están en las dos.
-- **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e), DI-29 (f) y DI-34 (e, f).
+- **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e), DI-29 (f) y DI-34 (e, f) y DI-45 (h).
 - **Un detalle que se corrige en el código.** `ServicioAlertas.diaLocal` es pública, no está en EA y nadie la usa fuera de la clase: se vuelve privada.

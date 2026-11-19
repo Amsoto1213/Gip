@@ -3,6 +3,7 @@ import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.
 import 'package:gip/business/workflow/gestion_caja/consultar_rotacion_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/gestionar_usuarios_coordinator.dart';
+import 'package:gip/business/workflow/info_tienda/revisar_conflictos_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
@@ -24,6 +25,7 @@ import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/composition_root/registrar_acceso.dart';
 import 'package:gip/composition_root/registrar_alertas.dart';
 import 'package:gip/composition_root/registrar_caja.dart';
+import 'package:gip/composition_root/registrar_conciliacion.dart';
 import 'package:gip/composition_root/registrar_exportacion.dart';
 import 'package:gip/composition_root/registrar_inventario.dart';
 import 'package:gip/composition_root/registrar_pagos.dart';
@@ -74,6 +76,13 @@ Future<void> main() async {
     configuracion,
     acceso.servicioAcceso,
   );
+  final revisarConflictos = registrarConciliacion(
+    base,
+    unidadTrabajo,
+    inventario.servicioInventario,
+    caja.servicioCaja,
+    acceso.servicioAcceso,
+  );
   runApp(
     GipApp(
       iniciarSesion: acceso.iniciarSesion,
@@ -94,6 +103,7 @@ Future<void> main() async {
       consultarRotacion: reportes.consultarRotacion,
       exportarDatos: exportarDatos,
       gestionarUsuarios: gestionarUsuarios,
+      revisarConflictos: revisarConflictos,
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,
@@ -123,6 +133,7 @@ class GipApp extends StatefulWidget {
     required this.consultarRotacion,
     required this.exportarDatos,
     required this.gestionarUsuarios,
+    required this.revisarConflictos,
     required this.generarReporteDiario,
     required this.registrarMovimientoCaja,
     required this.registrarCierreCaja,
@@ -147,6 +158,7 @@ class GipApp extends StatefulWidget {
   final ConsultarRotacionCoordinator consultarRotacion;
   final ExportarDatosCoordinator exportarDatos;
   final GestionarUsuariosCoordinator gestionarUsuarios;
+  final RevisarConflictosCoordinator revisarConflictos;
   final GenerarReporteDiarioCoordinator generarReporteDiario;
   final RegistrarMovimientoCajaCoordinator registrarMovimientoCaja;
   final RegistrarCierreCajaCoordinator registrarCierreCaja;
@@ -209,6 +221,7 @@ class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
         Provider.value(value: widget.consultarRotacion),
         Provider.value(value: widget.exportarDatos),
         Provider.value(value: widget.gestionarUsuarios),
+        Provider.value(value: widget.revisarConflictos),
         Provider.value(value: widget.generarReporteDiario),
         Provider.value(value: widget.registrarMovimientoCaja),
         Provider.value(value: widget.registrarCierreCaja),

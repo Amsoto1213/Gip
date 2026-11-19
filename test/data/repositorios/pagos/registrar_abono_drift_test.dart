@@ -47,6 +47,10 @@ class CajaQueFallaDespues implements ICajaRepositorio {
       _real.buscarUltimaAnterior(tienda, fecha);
 
   @override
+  Future<Caja?> buscarPorId(Tienda tienda, String id) =>
+      _real.buscarPorId(tienda, id);
+
+  @override
   Future<void> crear(Tienda tienda, Caja caja) => _real.crear(tienda, caja);
 
   @override
