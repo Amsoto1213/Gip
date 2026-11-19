@@ -22,6 +22,7 @@ import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
 
+import '../gestion_inventario/fakes_catalogo.dart';
 import '../gestion_inventario/fakes_inventario.dart';
 import '../pagos/fakes_pagos.dart';
 import 'fakes_caja.dart';
@@ -54,7 +55,14 @@ void main() {
     cajas = CajaRepositorioFalso();
     fiados = FiadoRepositorioFalso();
     estado = EstadoSincronizacionFalso();
-    servicio = ServicioReportes(ventas, movimientos, cajas, fiados, estado);
+    servicio = ServicioReportes(
+      ventas,
+      movimientos,
+      cajas,
+      fiados,
+      estado,
+      InventarioRepositorioFalso(),
+    );
     huevo = ItemInventario(
       'i1',
       Producto('p1', 'H1', 'Huevo AA', UnidadMedida.unidad, d('400'), d('550')),

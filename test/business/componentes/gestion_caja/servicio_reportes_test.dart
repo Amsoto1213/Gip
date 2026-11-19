@@ -9,6 +9,7 @@ import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
 
+import '../gestion_inventario/fakes_catalogo.dart';
 import '../gestion_inventario/fakes_inventario.dart';
 import '../pagos/fakes_pagos.dart';
 import 'fakes_caja.dart';
@@ -34,6 +35,7 @@ void main() {
       CajaRepositorioFalso(),
       FiadoRepositorioFalso(),
       EstadoSincronizacionFalso(),
+      InventarioRepositorioFalso(),
     );
     huevo = ItemInventario(
       'i1',

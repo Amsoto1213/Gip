@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/gestion_caja/consultar_margen_coordinator.dart';
+import 'package:gip/business/workflow/gestion_caja/consultar_rotacion_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/generar_reporte_diario_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
@@ -81,6 +82,7 @@ Future<void> main() async {
       consultarAlertas: alertas.consultarAlertas,
       registrarVentaPerdida: alertas.registrarVentaPerdida,
       consultarMargen: reportes.consultarMargen,
+      consultarRotacion: reportes.consultarRotacion,
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,
@@ -107,6 +109,7 @@ class GipApp extends StatefulWidget {
     required this.consultarAlertas,
     required this.registrarVentaPerdida,
     required this.consultarMargen,
+    required this.consultarRotacion,
     required this.generarReporteDiario,
     required this.registrarMovimientoCaja,
     required this.registrarCierreCaja,
@@ -128,6 +131,7 @@ class GipApp extends StatefulWidget {
   final ConsultarAlertasCoordinator consultarAlertas;
   final RegistrarVentaPerdidaCoordinator registrarVentaPerdida;
   final ConsultarMargenCoordinator consultarMargen;
+  final ConsultarRotacionCoordinator consultarRotacion;
   final GenerarReporteDiarioCoordinator generarReporteDiario;
   final RegistrarMovimientoCajaCoordinator registrarMovimientoCaja;
   final RegistrarCierreCajaCoordinator registrarCierreCaja;
@@ -178,6 +182,7 @@ class _GipAppState extends State<GipApp> {
         Provider.value(value: widget.consultarAlertas),
         Provider.value(value: widget.registrarVentaPerdida),
         Provider.value(value: widget.consultarMargen),
+        Provider.value(value: widget.consultarRotacion),
         Provider.value(value: widget.generarReporteDiario),
         Provider.value(value: widget.registrarMovimientoCaja),
         Provider.value(value: widget.registrarCierreCaja),
