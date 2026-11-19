@@ -76,7 +76,7 @@ Future<void> main() async {
     configuracion,
     acceso.servicioAcceso,
   );
-  final revisarConflictos = registrarConciliacion(
+  final conciliacion = registrarConciliacion(
     base,
     unidadTrabajo,
     inventario.servicioInventario,
@@ -103,7 +103,7 @@ Future<void> main() async {
       consultarRotacion: reportes.consultarRotacion,
       exportarDatos: exportarDatos,
       gestionarUsuarios: gestionarUsuarios,
-      revisarConflictos: revisarConflictos,
+      revisarConflictos: conciliacion.revisarConflictos,
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,

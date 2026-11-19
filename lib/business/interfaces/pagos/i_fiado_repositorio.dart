@@ -7,8 +7,8 @@ import 'package:gip/business/entidades/pagos/fiado.dart';
 ///
 /// [crear] (CUS-07), [registrarAbono] (CUS-08), [listarAbonos] (CUS-10),
 /// [actualizarSaldo] (CUS-20), [listar] (CUS-16), [buscarPorId] y [anularAbono]
-/// (CUS-22); las demás operaciones de EA llegan con CUS-19 y CUS-23 (DI-26,
-/// DI-27, DI-29, DI-39, DI-41, DI-45).
+/// (CUS-22) y [listarModificadosDesde] (CUS-23); las demás operaciones de EA
+/// llegan con CUS-19 (DI-26, DI-27, DI-29, DI-39, DI-41, DI-45, DI-46).
 abstract interface class IFiadoRepositorio {
   /// Inserta el fiado nuevo (sin abonos) cuando se confirma una venta fiada
   /// (CUR-07). Se une a la transacción abierta de la venta (RNF-04).
@@ -40,6 +40,13 @@ abstract interface class IFiadoRepositorio {
   /// Fiado de la tienda con su cliente y sus abonos (los anulados también), o
   /// null si no existe (CUS-22, DI-45).
   Future<Fiado?> buscarPorId(Tienda tienda, String id);
+
+  /// Fiados de la tienda que empezaron o recibieron algún abono (anulado o
+  /// no) con fecha igual o posterior a [desde], con su cliente y todos sus
+  /// abonos del más antiguo al más reciente. Son los que la conciliación debe
+  /// recalcular después de sincronizar (CUS-23, DI-46). Los fiados no guardan
+  /// la fecha de su última edición, por eso se miran estas dos fechas.
+  Future<List<Fiado>> listarModificadosDesde(Tienda tienda, DateTime desde);
 
   /// Guarda solo que el abono quedó anulado; no toca el saldo del fiado (eso
   /// lo hace [actualizarSaldo]) ni los demás abonos (RNF-15, DA-66). Se une a

@@ -261,6 +261,12 @@ void main() {
       final e1 = await entrada(huevo, '24');
       final e2 = await entrada(huevo, '24');
       final a1 = await entrada(arroz, '10');
+      // Números viejos, de antes de unir los registros: solo se escribe el
+      // stock que cambia.
+      for (final i in [huevo, arroz]) {
+        i.setStockActual(d('999'));
+        await items.guardarItem(tienda, i);
+      }
       items.guardadosEnTransaccion.clear();
 
       await resolutor.resolver(

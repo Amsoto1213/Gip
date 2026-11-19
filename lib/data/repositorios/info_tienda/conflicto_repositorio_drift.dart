@@ -30,15 +30,15 @@ class ConflictoRepositorioDrift implements IConflictoRepositorio {
 
   /// Inserta el conflicto si su id no existe y, solo entonces, lo anota en
   /// `cola_pendientes` (dos dispositivos pueden detectar el mismo choque, DA-48).
-  /// Si ya existe no lo toca, ni siquiera si ya estaba resuelto. Se une a la
-  /// transacción abierta.
+  /// Si ya existe no lo toca, ni siquiera si ya estaba resuelto. Devuelve
+  /// verdadero si lo insertó (DI-46). Se une a la transacción abierta.
   @override
-  Future<void> guardar(Tienda tienda, ConflictoSincronizacion conflicto) =>
+  Future<bool> guardar(Tienda tienda, ConflictoSincronizacion conflicto) =>
       _base.transaction(() async {
         final existe = await (_base.select(
           _base.conflictosSincronizacion,
         )..where((c) => c.id.equals(conflicto.getId()))).getSingleOrNull();
-        if (existe != null) return;
+        if (existe != null) return false;
         await _base
             .into(_base.conflictosSincronizacion)
             .insert(
@@ -62,6 +62,7 @@ class ConflictoRepositorioDrift implements IConflictoRepositorio {
           registroId: conflicto.getId(),
           operacion: OperacionCola.insertar,
         );
+        return true;
       });
 
   /// Conflictos sin resolver de la tienda, del más antiguo al más reciente.

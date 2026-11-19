@@ -357,6 +357,54 @@ class MovimientoInventarioRepositorioDrift
     ];
   }
 
+  /// Todos los movimientos de la tienda con fecha en `[desde, hasta)`, de los
+  /// cuatro tipos y en cualquier estado, del más antiguo al más reciente, cada
+  /// uno con su ítem y su producto (cada ítem se arma una sola vez). La venta
+  /// de cada salida trae solo id, fecha y total. Filtra por `tienda_id`
+  /// (CUS-23, DI-46).
+  @override
+  Future<List<MovimientoInventario>> listarPorTienda(
+    Tienda tienda,
+    DateTime desde,
+    DateTime hasta,
+  ) async {
+    final m = _base.movimientosInventario;
+    final i = _base.itemsInventario;
+    final p = _base.productos;
+    final v = _base.ventas;
+    final consulta =
+        _base.select(m).join([
+            innerJoin(
+              i,
+              i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
+            ),
+            innerJoin(p, p.id.equalsExp(i.productoId)),
+            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
+          ])
+          ..where(
+            m.tiendaId.equals(tienda.getId()) &
+                m.fecha.isBiggerOrEqualValue(desde.toUtc()) &
+                m.fecha.isSmallerThanValue(hasta.toUtc()),
+          )
+          ..orderBy([OrderingTerm.asc(m.fecha), OrderingTerm.asc(m.id)]);
+    final items = <String, ItemInventario>{};
+    return [
+      for (final r in await consulta.get())
+        _movimiento(
+          r.readTable(m),
+          r.readTableOrNull(v),
+          items.putIfAbsent(r.readTable(i).id, () {
+            final fila = r.readTable(i);
+            return ItemInventario(
+              fila.id,
+              MapeoProducto.aEntidad(r.readTable(p)),
+              fila.stockActual,
+            );
+          }),
+        ),
+    ];
+  }
+
   /// Guarda solo el estado del movimiento y lo anota en `cola_pendientes` como
   /// ACTUALIZAR en la misma transacción (DA-33, RNF-15); no toca lo demás. Se
   /// une a la transacción abierta.

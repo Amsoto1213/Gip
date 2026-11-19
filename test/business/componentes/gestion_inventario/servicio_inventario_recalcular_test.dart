@@ -101,6 +101,18 @@ void main() {
     expect((await guardado()).getStockActual(), d('24'));
   });
 
+  test('si el stock no cambió no escribe el ítem: cada escritura entraría a '
+      'la cola de sincronización', () async {
+    await entrada('24');
+    await servicio.recalcularStock(tienda, huevo);
+    items.guardadosEnTransaccion.clear();
+
+    await servicio.recalcularStock(tienda, huevo);
+
+    expect(items.guardadosEnTransaccion, isEmpty);
+    expect((await guardado()).getStockActual(), d('24'));
+  });
+
   test(
     'no cuenta los movimientos anulados ni los que están en revisión',
     () async {

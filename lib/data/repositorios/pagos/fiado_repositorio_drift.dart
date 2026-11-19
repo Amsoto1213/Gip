@@ -176,6 +176,70 @@ class FiadoRepositorioDrift implements IFiadoRepositorio {
     ];
   }
 
+  /// Fiados de la tienda que empezaron, o recibieron un abono (anulado o no),
+  /// con fecha igual o posterior a [desde], del más antiguo al más reciente,
+  /// con su cliente y todos sus abonos (CUS-23, DI-46). Filtra por
+  /// `tienda_id`.
+  @override
+  Future<List<Fiado>> listarModificadosDesde(
+    Tienda tienda,
+    DateTime desde,
+  ) async {
+    final limite = desde.toUtc();
+    final conAbonoReciente =
+        await (_base.selectOnly(_base.abonos, distinct: true)
+              ..addColumns([_base.abonos.fiadoId])
+              ..where(
+                _base.abonos.tiendaId.equals(tienda.getId()) &
+                    _base.abonos.fecha.isBiggerOrEqualValue(limite),
+              ))
+            .map((r) => r.read(_base.abonos.fiadoId)!)
+            .get();
+    final filas =
+        await (_base.select(_base.fiados)
+              ..where(
+                (f) =>
+                    f.tiendaId.equals(tienda.getId()) &
+                    (f.fechaInicio.isBiggerOrEqualValue(limite) |
+                        f.id.isIn(conAbonoReciente)),
+              )
+              ..orderBy([
+                (f) => OrderingTerm.asc(f.fechaInicio),
+                (f) => OrderingTerm.asc(f.id),
+              ]))
+            .get();
+    if (filas.isEmpty) return const [];
+    final ids = [for (final f in filas) f.id];
+    final clientes = {
+      for (final c
+          in await (_base.select(_base.clientes)..where(
+                (c) =>
+                    c.tiendaId.equals(tienda.getId()) &
+                    c.id.isIn([for (final f in filas) f.clienteId]),
+              ))
+              .get())
+        c.id: Cliente(c.id, c.nombre, c.telefono),
+    };
+    final porFiado = <String, List<FilaAbono>>{};
+    for (final a
+        in await (_base.select(_base.abonos)
+              ..where(
+                (a) => a.tiendaId.equals(tienda.getId()) & a.fiadoId.isIn(ids),
+              )
+              ..orderBy([(a) => OrderingTerm.asc(a.fecha)]))
+            .get()) {
+      porFiado.putIfAbsent(a.fiadoId, () => []).add(a);
+    }
+    return [
+      for (final fila in filas)
+        MapeoFiado.aEntidad(
+          fila,
+          clientes[fila.clienteId] ?? Cliente(fila.clienteId, '', ''),
+          porFiado[fila.id] ?? const [],
+        ),
+    ];
+  }
+
   /// Fiado de la tienda con su cliente y todos sus abonos, del más antiguo al
   /// más reciente y con los anulados (CUS-22, DI-45). Filtra por `tienda_id`.
   @override

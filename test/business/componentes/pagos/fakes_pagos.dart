@@ -157,6 +157,18 @@ class FiadoRepositorioFalso implements IFiadoRepositorio, Restaurable {
   Future<Fiado?> buscarPorId(Tienda tienda, String id) async =>
       de(tienda).where((f) => f.getId() == id).firstOrNull;
 
+  /// Fiados que empezaron o recibieron un abono desde [desde] (CUS-23).
+  @override
+  Future<List<Fiado>> listarModificadosDesde(
+    Tienda tienda,
+    DateTime desde,
+  ) async => [
+    for (final f in de(tienda))
+      if (!f.getFechaInicio().isBefore(desde) ||
+          f.getAbonos().any((a) => !a.getFecha().isBefore(desde)))
+        f,
+  ];
+
   /// Abonos anulados con anularAbono, en orden de llegada.
   final List<Abono> abonosAnulados = [];
 

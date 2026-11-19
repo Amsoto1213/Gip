@@ -7,8 +7,11 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 abstract interface class IConflictoRepositorio {
   /// Inserta el conflicto si su id no existe: dos dispositivos pueden detectar
   /// el mismo choque (DA-48). Si ya existe no lo toca, ni siquiera si ya
-  /// estaba resuelto. Lo usa la detección (CUS-23).
-  Future<void> guardar(Tienda tienda, ConflictoSincronizacion conflicto);
+  /// estaba resuelto. Devuelve verdadero si lo insertó y falso si ya existía:
+  /// así la detección (CUS-23) sabe cuáles son nuevos y no vuelve a aplicar su
+  /// efecto sobre un choque que el propietario ya decidió (DI-46). En EA es
+  /// `void`.
+  Future<bool> guardar(Tienda tienda, ConflictoSincronizacion conflicto);
 
   /// Conflictos sin resolver de la tienda, del más antiguo al más reciente.
   Future<List<ConflictoSincronizacion>> listarPendientes(Tienda tienda);

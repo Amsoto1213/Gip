@@ -63,6 +63,13 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`ResolutorAbonoExcedido.resolver`**, descripción (DI-45 f): antes de escribir comprueba que el saldo no quede negativo (`ExcepcionAbonoSigueExcedido`); no devuelve dos veces un abono ya anulado; el egreso de caja ("Devolución abono") solo se registra si el abono fue en efectivo.
 - [ ] **`ResolutorCodigoRepetido.resolver`**, descripción (DI-45 f): sin ningún producto elegido lanza `ExcepcionDecisionIncompleta`; el código interno nuevo es `codigo-n`, con el primer `n` desde 2 que ningún producto tenga; llama a `productos.quitarCodigo` para los códigos de barras y QR.
 - [ ] **`ResolutorCajaCerrada.resolver`**, descripción (DI-45 f): no cambia el efectivo contado ni la fecha del cierre.
+- [ ] **`IConflictoRepositorio.guardar`** (DI-46 c): `+ guardar(tienda, conflicto): bool`, verdadero si lo insertó y falso si ya existía (resuelto o no).
+- [ ] **`IMovimientoInventarioRepositorio.listarPorTienda(tienda, desde, hasta)`** (DI-46 d): los cuatro tipos y los tres estados, `[desde, hasta)`, del más antiguo al más reciente, con ítem y producto.
+- [ ] **`IFiadoRepositorio.listarModificadosDesde(tienda, desde)`** (DI-46 d): fiados que empezaron o recibieron un abono (anulado o no) desde esa fecha, con cliente y abonos.
+- [ ] **`ServicioConciliacion`** (DI-46 b, e, f): constructor con `reloj` opcional. `conciliar` en una sola transacción. Ids de conflicto: UUID v5 del tipo y de las claves (duplicado: las dos entradas; stock negativo: el ítem; abono: fiado y abonos no anulados; código: clase, valor y productos; caja: caja y movimiento). `detectarPosiblesDuplicados`: solo entradas VIGENTES con número de factura, pareja hasta 1 día antes de `desde`, EN_REVISION solo si el conflicto es nuevo. `detectarAbonosExcedidos`: ignora los fiados anulados y guarda el saldo solo si cambió. `detectarCodigosRepetidos`: agrupa `productos.listar` por código interno y por valor (no usa `listarCodigosRepetidos`). `detectarMovimientosCajaCerrada`: solo movimientos posteriores al cierre, con el día en hora local.
+- [ ] **`ServicioInventario.recalcularStock`**, descripción (DI-46 f): no escribe el ítem si el stock no cambió.
+- [ ] **`ConciliarCoordinator.ejecutar`**, descripción (DI-46 b): no llama a `exigirPropietario`; lo corre la app.
+- [ ] **`EtiquetasConflicto`** (DI-46 h): clase de apoyo en `Componentes/InfoTienda` con `hora`, `diaYHora`, `pesos`, `cantidad`, `movimiento` y `abono`; escribe las etiquetas de los registros de un conflicto.
 
 ### Entidades/GestionInventario
 
@@ -184,6 +191,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `IVentaRepositorio.listarPorPeriodo` trae también las ventas anuladas (los reportes las excluyen con `isAnulada`).
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
 - [ ] **CUS-22** (DI-45 g, h): `idsElegidos` depende del tipo: en POSIBLE_DUPLICADO son los registros que se **anulan** (los que el propietario no marcó como ocurridos); en ABONO_EXCEDE_SALDO, los abonos que se anulan; en CODIGO_REPETIDO, los productos que pierden el código; en STOCK_NEGATIVO y MOVIMIENTO_CAJA_CERRADA va vacío. La vista también ofrece "Ir al conteo" (abre CUS-04, no resuelve) y, tras cada intento, vuelve a pedir `consultarConflictos`.
+- [ ] **CUS-23** (DI-46 f, g): `desde` es la fecha del registro más antiguo que llegó al sincronizar; los detectores buscan la pareja de un duplicado hasta 1 día antes de `desde`. En el paso 6, la segunda entrada solo queda EN_REVISION si `conflictos.guardar` devuelve verdadero (paso 14 antes del efecto). Los pasos 8 a 9 no escriben el ítem si el stock no cambió.
 - [ ] **CUS-24** (DI-25 b, e):
   - El consumo usa `movimientos.buscarFechaPrimerMovimiento(item)` para los días con datos.
   - Disparo: mientras no exista el Sincronizador (CUS-23), lo lanza `DisparadorAlertasDiarias` en cuanto hay usuario activo, una vez por tienda y día en cada arranque de la app, sin bloquear la pantalla.
