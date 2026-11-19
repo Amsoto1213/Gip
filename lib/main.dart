@@ -29,6 +29,7 @@ import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/service_agents/cliente_supabase.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/comun/idioma_gip.dart';
 import 'package:gip/presentation/comun/router.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
 import 'package:gip/presentation/negocio/disparador_alertas_diarias.dart';
@@ -190,6 +191,9 @@ class _GipAppState extends State<GipApp> {
       child: MaterialApp.router(
         title: 'GIP',
         theme: TemaGip.claro(),
+        locale: idiomasGip.first,
+        supportedLocales: idiomasGip,
+        localizationsDelegates: delegadosIdiomaGip,
         routerConfig: _router,
       ),
     );
