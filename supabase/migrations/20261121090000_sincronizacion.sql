@@ -152,6 +152,9 @@ create trigger cajas_1_regla before update on public.cajas
 -- NEGATIVO: es justo el conflicto ABONO_EXCEDE_SALDO que decide el propietario
 -- (CUS-22). El servidor no puede rechazar ese saldo, o el equipo nunca lo
 -- subiría. Se quita `saldo_pendiente >= 0` y se deja `<= monto_inicial`.
+-- PostgreSQL guarda esa restricción como `saldo_pendiente >= (0)::numeric`, por
+-- eso se busca con una expresión regular. Si esta migración ya se aplicó sin
+-- quitarla, `20261121110000_fiados_saldo_negativo.sql` lo arregla.
 do $$
 declare
   c record;
@@ -161,7 +164,7 @@ begin
     from pg_constraint
     where conrelid = 'public.fiados'::regclass
       and contype = 'c'
-      and pg_get_constraintdef(oid) like '%saldo_pendiente >= 0%'
+      and pg_get_constraintdef(oid) ~ 'saldo_pendiente >= \(?0'
   loop
     execute format('alter table public.fiados drop constraint %I', c.conname);
   end loop;

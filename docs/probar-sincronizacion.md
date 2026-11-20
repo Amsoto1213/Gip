@@ -22,7 +22,7 @@ Marcar cada paso. **A** y **B** son los dos equipos.
 | 3 | A | Modo avión. Vender 2 huevos y fiar a "María Pérez". Quitar el modo avión | La venta, la forma de pago y el fiado suben. B los ve al sincronizar. La existencia baja en B |
 | 4 | A y B | Los dos en modo avión: cada uno registra **una entrada de 24 huevos con la misma factura `FV-2`** (una factura que **no** sea la del paso 1: si repites `FV-1`, el sistema ve tres entradas iguales y las muestra en **una sola tarjeta** con las tres entradas). Anotar la existencia de huevos antes. Quitar el modo avión de los dos | Negocio → Revisar sincronización (propietario): **un solo** conflicto "Posible registro repetido" con las dos entradas de `FV-2`. La más antigua queda vigente y la otra "En revisión" (no suma). La existencia en los dos equipos es la de antes **+ 24**, no + 48 |
 | 5 | A y B | Resolver el conflicto de 4 en A: marcar las entradas que sí ocurrieron y "Guardar decisión" (la que dejes sin marcar se anula). Sincronizar B. Repetir los pasos 4 y 5 con otra factura (`FV-3`) para probar la otra opción | **Si marcas las dos** (o pulsas "Son registros distintos"): la entrada en revisión pasa a vigente y **suma**: la existencia queda en la de antes + 48 (79 si eran 31). **Si dejas sin marcar la segunda**: queda "Anulado" y la existencia sigue en la de antes + 24 (55). En los dos casos el conflicto y el aviso de Surtido desaparecen en los dos equipos |
-| 6 | A y B | Los dos, sin internet, abonan al fiado de María lo que sobre (por ejemplo, el fiado es de $ 10.000 y cada uno abona $ 8.000). Reconectar | Conflicto "Abono mayor que el saldo" en los dos, con el mismo detalle. En `fiados` el `saldo_pendiente` queda **negativo** (no debe rechazarlo el servidor) |
+| 6 | A y B | Los dos, sin internet, abonan al fiado de María lo que sobre (por ejemplo, el fiado es de $ 10.000 y cada uno abona $ 8.000). Reconectar | Conflicto "Abono mayor que el saldo" en los dos, con el mismo detalle. En `fiados` el `saldo_pendiente` queda **negativo** (por ejemplo, fiado de 18.000 y dos abonos de 10.000: -2.000, no 8.000). Si se queda en 8.000, el servidor rechazó el saldo: revisar las restricciones de `fiados` (consulta abajo) y aplicar la migración `20261121110000` |
 | 7 | A y Supabase | Asociar un código de barras al producto en A y sincronizar; en B comprobar que aparece. Luego, en Supabase, `delete from public.codigos_producto where id = '<id>';` (la app no tiene pantalla para quitar un código, salvo al resolver un conflicto de código repetido) | En `registros_eliminados` aparece el borrado (lo pone el disparador) y A y B quitan el código en su siguiente sincronización |
 | 8 | A y B | Sin internet, cambiar el precio del mismo producto: primero en A y **después** en B. Reconectar los dos | Gana el de B (el más reciente), en `productos` y en los dos equipos, sin importar quién sincronizó primero |
 | 9 | A | Anular una venta; sincronizar. En B ver la venta anulada | Anulada en los dos; el stock vuelve |
@@ -36,6 +36,13 @@ select tabla, count(*) from public.registros_eliminados group by tabla;
 select id, estado, sincronizado_en from public.movimientos_inventario order by sincronizado_en desc limit 10;
 select id, saldo_pendiente, estado from public.fiados;
 select tipo, resuelto, ids_registros from public.conflictos_sincronizacion;
+```
+
+Restricciones de `fiados` (no debe haber ninguna `saldo_pendiente >= 0`):
+
+```sql
+select conname, pg_get_constraintdef(oid) from pg_constraint
+where conrelid = 'public.fiados'::regclass and contype = 'c';
 ```
 
 Probar los disparadores a mano (cambiar los ids por los reales):
