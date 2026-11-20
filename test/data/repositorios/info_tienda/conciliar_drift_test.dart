@@ -387,26 +387,26 @@ void main() {
               .getIdsRegistros(),
           ['f1', 'a1', 'a2'],
         );
-        // La cola lleva cada conflicto y el saldo corregido del fiado; ningún
-        // movimiento cambia al detectar (DI-50).
+        // La cola lleva cada conflicto, el estado de la entrada y el saldo
+        // corregido del fiado.
         expect((await cola('conflictos_sincronizacion')).length, nuevos.length);
-        expect(await cola('movimientos_inventario'), isEmpty);
+        expect(await cola('movimientos_inventario'), ['ACTUALIZAR:e2']);
         expect(await cola('fiados'), ['ACTUALIZAR:f1']);
       },
     );
 
-    test('las dos entradas siguen vigentes y el stock se recalcula con las '
-        'dos', () async {
+    test('la segunda entrada queda EN_REVISION y el stock se recalcula sin '
+        'ella', () async {
       await sembrarLosCincoChoques();
 
       await servicio().conciliar(tienda, desde);
 
       final e2 = (await movimientos.buscarPorIds(tienda, ['e2'])).single;
-      expect(e2.getEstado(), EstadoMovimiento.vigente);
-      // 24 (e1) + 24 (e2) - 60 (e3).
+      expect(e2.getEstado(), EstadoMovimiento.enRevision);
+      // 24 (e1) - 60 (e3); e2 en revisión no suma.
       expect(
         (await items.buscarItem(tienda, huevo))!.getStockActual(),
-        d('-12'),
+        d('-36'),
       );
     });
 
@@ -430,7 +430,7 @@ void main() {
       expect((await base.select(base.colaPendientes).get()).length, colaAntes);
     });
 
-    test('si algo falla se deshace todo: conflictos y saldo', () async {
+    test('si algo falla se deshace todo: conflictos, estado y saldo', () async {
       await sembrarLosCincoChoques();
 
       await expectLater(

@@ -11,9 +11,9 @@ import 'package:provider/provider.dart';
 
 /// Aviso para el propietario de que hay conflictos de sincronización por
 /// revisar, con el botón que lleva a Revisar sincronización (CUS-22, DI-50).
-/// Explica por qué la existencia puede cambiar: hasta que el propietario
-/// decide, cuenta todo lo registrado (por ejemplo las dos entradas de un posible
-/// duplicado) y baja si anula alguna.
+/// Explica por qué la existencia puede ser menor a lo registrado: la segunda
+/// entrada de un posible duplicado queda "En revisión" y no suma hasta que el
+/// propietario la acepta; si la descarta, queda anulada.
 ///
 /// Se cuenta al abrirse, cada vez que la pestaña vuelve a verse, al volver de
 /// Revisar sincronización y cuando llegan datos de otros equipos
@@ -27,8 +27,8 @@ class AvisoConflictosPendientes extends StatefulWidget {
       : 'Hay $total conflictos por revisar.';
 
   static const detalle =
-      'Mientras tanto la existencia cuenta todo lo registrado y puede bajar '
-      'cuando usted lo resuelva.';
+      'Mientras tanto, las entradas en revisión no suman a la existencia: '
+      'sumarán cuando usted las acepte.';
 
   @override
   State<AvisoConflictosPendientes> createState() =>
