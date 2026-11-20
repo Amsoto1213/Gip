@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/workflow/info_tienda/revisar_conflictos_coordinator.dart';
+import 'package:gip/presentation/negocio/agrupar_conflictos.dart';
 
 /// Cuántos conflictos de sincronización están por revisar, para avisarle al
 /// propietario (CUS-22, DI-50). Llama solo a [RevisarConflictosCoordinator]. Si
@@ -15,7 +16,8 @@ class ConflictosPendientesViewModel extends ChangeNotifier {
   int _total = 0;
   int _consulta = 0;
 
-  /// Conflictos sin resolver.
+  /// Conflictos sin resolver, contando como uno los que son la misma entrada
+  /// repetida varias veces.
   int get total => _total;
 
   /// Vuelve a contar los conflictos pendientes.
@@ -23,10 +25,14 @@ class ConflictosPendientesViewModel extends ChangeNotifier {
     final consulta = ++_consulta;
     var total = 0;
     try {
-      total = (await _coordinador.consultarConflictos(
-        _usuarioActivo.tienda,
-        _usuarioActivo.usuario,
-      )).length;
+      // Una situación es un conflicto, aunque por dentro sean varias parejas
+      // (DI-51).
+      total = agruparConflictos(
+        await _coordinador.consultarConflictos(
+          _usuarioActivo.tienda,
+          _usuarioActivo.usuario,
+        ),
+      ).length;
     } catch (_) {
       total = 0;
     }

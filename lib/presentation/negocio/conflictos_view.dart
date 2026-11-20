@@ -243,7 +243,7 @@ class _TarjetaConflicto extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(c.getDescripcion(), style: tema.textTheme.titleMedium),
+          Text(vm.descripcionDe(c), style: tema.textTheme.titleMedium),
           const SizedBox(height: 6),
           Text(
             ConflictosView.ayudaTipo(c.getTipo()),

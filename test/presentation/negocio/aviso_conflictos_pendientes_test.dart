@@ -130,6 +130,25 @@ void main() {
     expect(find.textContaining('Hay 1 conflicto por revisar.'), findsOneWidget);
   });
 
+  testWidgets('las parejas de una misma entrada repetida cuentan como un '
+      'solo conflicto', (tester) async {
+    when(() => coordinador.consultarConflictos(any(), any())).thenAnswer(
+      (_) async => [
+        ConflictoSincronizacion('d1', TipoConflicto.posibleDuplicado, 'x', [
+          'e0',
+          'e1',
+        ], fecha),
+        ConflictoSincronizacion('d2', TipoConflicto.posibleDuplicado, 'x', [
+          'e0',
+          'e2',
+        ], fecha),
+      ],
+    );
+    await montar(tester);
+
+    expect(find.textContaining('Hay 1 conflicto por revisar.'), findsOneWidget);
+  });
+
   testWidgets('sin conflictos no sale nada', (tester) async {
     devolver(0);
     await montar(tester);
