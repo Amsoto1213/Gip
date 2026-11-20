@@ -493,7 +493,7 @@ void main() {
 
   group('conciliación después de bajar', () {
     test('dos equipos que registran la misma entrada: queda un conflicto con '
-        'el mismo id en los dos y la segunda en revisión', () async {
+        'el mismo id en los dos y las dos entradas suman', () async {
       await huevo(a);
       await a.sincronizador.sincronizar(tienda);
       await b.sincronizador.sincronizar(tienda);
@@ -514,23 +514,22 @@ void main() {
       expect(enA.map((c) => c.getId()), enB.map((c) => c.getId()));
       expect(enA, hasLength(1));
       for (final e in [a, b]) {
-        expect(
-          (await e.movimientos.buscarPorIds(tienda, ['eb'])).single.getEstado(),
-          EstadoMovimiento.enRevision,
-        );
-        expect(
-          (await e.movimientos.buscarPorIds(tienda, ['ea'])).single.getEstado(),
-          EstadoMovimiento.vigente,
-        );
+        for (final id in ['ea', 'eb']) {
+          expect(
+            (await e.movimientos.buscarPorIds(tienda, [id])).single.getEstado(),
+            EstadoMovimiento.vigente,
+          );
+        }
       }
       expect(
         servidor.fila('movimientos_inventario', 'eb')!['estado'],
-        'EN_REVISION',
+        'VIGENTE',
       );
       expect(servidor.cuantas('conflictos_sincronizacion'), 1);
-      // El stock de los dos equipos no cuenta la entrada en revisión.
-      expect((await itemHuevo(a)).getStockActual(), d('24'));
-      expect((await itemHuevo(b)).getStockActual(), d('24'));
+      // Hasta que el propietario decida, el stock de los dos equipos cuenta
+      // las dos entradas (DI-50).
+      expect((await itemHuevo(a)).getStockActual(), d('48'));
+      expect((await itemHuevo(b)).getStockActual(), d('48'));
     });
 
     test('dos equipos que abonan de más al mismo fiado: conflicto de abono '
@@ -643,8 +642,49 @@ void main() {
   });
 
   group('resolver duplicados y el stock', () {
+    test('un duplicado entre dos equipos: las dos entradas suman y al anular '
+        'una el stock baja en los dos', () async {
+      await huevo(a);
+      await entrada(a, 'previa', cantidad: '31', factura: 'FV-0', fecha: f1);
+      await a.sincronizador.sincronizar(tienda);
+      await b.sincronizador.sincronizar(tienda);
+      expect((await itemHuevo(b)).getStockActual(), d('31'));
+      // Cada equipo, sin internet, registra la misma entrada de la factura.
+      await a.inventarioAplicar(
+        tienda,
+        'ea',
+        d('24'),
+        f1.add(const Duration(minutes: 5)),
+      );
+      await b.inventarioAplicar(
+        tienda,
+        'eb',
+        d('24'),
+        f1.add(const Duration(minutes: 6)),
+      );
+      expect((await itemHuevo(a)).getStockActual(), d('24'));
+
+      await a.sincronizador.sincronizar(tienda);
+      await b.sincronizador.sincronizar(tienda);
+      await a.sincronizador.sincronizar(tienda);
+
+      // Las dos entradas suman mientras el propietario no decide.
+      expect((await itemHuevo(a)).getStockActual(), d('79'));
+      expect((await itemHuevo(b)).getStockActual(), d('79'));
+      final conflicto = (await a.conflictos.listarPendientes(tienda)).single;
+
+      // Acepta una y descarta la otra: el stock baja de 79 a 55.
+      await a.servicioConciliacion.resolverConflicto(tienda, conflicto, ['eb']);
+      expect((await itemHuevo(a)).getStockActual(), d('55'));
+      await a.sincronizador.sincronizar(tienda);
+      await b.sincronizador.sincronizar(tienda);
+
+      expect((await itemHuevo(b)).getStockActual(), d('55'));
+      expect(await b.conflictos.listarPendientes(tienda), isEmpty);
+    });
+
     test('tres entradas con la misma factura: dos conflictos; al resolverlos '
-        'el stock de los dos equipos queda sin los duplicados', () async {
+        'el stock de los dos equipos baja al anular las repetidas', () async {
       await huevo(a);
       await entrada(a, 'e0', fecha: f1);
       await a.sincronizador.sincronizar(tienda);
@@ -670,9 +710,9 @@ void main() {
 
       final pendientes = await a.conflictos.listarPendientes(tienda);
       expect(pendientes, hasLength(2));
-      // Mientras están en revisión no suman al stock, en los dos equipos.
-      expect((await itemHuevo(a)).getStockActual(), d('24'));
-      expect((await itemHuevo(b)).getStockActual(), d('24'));
+      // Hasta que se decide, las tres entradas suman en los dos equipos.
+      expect((await itemHuevo(a)).getStockActual(), d('72'));
+      expect((await itemHuevo(b)).getStockActual(), d('72'));
 
       // El propietario marca el original en los dos y anula los otros.
       for (final c in pendientes) {

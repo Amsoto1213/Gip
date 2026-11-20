@@ -21,12 +21,8 @@ import 'package:gip/business/interfaces/pagos/i_fiado_repositorio.dart';
 import 'package:gip/transversal/errores/errores_conciliacion.dart';
 import 'package:uuid/uuid.dart';
 
-/// Un choque encontrado y, si hace falta, el movimiento que queda EN_REVISION
-/// cuando el conflicto es nuevo.
-typedef _Hallazgo = ({
-  ConflictoSincronizacion conflicto,
-  MovimientoInventario? aRevisar,
-});
+/// Un choque encontrado por un detector.
+typedef _Hallazgo = ({ConflictoSincronizacion conflicto});
 
 /// Pure Fabrication e Information Expert de la conciliación: después de
 /// sincronizar recalcula stock y saldos de fiados y detecta los choques que
@@ -163,8 +159,10 @@ class ServicioConciliacion {
     throw const ExcepcionConflictoSinResolutor();
   }
 
-  /// Guarda cada hallazgo (paso 14); de los que son nuevos aplica su efecto
-  /// (la segunda entrada queda EN_REVISION) y los devuelve.
+  /// Guarda cada hallazgo (paso 14) y devuelve los que son nuevos: los que ya
+  /// existían, resueltos o no, no se vuelven a crear (DI-46). Detectar un
+  /// choque no cambia ningún movimiento: lo que pasa con él lo decide el
+  /// propietario (DI-50).
   Future<List<ConflictoSincronizacion>> _registrar(
     Tienda tienda,
     List<_Hallazgo> hallazgos,
@@ -172,13 +170,9 @@ class ServicioConciliacion {
   ) async {
     final nuevos = <ConflictoSincronizacion>[];
     for (final h in hallazgos) {
-      if (!await _conflictos.guardar(tienda, h.conflicto)) continue;
-      final revisar = h.aRevisar;
-      if (revisar != null) {
-        revisar.setEstado(EstadoMovimiento.enRevision);
-        await _movimientos.actualizarEstado(tienda, revisar);
+      if (await _conflictos.guardar(tienda, h.conflicto)) {
+        nuevos.add(h.conflicto);
       }
-      nuevos.add(h.conflicto);
     }
     return nuevos;
   }
@@ -204,9 +198,11 @@ class ServicioConciliacion {
   );
 
   /// Dos entradas VIGENTES con el mismo ítem, cantidad y número de factura son
-  /// un posible duplicado: la segunda (por fecha) queda EN_REVISION y el
-  /// propietario decide (paso 6). Sin número de factura no se comparan: dos
-  /// compras iguales sin factura son normales (DI-46).
+  /// un posible duplicado: se crea un conflicto y el propietario decide cuál
+  /// anular (paso 6). Mientras tanto **las dos suman al stock** y, al anular
+  /// una, el stock baja (DI-50; EA decía que la segunda queda EN_REVISION).
+  /// Sin número de factura no se comparan: dos compras iguales sin factura son
+  /// normales (DI-46).
   Future<List<_Hallazgo>> _detectarPosiblesDuplicados(
     Tienda tienda,
     DateTime desde,
@@ -253,7 +249,6 @@ class ServicioConciliacion {
             ],
             ahora,
           ),
-          aRevisar: otra,
         ));
       }
     }
@@ -299,7 +294,6 @@ class ServicioConciliacion {
           [for (final m in causas) EtiquetasConflicto.movimiento(m)],
           ahora,
         ),
-        aRevisar: null,
       ));
     }
     return hallazgos;
@@ -347,7 +341,6 @@ class ServicioConciliacion {
           ],
           ahora,
         ),
-        aRevisar: null,
       ));
     }
     return hallazgos;
@@ -396,7 +389,6 @@ class ServicioConciliacion {
             [for (final p in ordenados) '${p.getNombre()} · código $valor'],
             ahora,
           ),
-          aRevisar: null,
         ));
       }
     }
@@ -444,7 +436,6 @@ class ServicioConciliacion {
           ],
           ahora,
         ),
-        aRevisar: null,
       ));
     }
     return hallazgos;

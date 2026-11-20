@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/presentation/negocio/aviso_conflictos_pendientes.dart';
 import 'package:gip/presentation/comun/leer_codigo.dart';
 import 'package:gip/presentation/comun/barra_busqueda.dart';
 import 'package:gip/presentation/comun/botones_gip.dart';
@@ -121,6 +122,7 @@ class _SurtidoViewState extends State<SurtidoView> {
                         ),
                 ),
                 separacion,
+                const AvisoConflictosPendientes(),
                 BarraBusqueda(
                   key: const Key('surtido_buscar'),
                   pista: web

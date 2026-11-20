@@ -71,7 +71,7 @@ void main() {
 
   group('posible duplicado', () {
     test('dos entradas con el mismo ítem, cantidad y factura: la segunda queda '
-        'EN_REVISION y se crea un conflicto', () async {
+        'siguen las dos vigentes y se crea un conflicto', () async {
       final primera = await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
       final segunda = await equipo.entradas('e2', '24', hace1h, factura: 'FV1');
 
@@ -88,34 +88,23 @@ void main() {
       expect(c.getFecha(), ahora);
       expect(c.isResuelto(), isFalse);
       expect(primera.getEstado(), EstadoMovimiento.vigente);
-      expect(segunda.getEstado(), EstadoMovimiento.enRevision);
-      expect(equipo.movimientos.estadosActualizados, [segunda]);
+      expect(
+        segunda.getEstado(),
+        EstadoMovimiento.vigente,
+        reason: 'detectar no cambia ningún movimiento (DI-50)',
+      );
+      expect(equipo.movimientos.estadosActualizados, isEmpty);
       expect(equipo.conflictos.todos(tienda), [c]);
     });
 
-    test(
-      'la segunda se decide por fecha, no por el orden de llegada',
-      () async {
-        final reciente = await equipo.entradas(
-          'e9',
-          '24',
-          hace1h,
-          factura: 'FV1',
-        );
-        final antigua = await equipo.entradas(
-          'e1',
-          '24',
-          hace2h,
-          factura: 'FV1',
-        );
+    test('la pareja se ordena por fecha, no por el orden de llegada', () async {
+      await equipo.entradas('e9', '24', hace1h, factura: 'FV1');
+      await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
 
-        final nuevos = await conciliar();
+      final nuevos = await conciliar();
 
-        expect(nuevos.single.getIdsRegistros(), ['e1', 'e9']);
-        expect(antigua.getEstado(), EstadoMovimiento.vigente);
-        expect(reciente.getEstado(), EstadoMovimiento.enRevision);
-      },
-    );
+      expect(nuevos.single.getIdsRegistros(), ['e1', 'e9']);
+    });
 
     test('con tres entradas iguales, una pareja por cada repetida', () async {
       await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
@@ -133,8 +122,8 @@ void main() {
         ['e1', 'e2'],
         ['e1', 'e3'],
       ]);
-      expect(b.getEstado(), EstadoMovimiento.enRevision);
-      expect(c.getEstado(), EstadoMovimiento.enRevision);
+      expect(b.getEstado(), EstadoMovimiento.vigente);
+      expect(c.getEstado(), EstadoMovimiento.vigente);
     });
 
     for (final (nombre, preparar) in <(String, Future<void> Function(_Equipo))>[
@@ -244,7 +233,7 @@ void main() {
       expect(await conciliar(), isEmpty);
     });
 
-    test('repetir la conciliación no crea otro conflicto ni vuelve a tocar el '
+    test('repetir la conciliación no crea otro conflicto ni toca ningún '
         'movimiento', () async {
       await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
       await equipo.entradas('e2', '24', hace1h, factura: 'FV1');
@@ -254,12 +243,26 @@ void main() {
 
       expect(otraVez, isEmpty);
       expect(equipo.conflictos.todos(tienda), hasLength(1));
-      expect(equipo.movimientos.estadosActualizados, hasLength(1));
+      expect(equipo.movimientos.estadosActualizados, isEmpty);
     });
 
     test(
-      'si el propietario dijo "son distintas" no se vuelve a poner EN_REVISION '
-      'ni se vuelve a avisar',
+      'si el propietario dijo "son distintas" no se vuelve a avisar',
+      () async {
+        await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
+        await equipo.entradas('e2', '24', hace1h, factura: 'FV1');
+        // CUS-22: resuelve sin anular nada; las dos siguen vigentes.
+        (await conciliar()).single.setResuelto(true);
+
+        final otraVez = await conciliar();
+
+        expect(otraVez, isEmpty);
+        expect(equipo.conflictos.todos(tienda), hasLength(1));
+      },
+    );
+
+    test(
+      'si el propietario anula una, ya no hay pareja y no se vuelve a avisar',
       () async {
         await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
         final segunda = await equipo.entradas(
@@ -268,31 +271,27 @@ void main() {
           hace1h,
           factura: 'FV1',
         );
-        final nuevo = (await conciliar()).single;
-        // CUS-22: resuelve sin anular nada y la deja VIGENTE.
-        nuevo.setResuelto(true);
-        segunda.setEstado(EstadoMovimiento.vigente);
-        equipo.movimientos.estadosActualizados.clear();
+        (await conciliar()).single.setResuelto(true);
+        segunda.setEstado(EstadoMovimiento.anulado);
 
-        final otraVez = await conciliar();
-
-        expect(otraVez, isEmpty);
-        expect(segunda.getEstado(), EstadoMovimiento.vigente);
-        expect(equipo.movimientos.estadosActualizados, isEmpty);
+        expect(await conciliar(), isEmpty);
       },
     );
 
-    test('la segunda entrada en revisión no suma al stock', () async {
-      await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
-      await equipo.entradas('e2', '24', hace1h, factura: 'FV1');
+    test(
+      'las dos entradas suman al stock hasta que el propietario decide',
+      () async {
+        await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
+        await equipo.entradas('e2', '24', hace1h, factura: 'FV1');
 
-      await conciliar();
+        await conciliar();
 
-      expect(
-        equipo.items.datos[tienda.getId()]!['i1']!.getStockActual(),
-        d('24'),
-      );
-    });
+        expect(
+          equipo.items.datos[tienda.getId()]!['i1']!.getStockActual(),
+          d('48'),
+        );
+      },
+    );
 
     test(
       'dos equipos que detectan el mismo duplicado crean el mismo id',
@@ -748,21 +747,17 @@ void main() {
     });
 
     test(
-      'si algo falla no se guarda nada: ni conflictos ni el estado EN_REVISION',
+      'si algo falla no se guarda nada: ni conflictos ni el stock recalculado',
       () async {
         await equipo.entradas('e1', '24', hace2h, factura: 'FV1');
-        final segunda = await equipo.entradas(
-          'e2',
-          '24',
-          hace1h,
-          factura: 'FV1',
-        );
-        equipo.movimientos.fallarActualizarEstado = true;
+        await equipo.entradas('e2', '24', hace1h, factura: 'FV1');
+        // El conflicto del duplicado ya se guardó cuando falla el recálculo
+        // del stock: el rollback lo deshace.
+        equipo.items.fallar = true;
 
         await expectLater(conciliar(), throwsA(isA<StateError>()));
 
         expect(equipo.conflictos.todos(tienda), isEmpty);
-        expect(segunda.getEstado(), EstadoMovimiento.vigente);
       },
     );
 
