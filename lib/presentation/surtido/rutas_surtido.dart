@@ -6,6 +6,7 @@ import 'package:gip/business/workflow/gestion_inventario/gestionar_producto_coor
 import 'package:gip/business/workflow/gestion_inventario/registrar_conteo_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_entrada_mercancia_coordinator.dart';
 import 'package:gip/business/workflow/gestion_inventario/registrar_perdida_coordinator.dart';
+import 'package:gip/presentation/comun/datos_actualizados.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/surtido/buscar_producto_view.dart';
@@ -66,7 +67,10 @@ StatefulShellBranch ramaSurtido() => StatefulShellBranch(
           context.read<ConsultarExistenciasCoordinator>(),
           context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
         )..cargar(),
-        child: const SurtidoView(),
+        child: RecargarAlCambiarLosDatos<ExistenciasViewModel>(
+          alRecargar: (vm) => vm.cargar(),
+          child: const SurtidoView(),
+        ),
       ),
       routes: [
         GoRoute(

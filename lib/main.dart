@@ -37,6 +37,7 @@ import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
 import 'package:gip/data/service_agents/cliente_supabase.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
+import 'package:gip/presentation/comun/datos_actualizados.dart';
 import 'package:gip/presentation/comun/disparador_sincronizacion.dart';
 import 'package:gip/presentation/comun/idioma_gip.dart';
 import 'package:gip/presentation/comun/router.dart';
@@ -86,6 +87,7 @@ Future<void> main() async {
     caja.servicioCaja,
     acceso.servicioAcceso,
   );
+  final datosActualizados = DatosActualizados();
   final sincronizacion = registrarSincronizacion(
     base,
     cliente,
@@ -117,7 +119,11 @@ Future<void> main() async {
           tienda,
         );
         debugPrint('Sincronización: $resultado');
+        // Lo que llegó de otros equipos ya está en la base local: las
+        // pantallas que muestran datos los vuelven a leer (DI-49).
+        if (resultado.bajados > 0) datosActualizados.avisar();
       },
+      datosActualizados: datosActualizados,
       escrituras: sincronizacion.escrituras,
       cambiosRemotos: sincronizacion.cambiosRemotos,
       generarReporteDiario: reportes.generarReporteDiario,
@@ -157,6 +163,7 @@ class GipApp extends StatefulWidget {
     this.sincronizar,
     this.escrituras,
     this.cambiosRemotos,
+    this.datosActualizados,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -193,6 +200,10 @@ class GipApp extends StatefulWidget {
   /// Avisa cuando otro equipo cambia algo de la tienda (DI-48).
   final Stream<void> Function(Tienda tienda)? cambiosRemotos;
 
+  /// Avisa a las pantallas que lleguen datos de otros equipos a la base local
+  /// (DI-49). Si es nulo, la app crea uno que nadie dispara.
+  final DatosActualizados? datosActualizados;
+
   @override
   State<GipApp> createState() => _GipAppState();
 }
@@ -202,6 +213,8 @@ class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
     widget.iniciarSesion,
   )..verificarSesionGuardada();
   late final GoRouter _router = crearRouter(_sesion);
+  late final DatosActualizados _datos =
+      widget.datosActualizados ?? DatosActualizados();
 
   /// CUS-24 en cada arranque con usuario activo, sin bloquear (DI-25).
   late final DisparadorAlertasDiarias _alertasDiarias;
@@ -248,6 +261,7 @@ class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _sesion),
+        ChangeNotifierProvider.value(value: _datos),
         Provider.value(value: widget.gestionarProducto),
         Provider.value(value: widget.buscarProducto),
         Provider.value(value: widget.registrarEntradaMercancia),

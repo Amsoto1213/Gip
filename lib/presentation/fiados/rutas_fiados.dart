@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gip/business/workflow/pagos/consultar_cliente_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_abono_coordinator.dart';
+import 'package:gip/presentation/comun/datos_actualizados.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/fiados/abono_view.dart';
 import 'package:gip/presentation/fiados/abono_view_model.dart';
@@ -35,7 +36,10 @@ StatefulShellBranch ramaFiados() => StatefulShellBranch(
           context.read<ConsultarClienteCoordinator>(),
           context.read<IniciarSesionViewModel>().usuarioActivo!.tienda,
         )..cargar(),
-        child: const FiadosView(),
+        child: RecargarAlCambiarLosDatos<FiadosViewModel>(
+          alRecargar: (vm) => vm.recargar(),
+          child: const FiadosView(),
+        ),
       ),
       routes: [
         GoRoute(
