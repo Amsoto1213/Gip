@@ -44,6 +44,7 @@ class VentaDePrueba {
     this.arroz,
     this.cafe,
     this.queso,
+    this.yuca,
   );
 
   final RegistrarVentaCoordinator coordinador;
@@ -58,6 +59,9 @@ class VentaDePrueba {
   final Producto arroz;
   final Producto cafe;
   final Producto queso;
+
+  /// Se vende por kilo: stock 10 kg, $ 3.000 el kilo (DI-53).
+  final Producto yuca;
 
   static Future<VentaDePrueba> crear() async {
     final items = InventarioRepositorioFalso();
@@ -99,6 +103,15 @@ class VentaDePrueba {
     await items.guardarItem(tiendaPrueba, ItemInventario('i1', arroz, d('10')));
     await items.guardarItem(tiendaPrueba, ItemInventario('i2', cafe, d('21')));
     await items.guardarItem(tiendaPrueba, ItemInventario('i3', queso, d('0')));
+    final yuca = Producto(
+      'yuca',
+      'yuca',
+      'Yuca',
+      UnidadMedida.kilogramo,
+      null,
+      d('3000'),
+    );
+    await items.guardarItem(tiendaPrueba, ItemInventario('i4', yuca, d('10')));
     final perdidas = VentaPerdidaRepositorioFalso();
     final alertas = ServicioAlertas(
       items,
@@ -121,6 +134,7 @@ class VentaDePrueba {
       arroz,
       cafe,
       queso,
+      yuca,
     );
   }
 }

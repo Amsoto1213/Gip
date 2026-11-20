@@ -1,4 +1,5 @@
 import 'package:decimal/decimal.dart';
+import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
@@ -91,6 +92,48 @@ class VenderViewModel extends ChangeNotifier {
     mensajeErrorAgregar,
     sinExistencia: linea.getItem().getProducto(),
   );
+
+  /// Cantidad escrita por el tendero en la línea (3,4 kg de yuca). Se valida
+  /// igual que "+": la existencia alcanza (RN-01) o la línea queda como estaba.
+  Future<void> cambiarCantidad(LineaVenta linea, Decimal cantidad) => _intentar(
+    () async => _coordinator.cambiarCantidad(linea, cantidad),
+    mensajeErrorAgregar,
+    sinExistencia: linea.getItem().getProducto(),
+  );
+
+  /// Verdadero si el producto de la línea se vende por peso (kilos o libras) y
+  /// admite decimales; por unidad solo admite enteros (IE-01 b).
+  static bool admiteDecimales(UnidadMedida unidad) =>
+      unidad != UnidadMedida.unidad;
+
+  /// Máximo de decimales de una cantidad: las del servidor y la base
+  /// (`numeric(12,3)`, DI-02).
+  static const maximoDecimales = 3;
+
+  /// Lo que se le dice al tendero si [texto] no es una cantidad válida para
+  /// [unidad], o null si lo es. La coma o el punto separan decimales.
+  static String? errorDeCantidad(String texto, UnidadMedida unidad) {
+    final limpio = texto.replaceAll(RegExp(r'\s'), '').replaceAll(',', '.');
+    if (!RegExp(r'^\d+(\.\d+)?$').hasMatch(limpio)) {
+      return 'Escriba la cantidad';
+    }
+    final valor = Decimal.parse(limpio);
+    if (valor <= Decimal.zero) return 'La cantidad debe ser mayor que cero';
+    if (!admiteDecimales(unidad) && !valor.isInteger) {
+      return 'Este producto se vende por unidad: escriba un número entero';
+    }
+    final partes = limpio.split('.');
+    if (partes.length > 1 && partes[1].length > maximoDecimales) {
+      return 'Use máximo $maximoDecimales decimales';
+    }
+    return null;
+  }
+
+  /// La cantidad escrita como número, o null si [errorDeCantidad] la rechaza.
+  static Decimal? leerCantidad(String texto, UnidadMedida unidad) =>
+      errorDeCantidad(texto, unidad) == null
+      ? Decimal.parse(texto.replaceAll(RegExp(r'\s'), '').replaceAll(',', '.'))
+      : null;
 
   /// Botón "−" de la línea; si la cantidad llega a cero, quita la línea.
   Future<void> restar(LineaVenta linea) {

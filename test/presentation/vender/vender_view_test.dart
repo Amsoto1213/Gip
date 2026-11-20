@@ -77,13 +77,14 @@ void main() {
     String codigo,
     String nombre,
     String precio,
-    String stock,
-  ) async => (await tester.runAsync(() async {
+    String stock, {
+    UnidadMedida unidad = UnidadMedida.unidad,
+  }) async => (await tester.runAsync(() async {
     final p = await inventario.gestionarProducto.crearProducto(
       tienda,
       codigo,
       nombre,
-      UnidadMedida.unidad,
+      unidad,
       d('1000'),
       d(precio),
     );
@@ -214,6 +215,128 @@ void main() {
       () => base.select(base.movimientosCaja).getSingle(),
     ))!;
     expect(caja.valor, d('5600'));
+  });
+
+  testWidgets('un producto por kilo muestra la unidad y se vende con '
+      'decimales: 3,4 kg de yuca', (tester) async {
+    final yuca = await crear(
+      tester,
+      'YUC',
+      'Yuca',
+      '3000',
+      '10',
+      unidad: UnidadMedida.kilogramo,
+    );
+    await abrir(tester);
+
+    await agregar(tester, 'yuca', 'Yuca');
+    expect(find.text('\$ 3.000 por kg'), findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(find.byKey(Key('vender_unidad_${yuca.getId()}')))
+          .data,
+      'kg',
+    );
+
+    await tester.tap(find.byKey(Key('vender_escribir_${yuca.getId()}')));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Cuántos kilos de Yuca?'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('dialogo_cantidad_campo')),
+      '3,4',
+    );
+    await tester.tap(find.byKey(const Key('dialogo_cantidad_aceptar')));
+    await esperarBase(tester);
+
+    expect(
+      tester
+          .widget<Text>(find.byKey(Key('vender_cantidad_${yuca.getId()}')))
+          .data,
+      '3,4',
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('vender_cobrar')),
+        matching: find.text('\$ 10.200'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('vender_cobrar')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('cobrar_efectivo')), '20.000');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('cobrar_confirmar')));
+    await esperarBase(tester);
+
+    expect(find.text('Venta registrada'), findsOneWidget);
+    expect(await stock(tester, yuca), d('6.6'));
+  });
+
+  testWidgets('más kilos de los que hay: avisa y deja la cantidad', (
+    tester,
+  ) async {
+    final yuca = await crear(
+      tester,
+      'YUC',
+      'Yuca',
+      '3000',
+      '5',
+      unidad: UnidadMedida.kilogramo,
+    );
+    await abrir(tester);
+    await agregar(tester, 'yuca', 'Yuca');
+
+    await tester.tap(find.byKey(Key('vender_escribir_${yuca.getId()}')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('dialogo_cantidad_campo')),
+      '5,5',
+    );
+    await tester.tap(find.byKey(const Key('dialogo_cantidad_aceptar')));
+    await esperarBase(tester);
+
+    expect(
+      find.text('No hay suficiente existencia del producto'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<Text>(find.byKey(Key('vender_cantidad_${yuca.getId()}')))
+          .data,
+      '1',
+    );
+  });
+
+  testWidgets('un producto por unidad muestra "und" y se escribe en enteros', (
+    tester,
+  ) async {
+    final arroz = await crear(tester, 'ARR', 'Arroz 500 g', '2800', '10');
+    await abrir(tester);
+    await agregar(tester, 'arroz', 'Arroz 500 g');
+    expect(
+      tester
+          .widget<Text>(find.byKey(Key('vender_unidad_${arroz.getId()}')))
+          .data,
+      'und',
+    );
+
+    await tester.tap(find.byKey(Key('vender_escribir_${arroz.getId()}')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('unidades de Arroz 500 g'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('dialogo_cantidad_campo')),
+      '4',
+    );
+    await tester.tap(find.byKey(const Key('dialogo_cantidad_aceptar')));
+    await esperarBase(tester);
+
+    expect(
+      tester
+          .widget<Text>(find.byKey(Key('vender_cantidad_${arroz.getId()}')))
+          .data,
+      '4',
+    );
   });
 
   testWidgets('sin existencia muestra el mensaje y no agrega (RN-01)', (
