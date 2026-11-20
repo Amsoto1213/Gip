@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/pagos/linea_venta.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/leer_codigo.dart';
@@ -8,6 +9,8 @@ import 'package:gip/presentation/comun/encabezado_pantalla.dart';
 import 'package:gip/presentation/comun/formato_pesos.dart';
 import 'package:gip/presentation/comun/tarjeta_gip.dart';
 import 'package:gip/presentation/comun/tema/tema_gip.dart';
+import 'package:gip/presentation/surtido/widgets_movimiento.dart';
+import 'package:gip/presentation/vender/dialogo_cantidad.dart';
 import 'package:gip/presentation/vender/rutas_vender.dart';
 import 'package:gip/presentation/vender/vender_view_model.dart';
 import 'package:provider/provider.dart';
@@ -198,6 +201,18 @@ class _VentaActual extends StatelessWidget {
                 linea: linea,
                 onSumar: () => vm.sumar(linea),
                 onRestar: () => vm.restar(linea),
+                onEscribir: () async {
+                  final producto = linea.getItem().getProducto();
+                  final cantidad = await pedirCantidad(
+                    context,
+                    producto: producto.getNombre(),
+                    unidad: producto.getUnidadMedida(),
+                    actual: linea.getCantidad(),
+                  );
+                  if (cantidad != null) {
+                    await vm.cambiarCantidad(linea, cantidad);
+                  }
+                },
               ),
             ],
         ],
@@ -211,11 +226,15 @@ class _FilaLinea extends StatelessWidget {
     required this.linea,
     required this.onSumar,
     required this.onRestar,
+    required this.onEscribir,
   });
 
   final LineaVenta linea;
   final VoidCallback onSumar;
   final VoidCallback onRestar;
+
+  /// Abre el diálogo para escribir la cantidad (kilos y libras con decimales).
+  final VoidCallback onEscribir;
 
   @override
   Widget build(BuildContext context) {
@@ -246,20 +265,39 @@ class _FilaLinea extends StatelessWidget {
       style: tema.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
     );
     final precio = Text(
-      '\$ ${mostrarPrecio(producto.getPrecioVenta())} c/u',
+      '\$ ${mostrarPrecio(producto.getPrecioVenta())} '
+      '${producto.getUnidadMedida() == UnidadMedida.unidad ? 'c/u' : 'por ${unidadCorta(producto.getUnidadMedida())}'}',
       style: tema.textTheme.bodySmall?.copyWith(fontSize: 13).cifrasTabulares,
     );
     final selector = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         paso('menos', Icons.remove, 'Quitar uno', onRestar),
-        SizedBox(
-          width: 44,
-          child: Text(
-            mostrarPrecio(linea.getCantidad()),
-            key: Key('vender_cantidad_$id'),
-            textAlign: TextAlign.center,
-            style: numero,
+        InkWell(
+          key: Key('vender_escribir_$id'),
+          onTap: onEscribir,
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 56, minHeight: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    mostrarCantidad(linea.getCantidad()),
+                    key: Key('vender_cantidad_$id'),
+                    textAlign: TextAlign.center,
+                    style: numero,
+                  ),
+                  Text(
+                    unidadCorta(producto.getUnidadMedida()),
+                    key: Key('vender_unidad_$id'),
+                    style: tema.textTheme.bodySmall?.copyWith(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         paso('mas', Icons.add, 'Agregar uno', onSumar),
