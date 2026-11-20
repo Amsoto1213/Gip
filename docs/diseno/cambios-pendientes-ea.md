@@ -207,6 +207,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 ## 5. Lo que no va en EA
 
 - **Esquema de la base de datos.** El `.qea` no tiene tablas. El esquema está en `supabase/migrations/` (fuente de verdad) y en las tablas drift de `lib/data/local/tablas/`. Por ejemplo, la columna `clientes.eliminado_en` de DI-31 y la tabla `codigos_producto` de DI-34 ya están en las dos.
+- **Saldo de `fiados` sin mínimo.** `fiados.saldo_pendiente` puede ser negativo en el servidor (DI-52); en el modelo, `Fiado.recalcularSaldo` ya lo dice ("saldo negativo → ABONO_EXCEDE_SALDO").
 - **Esquema local nuevo.** `cursores_sincronizacion` (drift versión 16, DI-47): hasta dónde bajó cada tabla; solo existe en la base local y nunca se sube.
 - **Mockups.** Varias DI piden cambios en el canvas de mockups, no en EA: DI-14, DI-21 (e), DI-24 (f), DI-25 (h), DI-26 (g, h), DI-27 (f), DI-28 (e), DI-29 (f) y DI-34 (e, f), DI-45 (h), DI-50 (aviso de conflictos por revisar en Surtido) y DI-51 (tarjeta única para una entrada repetida varias veces).
 - **Un detalle que se corrige en el código.** `ServicioAlertas.diaLocal` es pública, no está en EA y nadie la usa fuera de la clase: se vuelve privada.
