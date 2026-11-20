@@ -4,7 +4,7 @@ Las pruebas automáticas cubren el algoritmo con dos bases locales y un servidor
 
 ## Antes de empezar
 
-1. **Aplicar las migraciones al proyecto de pruebas**, en especial `20261121090000_sincronizacion.sql` (la hace quien administra el proyecto: `npx supabase db push`, o pegar el archivo en el SQL Editor). Si falla, copiar el error: casi seguro es un nombre de restricción o un disparador.
+1. **Aplicar las migraciones al proyecto de pruebas**, en especial `20261121090000_sincronizacion.sql` y `20261121100000_sincronizacion_tiempo_real.sql` (esta última hace que los cambios lleguen al instante) (la hace quien administra el proyecto: `npx supabase db push`, o pegar el archivo en el SQL Editor). Si falla, copiar el error: casi seguro es un nombre de restricción o un disparador.
 2. En el proyecto de pruebas: *Authentication → Providers → Email → Confirm email* **desactivado** (ya lo pide DI-43) y una tienda con su propietario en `tiendas` y `usuarios`.
 3. **Dos equipos con la misma tienda**: el APK (`docs/probar-en-telefono.md`) y Chrome (`flutter run -d chrome --dart-define-from-file=.env.json`) o dos teléfonos. Iniciar sesión en los dos con el mismo usuario (o con el propietario en uno y un empleado en otro).
 4. Ver lo que pasa: en la terminal de `flutter run` aparece `Sincronización: Sincronizacion(subidos: …, bajados: …)`; en Supabase, *Table Editor*.
@@ -17,8 +17,8 @@ Marcar cada paso. **A** y **B** son los dos equipos.
 
 | # | En | Hacer | Debe pasar |
 |---|---|---|---|
-| 1 | A | Crear un producto "Huevo AA" y registrar una entrada de 24 con factura `FV-1`. Esperar o forzar la sincronización | En Supabase: filas en `productos`, `items_inventario` y `movimientos_inventario` (con `sincronizado_en` lleno). `precio_venta` como número |
-| 2 | B | Abrir la app (con internet) | Aparecen el producto y la entrada. La existencia de Huevo AA es 24. B no debe quedar con pendientes: Negocio → Reporte del día no dice "sin sincronizar" |
+| 1 | A | Crear un producto "Huevo AA" y registrar una entrada de 24 con factura `FV-1`. Mirar la terminal: en 1 a 2 segundos debe salir `Sincronización: … subidos: N` | En Supabase: filas en `productos`, `items_inventario` y `movimientos_inventario` (con `sincronizado_en` lleno). `precio_venta` como número |
+| 2 | B | Tener la app abierta, con internet. **No hacer nada** | En 2 a 3 segundos la terminal de B muestra `bajados: N`. Los datos ya están en la base de B; **las pantallas que ya estaban abiertas no se refrescan solas** (hay que volver a entrar a la lista, o arrastrar para actualizar donde exista). Si B estaba cerrada, aparecen al abrirla. La existencia de Huevo AA es 24. B no debe quedar con pendientes: Negocio → Reporte del día no dice "sin sincronizar" |
 | 3 | A | Modo avión. Vender 2 huevos y fiar a "María Pérez". Quitar el modo avión | La venta, la forma de pago y el fiado suben. B los ve al sincronizar. La existencia baja en B |
 | 4 | A y B | Los dos en modo avión: cada uno registra una **entrada de 24 huevos con la misma factura `FV-1`**. Quitar el modo avión de los dos | Negocio → Revisar sincronización (propietario): **un solo** conflicto "Posible registro repetido" con las mismas dos entradas en A y en B. La segunda queda "en revisión" y no suma a la existencia |
 | 5 | A y B | Resolver el conflicto de 4 en A ("Guardar decisión"). Sincronizar B | En B el conflicto desaparece y la existencia coincide con la de A |

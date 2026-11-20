@@ -86,7 +86,7 @@ Future<void> main() async {
     caja.servicioCaja,
     acceso.servicioAcceso,
   );
-  final sincronizador = registrarSincronizacion(
+  final sincronizacion = registrarSincronizacion(
     base,
     cliente,
     conciliacion.conciliar,
@@ -113,9 +113,13 @@ Future<void> main() async {
       gestionarUsuarios: gestionarUsuarios,
       revisarConflictos: conciliacion.revisarConflictos,
       sincronizar: (tienda) async {
-        final resultado = await sincronizador.sincronizar(tienda);
+        final resultado = await sincronizacion.sincronizador.sincronizar(
+          tienda,
+        );
         debugPrint('Sincronización: $resultado');
       },
+      escrituras: sincronizacion.escrituras,
+      cambiosRemotos: sincronizacion.cambiosRemotos,
       generarReporteDiario: reportes.generarReporteDiario,
       registrarMovimientoCaja: cajaPropietario.registrarMovimientoCaja,
       registrarCierreCaja: cajaPropietario.registrarCierreCaja,
@@ -151,6 +155,8 @@ class GipApp extends StatefulWidget {
     required this.registrarCierreCaja,
     required this.anularVenta,
     this.sincronizar,
+    this.escrituras,
+    this.cambiosRemotos,
   });
 
   final IniciarSesionCoordinator iniciarSesion;
@@ -181,6 +187,12 @@ class GipApp extends StatefulWidget {
   /// pantallas, que no sincronizan.
   final Future<void> Function(Tienda tienda)? sincronizar;
 
+  /// Avisa cuando este equipo escribe algo que hay que subir (DI-48).
+  final Stream<void>? escrituras;
+
+  /// Avisa cuando otro equipo cambia algo de la tienda (DI-48).
+  final Stream<void> Function(Tienda tienda)? cambiosRemotos;
+
   @override
   State<GipApp> createState() => _GipAppState();
 }
@@ -205,7 +217,12 @@ class _GipAppState extends State<GipApp> with WidgetsBindingObserver {
     _alertasDiarias = DisparadorAlertasDiarias(_sesion, widget.generarAlertas);
     final sincronizar = widget.sincronizar;
     if (sincronizar != null) {
-      _sincronizacion = DisparadorSincronizacion(_sesion, sincronizar);
+      _sincronizacion = DisparadorSincronizacion(
+        _sesion,
+        sincronizar,
+        escrituras: widget.escrituras,
+        cambiosRemotos: widget.cambiosRemotos,
+      );
     }
   }
 

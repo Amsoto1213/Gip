@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart' show OrderingTerm, driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -637,6 +639,57 @@ void main() {
         expect(servidor.cuantas('conflictos_sincronizacion'), 1);
       },
     );
+  });
+
+  group('al instante (DI-48)', () {
+    test('lo que se pide mientras corre una sincronización se recoge en otra '
+        'vuelta al terminar', () async {
+      await huevo(a);
+      final puerta = servidor.puerta = Completer<void>();
+      final r1 = a.sincronizador.sincronizar(tienda);
+      await pumpEventQueue();
+      // La primera ya subió y está leyendo; ahora el equipo escribe algo.
+      await entrada(a, 'tarde');
+
+      final r2 = a.sincronizador.sincronizar(tienda);
+      puerta.complete();
+      await r1;
+
+      expect(identical(r1, r2), isTrue);
+      expect(servidor.fila('movimientos_inventario', 'tarde'), isNotNull);
+      expect(await a.cola(), isEmpty);
+    });
+
+    test('no se encierra: como máximo tres vueltas por pedido', () async {
+      await huevo(a);
+      final r = await a.sincronizador.sincronizar(tienda);
+
+      expect(r.termino, isTrue);
+      // Sin pedidos nuevos, una sola vuelta: una lectura por tabla.
+      expect(servidor.peticiones.where((p) => p == 'leer productos').length, 1);
+    });
+
+    test('escrituras avisa cada vez que se anota algo para subir, y no '
+        'cuando la sincronización vacía la cola', () async {
+      final avisos = <int>[];
+      final suscripcion = a.sincronizador.escrituras.listen(
+        (_) => avisos.add(1),
+      );
+      await huevo(a);
+      await pumpEventQueue();
+      final tras = avisos.length;
+      expect(tras, greaterThan(0));
+
+      await a.sincronizador.sincronizar(tienda);
+      await pumpEventQueue();
+
+      expect(
+        avisos.length,
+        tras,
+        reason: 'sacar de la cola no es una escritura',
+      );
+      await suscripcion.cancel();
+    });
   });
 
   test('dos llamadas a la vez comparten la misma sincronización', () async {

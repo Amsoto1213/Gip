@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:gip/data/service_agents/sincronizacion/servidor_remoto.dart';
 import 'package:gip/data/service_agents/sincronizacion/tablas_sincronizables.dart';
 
@@ -16,6 +18,10 @@ class ServidorRemotoFalso implements ServidorRemoto {
 
   /// Si es verdadero, toda petición falla como si no hubiera red.
   bool sinRed = false;
+
+  /// Si no es nulo, las lecturas esperan a que se complete: sirve para
+  /// escribir algo en el equipo mientras la sincronización está a medias.
+  Completer<void>? puerta;
 
   /// Ids que el servidor rechaza (como una llave foránea o una regla de tabla).
   final Set<String> rechazar = {};
@@ -146,6 +152,7 @@ class ServidorRemotoFalso implements ServidorRemoto {
     required int desplazamiento,
   }) async {
     _comprobarRed('leer $tabla');
+    await puerta?.future;
     final limiteInferior = desde == null ? null : DateTime.parse(desde);
     final filas =
         [

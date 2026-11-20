@@ -99,10 +99,64 @@ class Sincronizador {
 
   Future<ResultadoSincronizacion>? _enCurso;
 
+  /// Alguien pidió sincronizar mientras ya había una en curso: lo que cambió
+  /// después de que ella empezó a leer no está en su resultado, así que al
+  /// terminar se hace otra vuelta.
+  bool _otraVuelta = false;
+
+  /// Cuántas vueltas seguidas como máximo por un mismo pedido: si cada vuelta
+  /// escribe algo que vuelve a pedir otra (la conciliación), no se encierra.
+  static const _maximoDeVueltas = 3;
+
+  /// Avisa cada vez que se agrega una entrada a la cola de pendientes, es
+  /// decir, cada vez que este equipo escribe algo que hay que subir. Lo
+  /// usa el disparador para sincronizar enseguida (DI-48). Los borrados de la
+  /// cola, que hace la propia sincronización al subir, no avisan.
+  Stream<void> get escrituras => _base
+      .tableUpdates(
+        TableUpdateQuery.onTable(
+          _base.colaPendientes,
+          limitUpdateKind: UpdateKind.insert,
+        ),
+      )
+      .map((_) {});
+
   /// Sincroniza la tienda. Si ya hay una sincronización en curso devuelve esa
-  /// misma. Nunca lanza: lo que sale mal queda en el resultado.
-  Future<ResultadoSincronizacion> sincronizar(Tienda tienda) =>
-      _enCurso ??= _correr(tienda).whenComplete(() => _enCurso = null);
+  /// misma, y al terminar hace otra vuelta para recoger lo que cambió mientras
+  /// corría. Nunca lanza: lo que sale mal queda en el resultado.
+  Future<ResultadoSincronizacion> sincronizar(Tienda tienda) {
+    final enCurso = _enCurso;
+    if (enCurso != null) {
+      _otraVuelta = true;
+      return enCurso;
+    }
+    return _enCurso = _hastaEstabilizar(tienda)
+        .whenComplete(() => _enCurso = null);
+  }
+
+  Future<ResultadoSincronizacion> _hastaEstabilizar(Tienda tienda) async {
+    var total = await _correr(tienda);
+    var vueltas = 1;
+    while (_otraVuelta && vueltas < _maximoDeVueltas && !total.sinConexion) {
+      _otraVuelta = false;
+      vueltas++;
+      total = _sumar(total, await _correr(tienda));
+    }
+    _otraVuelta = false;
+    return total;
+  }
+
+  static ResultadoSincronizacion _sumar(
+    ResultadoSincronizacion a,
+    ResultadoSincronizacion b,
+  ) => ResultadoSincronizacion(
+    subidos: a.subidos + b.subidos,
+    bajados: a.bajados + b.bajados,
+    conflictosNuevos: [...a.conflictosNuevos, ...b.conflictosNuevos],
+    pendientes: b.pendientes,
+    sinConexion: b.sinConexion,
+    error: b.error ?? a.error,
+  );
 
   Future<ResultadoSincronizacion> _correr(Tienda tienda) async {
     var subidos = 0;

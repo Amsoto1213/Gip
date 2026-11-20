@@ -48,10 +48,14 @@ void main() {
   DisparadorSincronizacion crear({
     Duration intervalo = const Duration(minutes: 5),
     Duration separacion = const Duration(seconds: 20),
+    Stream<void>? escrituras,
+    Stream<void> Function(Tienda)? cambiosRemotos,
   }) => DisparadorSincronizacion(
     sesion,
     (t) => accion(t),
     conexion: conexion.stream,
+    escrituras: escrituras,
+    cambiosRemotos: cambiosRemotos,
     intervalo: intervalo,
     separacion: separacion,
     reloj: () => ahora,
@@ -203,6 +207,125 @@ void main() {
 
     expect(sincronizadas, hasLength(1));
     d.dispose();
+  });
+
+  group('al instante (DI-48)', () {
+    late StreamController<void> escrituras;
+    late List<StreamController<void>> remotos;
+    late List<Tienda> escuchadas;
+
+    setUp(() {
+      escrituras = StreamController<void>.broadcast();
+      remotos = [];
+      escuchadas = [];
+    });
+    tearDown(() async {
+      await escrituras.close();
+      for (final r in remotos) {
+        await r.close();
+      }
+    });
+
+    Stream<void> Function(Tienda) fabrica() => (t) {
+      escuchadas.add(t);
+      final c = StreamController<void>.broadcast();
+      remotos.add(c);
+      return c.stream;
+    };
+
+    testWidgets('una escritura de este equipo sincroniza enseguida', (
+      tester,
+    ) async {
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => carmen);
+      final d = crear(escrituras: escrituras.stream);
+      await sesion.verificarSesionGuardada();
+      await tester.pump();
+      expect(sincronizadas, hasLength(1));
+
+      escrituras.add(null);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(sincronizadas, hasLength(1), reason: 'aún no pasó la espera');
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(sincronizadas, hasLength(2));
+      d.dispose();
+    });
+
+    testWidgets('las escrituras seguidas hacen una sola sincronización', (
+      tester,
+    ) async {
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => carmen);
+      final d = crear(escrituras: escrituras.stream);
+      await sesion.verificarSesionGuardada();
+      await tester.pump();
+
+      for (var i = 0; i < 5; i++) {
+        escrituras.add(null);
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(sincronizadas, hasLength(2));
+      d.dispose();
+    });
+
+    testWidgets('un cambio de otro equipo sincroniza enseguida', (
+      tester,
+    ) async {
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => carmen);
+      final d = crear(cambiosRemotos: fabrica());
+      await sesion.verificarSesionGuardada();
+      await tester.pump();
+      expect(escuchadas, [tienda]);
+      expect(sincronizadas, hasLength(1));
+
+      remotos.single.add(null);
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(sincronizadas, hasLength(2));
+      d.dispose();
+    });
+
+    testWidgets('al cambiar de tienda deja de escuchar la anterior y escucha '
+        'la nueva', (tester) async {
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => carmen);
+      final d = crear(cambiosRemotos: fabrica());
+      await sesion.verificarSesionGuardada();
+      await tester.pump();
+
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => deOtra);
+      await sesion.verificarSesionGuardada();
+      await tester.pump();
+
+      expect(escuchadas, [tienda, otraTienda]);
+      expect(remotos.first.hasListener, isFalse);
+      expect(remotos.last.hasListener, isTrue);
+      d.dispose();
+    });
+
+    testWidgets('sin usuario activo los avisos no sincronizan y al cerrar '
+        'sesión se deja de escuchar', (tester) async {
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => null);
+      final d = crear(escrituras: escrituras.stream, cambiosRemotos: fabrica());
+      await sesion.verificarSesionGuardada();
+      escrituras.add(null);
+      await tester.pump(const Duration(seconds: 2));
+      expect(sincronizadas, isEmpty);
+      expect(escuchadas, isEmpty);
+
+      when(() => coordinador.sesionGuardada()).thenAnswer((_) async => carmen);
+      await sesion.verificarSesionGuardada();
+      await tester.pump();
+      expect(remotos.single.hasListener, isTrue);
+
+      await sesion.cerrarSesion();
+      await tester.pump();
+      expect(remotos.single.hasListener, isFalse);
+      escrituras.add(null);
+      await tester.pump(const Duration(seconds: 2));
+      expect(sincronizadas, hasLength(1));
+      d.dispose();
+    });
   });
 
   test('un fallo de la sincronización no tumba nada', () async {
