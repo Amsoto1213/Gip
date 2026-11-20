@@ -6,6 +6,7 @@ import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coord
 import 'package:gip/business/workflow/info_tienda/exportar_datos_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/gestionar_usuarios_coordinator.dart';
 import 'package:gip/business/workflow/info_tienda/revisar_conflictos_coordinator.dart';
+import 'package:gip/presentation/comun/datos_actualizados.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/comun/menu_lateral.dart';
 import 'package:gip/presentation/negocio/alertas_view.dart';
@@ -77,7 +78,10 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
               context.read<ConsultarAlertasCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..cargar(),
-            child: const AlertasView(),
+            child: RecargarAlCambiarLosDatos<AlertasViewModel>(
+              alRecargar: (vm) => vm.cargar(),
+              child: const AlertasView(),
+            ),
           ),
         ),
         GoRoute(
@@ -87,7 +91,10 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
               context.read<ConsultarMargenCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..cargar(),
-            child: const MargenView(),
+            child: RecargarAlCambiarLosDatos<MargenViewModel>(
+              alRecargar: (vm) => vm.cargar(),
+              child: const MargenView(),
+            ),
           ),
         ),
         GoRoute(
@@ -97,7 +104,10 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
               context.read<ConsultarRotacionCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..cargar(),
-            child: const RotacionView(),
+            child: RecargarAlCambiarLosDatos<RotacionViewModel>(
+              alRecargar: (vm) => vm.cargar(),
+              child: const RotacionView(),
+            ),
           ),
         ),
         GoRoute(
@@ -127,7 +137,10 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
               context.read<RevisarConflictosCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..cargar(),
-            child: const ConflictosView(),
+            child: RecargarAlCambiarLosDatos<ConflictosViewModel>(
+              alRecargar: (vm) => vm.cargar(),
+              child: const ConflictosView(),
+            ),
           ),
         ),
         GoRoute(
@@ -137,7 +150,10 @@ StatefulShellBranch ramaNegocio() => StatefulShellBranch(
               context.read<GenerarReporteDiarioCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..cargar(),
-            child: const ReporteDiarioView(),
+            child: RecargarAlCambiarLosDatos<ReporteDiarioViewModel>(
+              alRecargar: (vm) => vm.cargar(),
+              child: const ReporteDiarioView(),
+            ),
           ),
         ),
       ],

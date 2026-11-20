@@ -49,3 +49,7 @@ Sin cable, el lector 2D debe ser **Bluetooth en modo teclado (HID)**: se emparej
 ## Minutos de GitHub Actions
 
 En repos privados GitHub da una cuota mensual de minutos (más alta con GitHub Pro / Student Pack). Cada APK toma unos 6–10 minutos; por eso el workflow solo corre en `main` y a pedido, no en cada push de cada rama.
+
+## Sincronización entre equipos
+
+Para probar que dos equipos comparten datos (CUS-23) con este APK y Chrome, sigue `docs/probar-sincronizacion.md`.

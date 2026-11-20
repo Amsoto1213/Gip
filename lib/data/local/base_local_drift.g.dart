@@ -7828,6 +7828,278 @@ class ConflictosSincronizacionCompanion
   }
 }
 
+class $CursoresSincronizacionTable extends CursoresSincronizacion
+    with TableInfo<$CursoresSincronizacionTable, FilaCursorSincronizacion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CursoresSincronizacionTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _tiendaIdMeta = const VerificationMeta(
+    'tiendaId',
+  );
+  @override
+  late final GeneratedColumn<String> tiendaId = GeneratedColumn<String>(
+    'tienda_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tablaMeta = const VerificationMeta('tabla');
+  @override
+  late final GeneratedColumn<String> tabla = GeneratedColumn<String>(
+    'tabla',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cursorMeta = const VerificationMeta('cursor');
+  @override
+  late final GeneratedColumn<String> cursor = GeneratedColumn<String>(
+    'cursor',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [tiendaId, tabla, cursor];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cursores_sincronizacion';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FilaCursorSincronizacion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('tienda_id')) {
+      context.handle(
+        _tiendaIdMeta,
+        tiendaId.isAcceptableOrUnknown(data['tienda_id']!, _tiendaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tiendaIdMeta);
+    }
+    if (data.containsKey('tabla')) {
+      context.handle(
+        _tablaMeta,
+        tabla.isAcceptableOrUnknown(data['tabla']!, _tablaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tablaMeta);
+    }
+    if (data.containsKey('cursor')) {
+      context.handle(
+        _cursorMeta,
+        cursor.isAcceptableOrUnknown(data['cursor']!, _cursorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cursorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {tiendaId, tabla};
+  @override
+  FilaCursorSincronizacion map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FilaCursorSincronizacion(
+      tiendaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tienda_id'],
+      )!,
+      tabla: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tabla'],
+      )!,
+      cursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cursor'],
+      )!,
+    );
+  }
+
+  @override
+  $CursoresSincronizacionTable createAlias(String alias) {
+    return $CursoresSincronizacionTable(attachedDatabase, alias);
+  }
+}
+
+class FilaCursorSincronizacion extends DataClass
+    implements Insertable<FilaCursorSincronizacion> {
+  final String tiendaId;
+  final String tabla;
+  final String cursor;
+  const FilaCursorSincronizacion({
+    required this.tiendaId,
+    required this.tabla,
+    required this.cursor,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['tienda_id'] = Variable<String>(tiendaId);
+    map['tabla'] = Variable<String>(tabla);
+    map['cursor'] = Variable<String>(cursor);
+    return map;
+  }
+
+  CursoresSincronizacionCompanion toCompanion(bool nullToAbsent) {
+    return CursoresSincronizacionCompanion(
+      tiendaId: Value(tiendaId),
+      tabla: Value(tabla),
+      cursor: Value(cursor),
+    );
+  }
+
+  factory FilaCursorSincronizacion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FilaCursorSincronizacion(
+      tiendaId: serializer.fromJson<String>(json['tiendaId']),
+      tabla: serializer.fromJson<String>(json['tabla']),
+      cursor: serializer.fromJson<String>(json['cursor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'tiendaId': serializer.toJson<String>(tiendaId),
+      'tabla': serializer.toJson<String>(tabla),
+      'cursor': serializer.toJson<String>(cursor),
+    };
+  }
+
+  FilaCursorSincronizacion copyWith({
+    String? tiendaId,
+    String? tabla,
+    String? cursor,
+  }) => FilaCursorSincronizacion(
+    tiendaId: tiendaId ?? this.tiendaId,
+    tabla: tabla ?? this.tabla,
+    cursor: cursor ?? this.cursor,
+  );
+  FilaCursorSincronizacion copyWithCompanion(
+    CursoresSincronizacionCompanion data,
+  ) {
+    return FilaCursorSincronizacion(
+      tiendaId: data.tiendaId.present ? data.tiendaId.value : this.tiendaId,
+      tabla: data.tabla.present ? data.tabla.value : this.tabla,
+      cursor: data.cursor.present ? data.cursor.value : this.cursor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FilaCursorSincronizacion(')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('tabla: $tabla, ')
+          ..write('cursor: $cursor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(tiendaId, tabla, cursor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FilaCursorSincronizacion &&
+          other.tiendaId == this.tiendaId &&
+          other.tabla == this.tabla &&
+          other.cursor == this.cursor);
+}
+
+class CursoresSincronizacionCompanion
+    extends UpdateCompanion<FilaCursorSincronizacion> {
+  final Value<String> tiendaId;
+  final Value<String> tabla;
+  final Value<String> cursor;
+  final Value<int> rowid;
+  const CursoresSincronizacionCompanion({
+    this.tiendaId = const Value.absent(),
+    this.tabla = const Value.absent(),
+    this.cursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CursoresSincronizacionCompanion.insert({
+    required String tiendaId,
+    required String tabla,
+    required String cursor,
+    this.rowid = const Value.absent(),
+  }) : tiendaId = Value(tiendaId),
+       tabla = Value(tabla),
+       cursor = Value(cursor);
+  static Insertable<FilaCursorSincronizacion> custom({
+    Expression<String>? tiendaId,
+    Expression<String>? tabla,
+    Expression<String>? cursor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (tiendaId != null) 'tienda_id': tiendaId,
+      if (tabla != null) 'tabla': tabla,
+      if (cursor != null) 'cursor': cursor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CursoresSincronizacionCompanion copyWith({
+    Value<String>? tiendaId,
+    Value<String>? tabla,
+    Value<String>? cursor,
+    Value<int>? rowid,
+  }) {
+    return CursoresSincronizacionCompanion(
+      tiendaId: tiendaId ?? this.tiendaId,
+      tabla: tabla ?? this.tabla,
+      cursor: cursor ?? this.cursor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (tiendaId.present) {
+      map['tienda_id'] = Variable<String>(tiendaId.value);
+    }
+    if (tabla.present) {
+      map['tabla'] = Variable<String>(tabla.value);
+    }
+    if (cursor.present) {
+      map['cursor'] = Variable<String>(cursor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CursoresSincronizacionCompanion(')
+          ..write('tiendaId: $tiendaId, ')
+          ..write('tabla: $tabla, ')
+          ..write('cursor: $cursor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseLocalDrift extends GeneratedDatabase {
   _$BaseLocalDrift(QueryExecutor e) : super(e);
   $BaseLocalDriftManager get managers => $BaseLocalDriftManager(this);
@@ -7858,6 +8130,8 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
   );
   late final $ConflictosSincronizacionTable conflictosSincronizacion =
       $ConflictosSincronizacionTable(this);
+  late final $CursoresSincronizacionTable cursoresSincronizacion =
+      $CursoresSincronizacionTable(this);
   late final Index productosTiendaCodigoIdx = Index(
     'productos_tienda_codigo_idx',
     'CREATE INDEX productos_tienda_codigo_idx ON productos (tienda_id, codigo)',
@@ -7975,6 +8249,7 @@ abstract class _$BaseLocalDrift extends GeneratedDatabase {
     codigosProducto,
     anulacionesVenta,
     conflictosSincronizacion,
+    cursoresSincronizacion,
     productosTiendaCodigoIdx,
     productosTiendaNombreIdx,
     itemsInventarioTiendaIdx,
@@ -14448,6 +14723,199 @@ typedef $$ConflictosSincronizacionTableProcessedTableManager =
       FilaConflictoSincronizacion,
       PrefetchHooks Function()
     >;
+typedef $$CursoresSincronizacionTableCreateCompanionBuilder =
+    CursoresSincronizacionCompanion Function({
+      required String tiendaId,
+      required String tabla,
+      required String cursor,
+      Value<int> rowid,
+    });
+typedef $$CursoresSincronizacionTableUpdateCompanionBuilder =
+    CursoresSincronizacionCompanion Function({
+      Value<String> tiendaId,
+      Value<String> tabla,
+      Value<String> cursor,
+      Value<int> rowid,
+    });
+
+class $$CursoresSincronizacionTableFilterComposer
+    extends Composer<_$BaseLocalDrift, $CursoresSincronizacionTable> {
+  $$CursoresSincronizacionTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tabla => $composableBuilder(
+    column: $table.tabla,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CursoresSincronizacionTableOrderingComposer
+    extends Composer<_$BaseLocalDrift, $CursoresSincronizacionTable> {
+  $$CursoresSincronizacionTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get tiendaId => $composableBuilder(
+    column: $table.tiendaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tabla => $composableBuilder(
+    column: $table.tabla,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CursoresSincronizacionTableAnnotationComposer
+    extends Composer<_$BaseLocalDrift, $CursoresSincronizacionTable> {
+  $$CursoresSincronizacionTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get tiendaId =>
+      $composableBuilder(column: $table.tiendaId, builder: (column) => column);
+
+  GeneratedColumn<String> get tabla =>
+      $composableBuilder(column: $table.tabla, builder: (column) => column);
+
+  GeneratedColumn<String> get cursor =>
+      $composableBuilder(column: $table.cursor, builder: (column) => column);
+}
+
+class $$CursoresSincronizacionTableTableManager
+    extends
+        RootTableManager<
+          _$BaseLocalDrift,
+          $CursoresSincronizacionTable,
+          FilaCursorSincronizacion,
+          $$CursoresSincronizacionTableFilterComposer,
+          $$CursoresSincronizacionTableOrderingComposer,
+          $$CursoresSincronizacionTableAnnotationComposer,
+          $$CursoresSincronizacionTableCreateCompanionBuilder,
+          $$CursoresSincronizacionTableUpdateCompanionBuilder,
+          (
+            FilaCursorSincronizacion,
+            BaseReferences<
+              _$BaseLocalDrift,
+              $CursoresSincronizacionTable,
+              FilaCursorSincronizacion
+            >,
+          ),
+          FilaCursorSincronizacion,
+          PrefetchHooks Function()
+        > {
+  $$CursoresSincronizacionTableTableManager(
+    _$BaseLocalDrift db,
+    $CursoresSincronizacionTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CursoresSincronizacionTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CursoresSincronizacionTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CursoresSincronizacionTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> tiendaId = const Value.absent(),
+                Value<String> tabla = const Value.absent(),
+                Value<String> cursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CursoresSincronizacionCompanion(
+                tiendaId: tiendaId,
+                tabla: tabla,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String tiendaId,
+                required String tabla,
+                required String cursor,
+                Value<int> rowid = const Value.absent(),
+              }) => CursoresSincronizacionCompanion.insert(
+                tiendaId: tiendaId,
+                tabla: tabla,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $CursoresSincronizacionTable,
+                    FilaCursorSincronizacion
+                  >(table),
+                  BaseReferences<
+                    _$BaseLocalDrift,
+                    $CursoresSincronizacionTable,
+                    FilaCursorSincronizacion
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CursoresSincronizacionTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseLocalDrift,
+      $CursoresSincronizacionTable,
+      FilaCursorSincronizacion,
+      $$CursoresSincronizacionTableFilterComposer,
+      $$CursoresSincronizacionTableOrderingComposer,
+      $$CursoresSincronizacionTableAnnotationComposer,
+      $$CursoresSincronizacionTableCreateCompanionBuilder,
+      $$CursoresSincronizacionTableUpdateCompanionBuilder,
+      (
+        FilaCursorSincronizacion,
+        BaseReferences<
+          _$BaseLocalDrift,
+          $CursoresSincronizacionTable,
+          FilaCursorSincronizacion
+        >,
+      ),
+      FilaCursorSincronizacion,
+      PrefetchHooks Function()
+    >;
 
 class $BaseLocalDriftManager {
   final _$BaseLocalDrift _db;
@@ -14489,5 +14957,10 @@ class $BaseLocalDriftManager {
       $$ConflictosSincronizacionTableTableManager(
         _db,
         _db.conflictosSincronizacion,
+      );
+  $$CursoresSincronizacionTableTableManager get cursoresSincronizacion =>
+      $$CursoresSincronizacionTableTableManager(
+        _db,
+        _db.cursoresSincronizacion,
       );
 }

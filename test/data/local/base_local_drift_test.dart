@@ -70,8 +70,14 @@ void main() {
             .map((f) => f.read<String>('name'))
             .toList();
 
-    /// Quita lo que agregó la versión 15 (CUS-22).
+    /// Quita lo que agregó la versión 16 (CUS-23).
+    Future<void> bajarDeLaVersion16(BaseLocalDrift base) async {
+      await base.customStatement('DROP TABLE cursores_sincronizacion');
+    }
+
+    /// Quita lo que agregó la versión 15 (CUS-22), y antes la 16.
     Future<void> bajarDeLaVersion15(BaseLocalDrift base) async {
+      await bajarDeLaVersion16(base);
       await base.customStatement('DROP TABLE conflictos_sincronizacion');
     }
 
@@ -157,7 +163,7 @@ void main() {
       await v2.close();
 
       final actual = BaseLocalDrift(NativeDatabase(archivo));
-      expect(actual.schemaVersion, 15);
+      expect(actual.schemaVersion, 16);
       expect(
         await tablas(actual),
         containsAll([
@@ -175,12 +181,13 @@ void main() {
           'abonos',
           'conflictos_sincronizacion',
           'conflictos_sincronizacion_tienda_idx',
+          'cursores_sincronizacion',
         ]),
       );
       final version = await actual
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.read<int>('user_version'), 15);
+      expect(version.read<int>('user_version'), 16);
       await actual.close();
     });
 
@@ -537,6 +544,27 @@ void main() {
       expect((await v15.select(v15.ventas).get()).single.id, 'v1');
       expect(await v15.select(v15.conflictosSincronizacion).get(), isEmpty);
       await v15.close();
+    });
+
+    test('de la versión 15 a la 16 crea cursores_sincronizacion sin perder '
+        'datos', () async {
+      final archivo = File('${carpeta.path}/gip.sqlite');
+
+      final v15 = BaseLocalDrift(NativeDatabase(archivo));
+      await bajarDeLaVersion16(v15);
+      await v15.customStatement(
+        "INSERT INTO ventas (id, tienda_id, fecha, total) "
+        "VALUES ('v1', 't1', '2026-11-14T10:00:00.000Z', '5000')",
+      );
+      await v15.customStatement('PRAGMA user_version = 15');
+      expect(await tablas(v15), isNot(contains('cursores_sincronizacion')));
+      await v15.close();
+
+      final v16 = BaseLocalDrift(NativeDatabase(archivo));
+      expect(await tablas(v16), contains('cursores_sincronizacion'));
+      expect((await v16.select(v16.ventas).get()).single.id, 'v1');
+      expect(await v16.select(v16.cursoresSincronizacion).get(), isEmpty);
+      await v16.close();
     });
   });
 }

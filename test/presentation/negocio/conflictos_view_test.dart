@@ -156,6 +156,36 @@ void main() {
         expect(find.text('Entrada de las 10:44'), findsOneWidget);
       });
 
+      testWidgets('una entrada repetida varias veces es una sola tarjeta con '
+          'todas las entradas', (tester) async {
+        ConflictoSincronizacion pareja(String id, String otra) =>
+            ConflictoSincronizacion(
+              id,
+              TipoConflicto.posibleDuplicado,
+              'Dos entradas iguales de huevos',
+              ['e0', otra],
+              fecha,
+              etiquetasRegistros: ['Entrada original', 'Entrada $otra'],
+            );
+        await abrir(tester, tamano, [pareja('d1', 'e1'), pareja('d2', 'e2')]);
+
+        expect(find.byType(CasillaRegistro), findsNWidgets(3));
+        expect(find.byKey(const Key('conflicto_d1')), findsOneWidget);
+        expect(find.byKey(const Key('conflicto_d2')), findsNothing);
+        expect(find.textContaining('3 entradas iguales'), findsOneWidget);
+
+        await tocar(tester, find.byKey(const Key('registro_e0')));
+        await tocar(tester, find.byKey(const Key('conflicto_guardar_d1')));
+
+        final enviados = verify(
+          () => coordinador.resolver(any(), any(), captureAny(), any()),
+        ).captured;
+        expect(enviados, [
+          ['e1'],
+          ['e2'],
+        ]);
+      });
+
       testWidgets('sin conflictos dice que no hay nada por revisar', (
         tester,
       ) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_acceso.dart';
+import 'package:gip/business/entidades/gestion_caja/caja.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
@@ -18,6 +19,7 @@ import 'package:gip/business/workflow/pagos/registrar_fiado_coordinator.dart';
 import 'package:gip/business/workflow/pagos/registrar_venta_coordinator.dart';
 import 'package:gip/main.dart';
 import 'package:gip/presentation/comun/barra_inferior.dart';
+import 'package:gip/presentation/comun/datos_actualizados.dart';
 import 'package:gip/presentation/caja/cierre_caja_view.dart';
 import 'package:gip/presentation/caja/ventas_hoy_view.dart';
 import 'package:gip/presentation/comun/marco_navegacion.dart';
@@ -74,10 +76,21 @@ void main() {
     tienda: Tienda('1111', 'T001', 'Granero El Porvenir', 'Arjona, Bolívar'),
   );
 
-  setUpAll(() => registerFallbackValue(carmen.tienda));
+  setUpAll(() {
+    registerFallbackValue(carmen.tienda);
+    registerFallbackValue(carmen.usuario);
+  });
 
   /// Abre la app con sesión guardada en una pantalla de [ancho] x [alto].
-  Future<void> abrir(WidgetTester tester, double ancho, double alto) async {
+  Future<void> abrir(
+    WidgetTester tester,
+    double ancho,
+    double alto, {
+    DatosActualizados? datos,
+    ConsultarExistenciasFalso? existencias,
+    ConsultarClienteFalso? clientesFalso,
+    RegistrarMovimientoCajaFalso? caja,
+  }) async {
     tester.view.physicalSize = Size(ancho, alto);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -87,7 +100,7 @@ void main() {
     when(() => autenticacion.haySesionGuardada()).thenReturn(true);
     when(() => sesionLocal.leer()).thenAnswer((_) async => carmen);
 
-    final clientes = ConsultarClienteFalso();
+    final clientes = clientesFalso ?? ConsultarClienteFalso();
     when(() => clientes.buscarClientes(any(), any()))
         .thenAnswer((_) async => []);
     await tester.pumpWidget(
@@ -100,7 +113,7 @@ void main() {
         registrarEntradaMercancia: RegistrarEntradaFalso(),
         registrarPerdida: RegistrarPerdidaFalso(),
         registrarConteo: RegistrarConteoFalso(),
-        consultarExistencias: ConsultarExistenciasFalso(),
+        consultarExistencias: existencias ?? ConsultarExistenciasFalso(),
         registrarVenta: RegistrarVentaFalso(),
         registrarFiado: RegistrarFiadoFalso(),
         registrarAbono: RegistrarAbonoFalso(),
@@ -114,7 +127,8 @@ void main() {
         gestionarUsuarios: GestionarUsuariosFalso(),
         revisarConflictos: RevisarConflictosFalso(),
         generarReporteDiario: GenerarReporteDiarioFalso(),
-        registrarMovimientoCaja: RegistrarMovimientoCajaFalso(),
+        registrarMovimientoCaja: caja ?? RegistrarMovimientoCajaFalso(),
+        datosActualizados: datos,
         registrarCierreCaja: RegistrarCierreCajaFalso(),
         anularVenta: AnularVentaFalso(),
       ),
@@ -307,5 +321,72 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(BuscarProductoView), findsNothing);
     expect(titulo('Surtido'), findsOneWidget);
+  });
+
+  group('al llegar datos de otros equipos (DI-49)', () {
+    Future<void> irA(WidgetTester tester, String seccion) async {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BarraInferior),
+          matching: find.text(seccion),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Surtido vuelve a leer las existencias', (tester) async {
+      final datos = DatosActualizados();
+      final existencias = ConsultarExistenciasFalso();
+      await abrir(tester, 390, 844, datos: datos, existencias: existencias);
+      await irA(tester, 'Surtido');
+      final antes = existencias.vecesListar;
+      expect(antes, greaterThan(0));
+
+      datos.avisar();
+      await tester.pumpAndSettle();
+
+      expect(existencias.vecesListar, antes + 1);
+    });
+
+    testWidgets('Fiados vuelve a leer los clientes', (tester) async {
+      final datos = DatosActualizados();
+      final clientes = ConsultarClienteFalso();
+      await abrir(tester, 390, 844, datos: datos, clientesFalso: clientes);
+      await irA(tester, 'Fiados');
+      clearInteractions(clientes);
+
+      datos.avisar();
+      await tester.pumpAndSettle();
+
+      verify(() => clientes.buscarClientes(any(), any())).called(1);
+    });
+
+    testWidgets('Caja vuelve a leer la caja de hoy', (tester) async {
+      final datos = DatosActualizados();
+      final caja = RegistrarMovimientoCajaFalso();
+      when(() => caja.consultarCajaDelDia(any(), any()))
+          .thenAnswer((_) async => Caja('c1', DateTime(2026, 11, 20)));
+      await abrir(tester, 390, 844, datos: datos, caja: caja);
+      await irA(tester, 'Caja');
+      clearInteractions(caja);
+
+      datos.avisar();
+      await tester.pumpAndSettle();
+
+      verify(() => caja.consultarCajaDelDia(any(), any())).called(1);
+    });
+
+    testWidgets('Vender no se recarga: la venta en curso no se pierde', (
+      tester,
+    ) async {
+      final datos = DatosActualizados();
+      await abrir(tester, 390, 844, datos: datos);
+
+      datos.avisar();
+      await tester.pumpAndSettle();
+
+      expect(titulo('Vender'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

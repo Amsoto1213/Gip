@@ -1,6 +1,7 @@
 import 'package:gip/business/workflow/gestion_caja/registrar_cierre_caja_coordinator.dart';
 import 'package:gip/business/workflow/gestion_caja/registrar_movimiento_caja_coordinator.dart';
 import 'package:gip/business/workflow/pagos/anular_venta_coordinator.dart';
+import 'package:gip/presentation/comun/datos_actualizados.dart';
 import 'package:gip/presentation/acceso/iniciar_sesion_view_model.dart';
 import 'package:gip/presentation/caja/caja_view.dart';
 import 'package:gip/presentation/caja/caja_view_model.dart';
@@ -39,7 +40,10 @@ StatefulShellBranch ramaCaja() => StatefulShellBranch(
           context.read<RegistrarMovimientoCajaCoordinator>(),
           context.read<IniciarSesionViewModel>().usuarioActivo!,
         )..cargar(),
-        child: const CajaView(),
+        child: RecargarAlCambiarLosDatos<CajaViewModel>(
+          alRecargar: (vm) => vm.cargar(),
+          child: const CajaView(),
+        ),
       ),
       routes: [
         GoRoute(
@@ -49,7 +53,10 @@ StatefulShellBranch ramaCaja() => StatefulShellBranch(
               context.read<AnularVentaCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..elegirPeriodo(PeriodoVentas.hoy),
-            child: const VentasHoyView(),
+            child: RecargarAlCambiarLosDatos<VentasHoyViewModel>(
+              alRecargar: (vm) => vm.cargar(conservarMensajes: true),
+              child: const VentasHoyView(),
+            ),
           ),
         ),
         GoRoute(
@@ -59,7 +66,10 @@ StatefulShellBranch ramaCaja() => StatefulShellBranch(
               context.read<RegistrarCierreCajaCoordinator>(),
               context.read<IniciarSesionViewModel>().usuarioActivo!,
             )..cargar(),
-            child: const CierreCajaView(),
+            child: RecargarAlCambiarLosDatos<CierreCajaViewModel>(
+              alRecargar: (vm) => vm.cargar(),
+              child: const CierreCajaView(),
+            ),
           ),
         ),
       ],

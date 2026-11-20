@@ -380,4 +380,137 @@ void main() {
       expect(vm.ocupado, isFalse);
     });
   });
+
+  group('una entrada repetida varias veces es una sola tarjeta (DI-51)', () {
+    ConflictoSincronizacion pareja(String id, String otra) =>
+        ConflictoSincronizacion(
+          id,
+          TipoConflicto.posibleDuplicado,
+          'Dos entradas iguales',
+          ['e0', otra],
+          fecha,
+          etiquetasRegistros: ['Entrada original', 'Entrada $otra'],
+        );
+
+    test('cargar junta las parejas con la misma entrada original', () async {
+      alConsultar().thenAnswer(
+        (_) async => [pareja('d1', 'e1'), pareja('d2', 'e2'), stock()],
+      );
+      final vm = crear();
+
+      await vm.cargar();
+
+      expect(vm.conflictos.map((c) => c.getId()), ['d1', 'stk']);
+      final tarjeta = vm.conflictos.first;
+      expect(vm.registrosElegibles(tarjeta).map((r) => r.id), [
+        'e0',
+        'e1',
+        'e2',
+      ]);
+      expect(vm.registrosElegibles(tarjeta).first.etiqueta, 'Entrada original');
+      expect(vm.cantidadDeRegistros(tarjeta), 3);
+      expect(vm.descripcionDe(tarjeta), contains('3 entradas iguales'));
+    });
+
+    test('una pareja sola conserva su descripción', () async {
+      alConsultar().thenAnswer((_) async => [pareja('d1', 'e1')]);
+      final vm = crear();
+      await vm.cargar();
+
+      expect(vm.descripcionDe(vm.conflictos.single), 'Dos entradas iguales');
+      expect(vm.cantidadDeRegistros(vm.conflictos.single), 2);
+    });
+
+    test(
+      'guardar anula las que no se marcaron, conflicto por conflicto',
+      () async {
+        alConsultar().thenAnswer(
+          (_) async => [pareja('d1', 'e1'), pareja('d2', 'e2')],
+        );
+        alResolver().thenAnswer((_) async {});
+        final vm = crear();
+        await vm.cargar();
+        final tarjeta = vm.conflictos.single;
+
+        vm.marcar(tarjeta, 'e0', true);
+        vm.marcar(tarjeta, 'e1', true);
+        await vm.guardarDecision(tarjeta);
+
+        final llamadas = verify(
+          () => coordinador.resolver(any(), captureAny(), captureAny(), any()),
+        ).captured;
+        // d1 (e0, e1): las dos marcadas, no se anula nada. d2 (e0, e2): e2.
+        expect((llamadas[0] as ConflictoSincronizacion).getId(), 'd1');
+        expect(llamadas[1], isEmpty);
+        expect((llamadas[2] as ConflictoSincronizacion).getId(), 'd2');
+        expect(llamadas[3], ['e2']);
+        expect(vm.mensajeListo, ConflictosViewModel.mensajeResuelto);
+      },
+    );
+
+    test(
+      'si solo se marca una repetida, la original también se anula',
+      () async {
+        alConsultar().thenAnswer(
+          (_) async => [pareja('d1', 'e1'), pareja('d2', 'e2')],
+        );
+        alResolver().thenAnswer((_) async {});
+        final vm = crear();
+        await vm.cargar();
+        final tarjeta = vm.conflictos.single;
+
+        vm.marcar(tarjeta, 'e2', true);
+        await vm.guardarDecision(tarjeta);
+
+        final llamadas = verify(
+          () => coordinador.resolver(any(), any(), captureAny(), any()),
+        ).captured;
+        expect(llamadas[0], ['e0', 'e1']);
+        expect(llamadas[1], ['e0']);
+      },
+    );
+
+    test('"son registros distintos" resuelve todos los conflictos del grupo '
+        'sin anular nada', () async {
+      alConsultar().thenAnswer(
+        (_) async => [pareja('d1', 'e1'), pareja('d2', 'e2')],
+      );
+      alResolver().thenAnswer((_) async {});
+      final vm = crear();
+      await vm.cargar();
+
+      await vm.resolverSinElegir(vm.conflictos.single);
+
+      final llamadas = verify(
+        () => coordinador.resolver(any(), captureAny(), captureAny(), any()),
+      ).captured;
+      expect((llamadas[0] as ConflictoSincronizacion).getId(), 'd1');
+      expect(llamadas[1], isEmpty);
+      expect((llamadas[2] as ConflictoSincronizacion).getId(), 'd2');
+      expect(llamadas[3], isEmpty);
+    });
+
+    test(
+      'si falla uno de los conflictos muestra el error y vuelve a leer',
+      () async {
+        var lecturas = 0;
+        alConsultar().thenAnswer((_) async {
+          lecturas++;
+          return [pareja('d1', 'e1'), pareja('d2', 'e2')];
+        });
+        var llamadas = 0;
+        alResolver().thenAnswer((_) async {
+          if (++llamadas == 2) throw StateError('falla');
+        });
+        final vm = crear();
+        await vm.cargar();
+
+        await vm.resolverSinElegir(vm.conflictos.single);
+
+        expect(vm.error, isNotNull);
+        expect(vm.mensajeListo, isNull);
+        expect(lecturas, 2, reason: 'vuelve a leer la lista');
+      },
+    );
+  });
 }

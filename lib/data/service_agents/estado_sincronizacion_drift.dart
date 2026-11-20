@@ -3,9 +3,9 @@ import 'package:gip/business/interfaces/info_tienda/i_estado_sincronizacion.dart
 import 'package:gip/data/local/base_local_drift.dart';
 
 /// [IEstadoSincronizacion] sobre la base local: hay pendientes mientras
-/// `cola_pendientes` tenga alguna fila de la tienda (ERS 3.2.5 c, DI-29). Hoy
-/// no hay sincronizador que la vacíe, así que casi siempre es verdadero; el
-/// reporte lo muestra como información, no como error.
+/// `cola_pendientes` tenga alguna fila de la tienda (ERS 3.2.5 c, DI-29). El
+/// Sincronizador (CUS-23, DI-47) la vacía cada vez que sube; el reporte lo
+/// muestra como información, no como error.
 class EstadoSincronizacionDrift implements IEstadoSincronizacion {
   EstadoSincronizacionDrift(this._base);
 
