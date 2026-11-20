@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' show OrderingTerm, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gip/business/componentes/gestion_inventario/servicio_inventario.dart';
+import 'package:gip/business/componentes/info_tienda/resolutor_movimientos.dart';
 import 'package:gip/business/componentes/info_tienda/servicio_conciliacion.dart';
 import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/entrada_mercancia.dart';
@@ -641,6 +642,60 @@ void main() {
     );
   });
 
+  group('resolver duplicados y el stock', () {
+    test('tres entradas con la misma factura: dos conflictos; al resolverlos '
+        'el stock de los dos equipos queda sin los duplicados', () async {
+      await huevo(a);
+      await entrada(a, 'e0', fecha: f1);
+      await a.sincronizador.sincronizar(tienda);
+      await b.sincronizador.sincronizar(tienda);
+      // Cada equipo, sin internet, registra otra entrada con la misma factura.
+      await a.inventarioAplicar(
+        tienda,
+        'ea',
+        d('24'),
+        f1.add(const Duration(minutes: 55)),
+      );
+      await b.inventarioAplicar(
+        tienda,
+        'eb',
+        d('24'),
+        f1.add(const Duration(minutes: 56)),
+      );
+      expect((await itemHuevo(a)).getStockActual(), d('24'));
+
+      await a.sincronizador.sincronizar(tienda);
+      await b.sincronizador.sincronizar(tienda);
+      await a.sincronizador.sincronizar(tienda);
+
+      final pendientes = await a.conflictos.listarPendientes(tienda);
+      expect(pendientes, hasLength(2));
+      // Mientras están en revisión no suman al stock, en los dos equipos.
+      expect((await itemHuevo(a)).getStockActual(), d('24'));
+      expect((await itemHuevo(b)).getStockActual(), d('24'));
+
+      // El propietario marca el original en los dos y anula los otros.
+      for (final c in pendientes) {
+        final duplicada = c.getIdsRegistros().firstWhere((id) => id != 'e0');
+        await a.servicioConciliacion.resolverConflicto(tienda, c, [duplicada]);
+      }
+      expect((await itemHuevo(a)).getStockActual(), d('24'));
+      await a.sincronizador.sincronizar(tienda);
+      await b.sincronizador.sincronizar(tienda);
+
+      for (final e in [a, b]) {
+        expect((await itemHuevo(e)).getStockActual(), d('24'));
+        for (final id in ['ea', 'eb']) {
+          expect(
+            (await e.movimientos.buscarPorIds(tienda, [id])).single.getEstado(),
+            EstadoMovimiento.anulado,
+          );
+        }
+        expect(await e.conflictos.listarPendientes(tienda), isEmpty);
+      }
+    });
+  });
+
   group('al instante (DI-48)', () {
     test('lo que se pide mientras corre una sincronización se recoge en otra '
         'vuelta al terminar', () async {
@@ -735,6 +790,7 @@ class _Equipo {
   late final CajaRepositorioDrift cajas;
   late final ConflictoRepositorioDrift conflictos;
   late Sincronizador sincronizador;
+  late ServicioConciliacion servicioConciliacion;
 
   /// Las fechas `desde` con que se llamó a la conciliación.
   final List<DateTime> conciliaciones = [];
@@ -755,19 +811,18 @@ class _Equipo {
       unidad,
       productos,
     );
-    final coordinador = ConciliarCoordinator(
-      ServicioConciliacion(
-        conflictos,
-        movimientos,
-        fiados,
-        cajas,
-        productos,
-        inventario,
-        unidad,
-        const [],
-        reloj: () => ahora,
-      ),
+    servicioConciliacion = ServicioConciliacion(
+      conflictos,
+      movimientos,
+      fiados,
+      cajas,
+      productos,
+      inventario,
+      unidad,
+      [ResolutorMovimientos(movimientos, inventario)],
+      reloj: () => ahora,
     );
+    final coordinador = ConciliarCoordinator(servicioConciliacion);
     return Sincronizador(
       base,
       servidor,
@@ -791,6 +846,28 @@ class _Equipo {
   ];
 
   Future<void> cerrar() => base.close();
+
+  /// Una entrada de 24 con la factura FV-1, como la registra la app: el
+  /// movimiento y el stock del ítem, juntos.
+  Future<void> inventarioAplicar(
+    Tienda tienda,
+    String id,
+    Decimal cantidad,
+    DateTime fecha,
+  ) async {
+    final item = (await items.listarItems(tienda)).single;
+    final e = EntradaMercancia(
+      id,
+      item,
+      cantidad,
+      fecha,
+      Decimal.parse('400'),
+      'FV-1',
+    );
+    await movimientos.guardar(tienda, e);
+    item.setStockActual(item.getStockActual() + cantidad);
+    await items.guardarItem(tienda, item);
+  }
 
   /// Un fiado de 10.000 de un cliente nuevo, con los abonos dados
   /// (id, monto, fecha). Todo con los repositorios reales.
