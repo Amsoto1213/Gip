@@ -290,7 +290,7 @@ void main() {
         final despues = DateTime.now().toUtc();
 
         expect(uuidV4.hasMatch(venta.getId()), isTrue);
-        expect(venta.getProducto(), same(coco));
+        expect(venta.getProductoId(), coco.getId());
         expect(venta.getFecha().isUtc, isTrue);
         expect(venta.getFecha().isBefore(antes), isFalse);
         expect(venta.getFecha().isAfter(despues), isFalse);

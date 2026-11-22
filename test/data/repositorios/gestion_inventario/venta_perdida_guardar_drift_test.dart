@@ -106,7 +106,7 @@ void main() {
       ahora.add(const Duration(days: 1)),
     );
     expect(lista.map((v) => v.getId()), [registrada.getId()]);
-    expect(lista.single.getProducto().getNombre(), 'Coco');
+    expect(lista.single.getNombreProducto(), 'Coco');
     expect(
       (await servicio.obtenerVentasPerdidas(
         Tienda('t2', 'T002', 'Otra', 'Turbaco'),

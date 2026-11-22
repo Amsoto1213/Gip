@@ -28,7 +28,7 @@ class VentaPerdidaRepositorioDrift implements IVentaPerdidaRepositorio {
               VentasPerdidasCompanion.insert(
                 id: ventaPerdida.getId(),
                 tiendaId: tienda.getId(),
-                productoId: ventaPerdida.getProducto().getId(),
+                productoId: ventaPerdida.getProductoId(),
                 fecha: ventaPerdida.getFecha().toUtc(),
               ),
             );

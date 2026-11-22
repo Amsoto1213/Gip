@@ -589,7 +589,7 @@ class _FilaVentaPerdida extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final nombre = Text(
-      venta.getProducto().getNombre(),
+      venta.getNombreProducto(),
       style: tema.textTheme.titleMedium,
     );
     final fecha = Text(

@@ -88,7 +88,7 @@ class AlertasViewModel extends ChangeNotifier {
       _ventasPerdidas = perdidas;
       final conteo = <String, int>{};
       for (final v in perdidas) {
-        conteo.update(v.getProducto().getId(), (n) => n + 1, ifAbsent: () => 1);
+        conteo.update(v.getProductoId(), (n) => n + 1, ifAbsent: () => 1);
       }
       _perdidasPorProducto = conteo;
     } on ExcepcionSoloPropietario {
