@@ -78,7 +78,7 @@ void main() {
       final leidas = await alertas.listarPorFecha(tienda, hoy);
       final a = leidas.single;
       expect(a.getId(), 'a1');
-      expect(a.getItem().getProducto().getNombre(), 'Coco');
+      expect(a.getNombreProducto(), 'Coco');
       expect(a.getFecha(), hoy);
       expect(a.getExistencia(), d('2'));
       expect(a.getConsumoPromedioDiario(), d('2.3'));

@@ -87,7 +87,7 @@ void main() {
       DateTime(2026, 11, 15),
     );
     expect(guardadas, hasLength(1));
-    expect(guardadas.single.getItem().getProducto().getNombre(), 'Coco');
+    expect(guardadas.single.getNombreProducto(), 'Coco');
   });
 
   group('CUS-05', () {

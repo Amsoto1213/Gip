@@ -58,7 +58,7 @@ class AlertaRepositorioDrift implements IAlertaRepositorio {
               AlertasReabastecimientoCompanion.insert(
                 id: alerta.getId(),
                 tiendaId: tienda.getId(),
-                itemId: alerta.getItem().getId(),
+                itemId: alerta.getItemId(),
                 fecha: dia,
                 existencia: alerta.getExistencia(),
                 consumoPromedioDiario: alerta.getConsumoPromedioDiario(),
@@ -102,9 +102,7 @@ class AlertaRepositorioDrift implements IAlertaRepositorio {
     return alertas..sort((x, y) {
       final porDias = x.getDiasCobertura().compareTo(y.getDiasCobertura());
       if (porDias != 0) return porDias;
-      return x.getItem().getProducto().getNombre().compareTo(
-        y.getItem().getProducto().getNombre(),
-      );
+      return x.getNombreProducto().compareTo(y.getNombreProducto());
     });
   }
 

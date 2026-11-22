@@ -262,7 +262,7 @@ class _PorSurtir extends StatelessWidget {
           if (i > 0) const SizedBox(height: 12),
           _TarjetaAlerta(
             alerta: alerta,
-            perdidas: vm.ventasPerdidasDe(alerta.getItem().getProducto()),
+            perdidas: vm.ventasPerdidasDe(alerta.getProductoId()),
           ),
         ],
       ],
@@ -321,7 +321,7 @@ class _TablaAlertas extends StatelessWidget {
           for (final alerta in vm.alertas)
             _FilaAlerta(
               alerta: alerta,
-              perdidas: vm.ventasPerdidasDe(alerta.getItem().getProducto()),
+              perdidas: vm.ventasPerdidasDe(alerta.getProductoId()),
             ),
         ],
       ),
@@ -387,7 +387,7 @@ class _FilaAlerta extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
-              alerta.getItem().getProducto().getNombre(),
+              alerta.getNombreProducto(),
               style: tema.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -467,7 +467,7 @@ class _TarjetaAlerta extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          alerta.getItem().getProducto().getNombre(),
+                          alerta.getNombreProducto(),
                           style: tema.textTheme.titleLarge,
                         ),
                         if (alerta.isProvisional())

@@ -111,7 +111,7 @@ void main() {
         expect(generadas, hasLength(1));
         final alerta = generadas.single;
         expect(alerta.getId(), matches(uuidV4));
-        expect(alerta.getItem().getProducto().getNombre(), 'Coco');
+        expect(alerta.getNombreProducto(), 'Coco');
         expect(alerta.getFecha(), diaHoy);
         expect(alerta.getExistencia(), d('13.98'));
         expect(alerta.getConsumoPromedioDiario(), d('2'));
@@ -237,7 +237,7 @@ void main() {
 
         final generadas = await servicio.generarAlertas(tienda, hoy);
 
-        expect(generadas.map((a) => a.getItem().getId()), ['i1']);
+        expect(generadas.map((a) => a.getItemId()), ['i1']);
         expect(alertas.reemplazos, 1);
         expect(await alertas.listarPorFecha(tienda, diaHoy), hasLength(1));
       },
