@@ -122,6 +122,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Entidades/GestionCaja y Componentes/GestionCaja
 
+- [ ] **Relaciones de los componentes de caja** (DI-64): las asociaciones pasan a **dependencia** «use»: `ServicioCaja` ⇢ `ICajaRepositorio`; `ServicioReportes` ⇢ `IVentaRepositorio`, `IMovimientoInventarioRepositorio`, `ICajaRepositorio`, `IFiadoRepositorio`, `IEstadoSincronizacion` e `IInventarioRepositorio`. Las dependencias hacia lo que crean pasan a «create»: `ServicioCaja` ⇢ `Caja` y `MovimientoCaja`, `ServicioReportes` ⇢ `ReporteDiario`. Se agrega `ServicioReportes` ⇢ `Producto` «use» (llave de los mapas de `calcularMargenes` y `clasificarRotacion`). `Caja` ◆ `MovimientoCaja` sigue como composición, 1 a 0..*.
+- [ ] **`DesgloseCaja`** (DI-38, DI-64): clase nueva en `Entidades/GestionCaja`, sin relaciones con otras entidades: `baseApertura`, `ingresosNegocio`, `ingresosPersonales`, `egresosNegocio`, `cantidadEgresosNegocio`, `egresosPersonales`, `devolucionesPorAnulacion` y `saldoEsperado` (todos `Decimal` salvo `cantidadEgresosNegocio: int`). `Caja` gana `+ calcularDesglose(): DesgloseCaja` y `Caja` ⇢ `DesgloseCaja` «create».
 - [ ] **`ServicioCaja`** (DI-21 b):
   - `+ idCaja(tienda: Tienda, dia: DateTime): String` (estática): id de la caja del día, `<tienda_id>_AAAA-MM-DD`; no es uuid.
   - `+ diaLocal(momento: DateTime): DateTime` (estática): día local del dispositivo, sin hora.
