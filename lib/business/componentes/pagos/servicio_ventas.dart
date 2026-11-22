@@ -149,7 +149,7 @@ class ServicioVentas {
           item,
           -linea.getCantidad(),
           fecha,
-          venta,
+          venta.getId(),
           producto.getPrecioVenta(),
           producto.getPrecioCompra(),
         );

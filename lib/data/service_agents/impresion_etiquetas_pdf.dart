@@ -76,8 +76,6 @@ class ImpresionEtiquetasPdf implements IImpresionEtiquetas {
   }
 
   pw.Widget _celda(Etiqueta etiqueta) {
-    final producto = etiqueta.getProducto();
-    final codigo = etiqueta.getCodigo();
     return pw.Container(
       width: _ancho,
       height: _alto,
@@ -86,11 +84,11 @@ class ImpresionEtiquetasPdf implements IImpresionEtiquetas {
         crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
           pw.SizedBox(
-            width: codigo.getFormato() == FormatoCodigo.qr ? 54 : 84,
+            width: etiqueta.getFormato() == FormatoCodigo.qr ? 54 : 84,
             height: 54,
             child: pw.BarcodeWidget(
-              barcode: _barcodeDe(codigo.getFormato()),
-              data: codigo.getValor(),
+              barcode: _barcodeDe(etiqueta.getFormato()),
+              data: etiqueta.getValorCodigo(),
               drawText: false,
             ),
           ),
@@ -101,7 +99,7 @@ class ImpresionEtiquetasPdf implements IImpresionEtiquetas {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  producto.getNombre(),
+                  etiqueta.getNombre(),
                   maxLines: 2,
                   style: pw.TextStyle(
                     fontSize: 9,
@@ -110,7 +108,7 @@ class ImpresionEtiquetasPdf implements IImpresionEtiquetas {
                 ),
                 pw.SizedBox(height: 2),
                 pw.Text(
-                  r'$ ' + _precio(producto.getPrecioVenta().toString()),
+                  r'$ ' + _precio(etiqueta.getPrecioVenta().toString()),
                   style: pw.TextStyle(
                     fontSize: 13,
                     fontWeight: pw.FontWeight.bold,

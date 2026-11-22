@@ -6,7 +6,6 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/gestion_inventario/venta_perdida.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 
 void main() {
   Decimal d(String v) => Decimal.parse(v);
@@ -22,15 +21,8 @@ void main() {
   final fecha = DateTime.utc(2026, 11, 10);
   final estrategia = ConsumoPromedioSimple();
 
-  SalidaVenta salida(String cantidad) => SalidaVenta(
-    'S$cantidad',
-    item,
-    d(cantidad),
-    fecha,
-    Venta('v', const [], d('0'), fecha),
-    d('3000'),
-    null,
-  );
+  SalidaVenta salida(String cantidad) =>
+      SalidaVenta('S$cantidad', item, d(cantidad), fecha, 'v', d('3000'), null);
   VentaPerdida perdida(int n) => VentaPerdida('vp$n', coco, fecha);
 
   test(

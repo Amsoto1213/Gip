@@ -77,7 +77,7 @@ void main() {
       deItem,
       d(cantidad),
       fecha,
-      venta,
+      venta.getId(),
       d('3000'),
       null,
     );
@@ -107,8 +107,7 @@ void main() {
 
         expect(salidas.map((s) => s.getId()), ['s3', 's2']);
         expect(salidas.first.calcularUnidades(), d('3'));
-        expect(salidas.first.getVenta().getId(), 'vs3');
-        expect(salidas.first.getVenta().getTotal(), d('6000'));
+        expect(salidas.first.getVentaId(), 'vs3');
       },
     );
 

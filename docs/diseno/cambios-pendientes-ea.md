@@ -77,6 +77,11 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 - [ ] **`ItemInventario`**: `+ setStockActual(stockActual: Decimal): void`. El diagrama de CUS-01 (paso 27) ya la usa (DI-20 a).
 - [ ] **`AjusteConteo`**, descripción: `cantidad` es la diferencia con signo (contada − stock) y una diferencia cero también se registra, como constancia del conteo (DI-24 b).
+- [ ] **`SalidaVenta`** (DI-56): atributo `- ventaId: String` en lugar de `- venta: Venta`; constructor `SalidaVenta(id: String, item: ItemInventario, cantidad: Decimal, fecha: DateTime, ventaId: String, precioUnitario: Decimal, costoUnitario: Decimal?)`; `+ getVentaId(): String` en lugar de `getVenta(): Venta`. Se quita la composición `Venta` ◆ `SalidaVenta` y la descripción de `Venta` deja de decir que sus salidas son partes de ella: la salida se crea con la venta en la misma transacción (`ServicioVentas.confirmar`) y guarda solo su id.
+- [ ] **Relaciones de inventario** (DI-56): `Producto` ◆ `CodigoProducto` vuelve a **composición** (1 a 0..*), en lugar de la agregación de DI-54 (a); `ItemInventario` ◆ `MovimientoInventario` pasa de asociación a **composición** (1 a 0..*), con el rombo en `ItemInventario`. Las subclases (`EntradaMercancia`, `Merma`, `AjusteConteo`, `SalidaVenta`) la heredan.
+- [ ] **`AlertaReabastecimiento`** (DI-57): atributos `- itemId: String`, `- productoId: String` y `- nombreProducto: String` en lugar de `- item: ItemInventario`; operaciones `+ getItemId(): String`, `+ getProductoId(): String` y `+ getNombreProducto(): String` en lugar de `getItem()`. El constructor sigue recibiendo `item: ItemInventario`: copia los tres datos y no guarda el ítem. Relación: **Dependency** `AlertaReabastecimiento` ⇢ `ItemInventario` en lugar de la asociación.
+- [ ] **`VentaPerdida`** (DI-58): atributos `- productoId: String` y `- nombreProducto: String` en lugar de `- producto: Producto`; operaciones `+ getProductoId(): String` y `+ getNombreProducto(): String`. El constructor sigue siendo `VentaPerdida(id: String, producto: Producto, fecha: DateTime)`: copia los dos datos y no guarda el producto. Relación: **Dependency** `VentaPerdida` ⇢ `Producto` en lugar de la agregación de DI-54 (c).
+- [ ] **`Etiqueta`** (DI-55): atributos `- nombre: String`, `- precioVenta: Decimal`, `- valorCodigo: String` y `- formato: FormatoCodigo` en lugar de `- producto: Producto` y `- codigo: CodigoProducto`; operaciones `+ getNombre(): String`, `+ getPrecioVenta(): Decimal`, `+ getValorCodigo(): String` y `+ getFormato(): FormatoCodigo` en lugar de `getProducto()` y `getCodigo()`. El constructor sigue siendo `Etiqueta(producto: Producto, codigo: CodigoProducto)`: copia los datos y no guarda referencias. Relaciones: **Dependency** `Etiqueta` ⇢ `Producto` y `Etiqueta` ⇢ `CodigoProducto` (en lugar de las agregaciones de DI-54 b) y Dependency → `FormatoCodigo`.
 
 ### Interfaces/GestionInventario
 
@@ -133,6 +138,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`Cliente`**, descripción (DI-26 b, DI-31 a, b):
   - `telefono` vacío significa que el cliente no lo dio; el teléfono es opcional.
   - Eliminar los datos **anonimiza** al cliente y no borra la fila: queda con el nombre "Cliente eliminado" y el teléfono vacío, y deja de salir en las búsquedas. Sus fiados, abonos y ventas no cambian.
+
+- [ ] **`LineaVenta` — `ItemInventario`** (DI-59): la asociación pasa a **agregación** con el rombo vacío en `LineaVenta`, 0..* en `LineaVenta` y 1 en `ItemInventario`. Atributos y operaciones no cambian.
 
 ### Componentes/Pagos
 

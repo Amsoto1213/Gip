@@ -65,8 +65,8 @@ void main() {
     final vm = crear();
     await vm.cargar();
 
-    expect(vm.ventasPerdidasDe(coco), 3);
-    expect(vm.ventasPerdidasDe(platano), 0);
+    expect(vm.ventasPerdidasDe(coco.getId()), 3);
+    expect(vm.ventasPerdidasDe(platano.getId()), 0);
   });
 
   test('al empleado le muestra el mensaje del diagrama', () async {

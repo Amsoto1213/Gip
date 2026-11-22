@@ -91,7 +91,7 @@ class MovimientoRepositorioFalso
     final ids = ventas.map((v) => v.getId()).toSet();
     return de(tienda)
         .whereType<SalidaVenta>()
-        .where((s) => ids.contains(s.getVenta().getId()))
+        .where((s) => ids.contains(s.getVentaId()))
         .toList();
   }
 

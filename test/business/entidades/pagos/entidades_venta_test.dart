@@ -67,13 +67,13 @@ void main() {
         item(),
         d('-2'),
         DateTime.utc(2026),
-        venta,
+        venta.getId(),
         d('2800'),
         d('2000'),
       );
       expect(s.calcularUnidades(), d('2'));
       expect(s.calcularMargen(), d('1600'));
-      expect(s.getVenta(), same(venta));
+      expect(s.getVentaId(), venta.getId());
     });
 
     test('calcularMargen es null sin costo (ERS 3.2.4)', () {
@@ -82,7 +82,7 @@ void main() {
         item(compra: null),
         d('-2'),
         DateTime.utc(2026),
-        venta,
+        venta.getId(),
         d('2800'),
         null,
       );

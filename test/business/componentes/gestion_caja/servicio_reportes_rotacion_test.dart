@@ -8,7 +8,6 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 
 import '../gestion_inventario/fakes_catalogo.dart';
 import '../gestion_inventario/fakes_inventario.dart';
@@ -80,7 +79,7 @@ void main() {
         item,
         -d(unidades),
         cuando,
-        Venta('v$contador', const [], d('200') * d(unidades), cuando),
+        'v$contador',
         d('200'),
         d('100'),
       )..setEstado(estado),

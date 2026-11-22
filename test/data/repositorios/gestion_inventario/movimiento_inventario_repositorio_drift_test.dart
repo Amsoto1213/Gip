@@ -12,7 +12,6 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_inventario_repositorio.dart';
 import 'package:gip/data/helpers/unidad_trabajo_drift.dart';
 import 'package:gip/data/local/base_local_drift.dart';
@@ -515,15 +514,7 @@ void main() {
           );
       await movimientos.guardar(
         tienda,
-        SalidaVenta(
-          id,
-          item,
-          d('-2'),
-          fecha,
-          Venta('v$id', const [], d('22000'), fecha),
-          d('11000'),
-          d('8600'),
-        ),
+        SalidaVenta(id, item, d('-2'), fecha, 'v$id', d('11000'), d('8600')),
       );
     }
 
@@ -564,7 +555,7 @@ void main() {
       expect((lista[1] as Merma).getMotivo(), MotivoMerma.devueltoProveedor);
       final salida = lista[2] as SalidaVenta;
       expect(salida.getCantidad(), d('-2'));
-      expect(salida.getVenta().getId(), 'vs1');
+      expect(salida.getVentaId(), 'vs1');
       expect(salida.getPrecioUnitario(), d('11000'));
       final e = lista[3] as EntradaMercancia;
       expect(e.getCantidad(), d('24'));

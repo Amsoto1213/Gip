@@ -1,17 +1,35 @@
+import 'package:decimal/decimal.dart';
 import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
+import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 
-/// Etiqueta para pegar en un producto: apunta al producto (nombre y precio) y
-/// al código que se imprime. No se guarda; la crea `ServicioCatalogo` y la
-/// recibe `IImpresionEtiquetas` (DA-39, DA-40, DA-41).
+/// Etiqueta para pegar en un producto: el nombre y el precio del producto y el
+/// código que se imprime. No se guarda; la crea `ServicioCatalogo` y la recibe
+/// `IImpresionEtiquetas` (DA-39, DA-40, DA-41).
+///
+/// Depende de [Producto] y [CodigoProducto] solo en el constructor: copia los
+/// datos que se imprimen y no guarda referencias a ellos (DI-55).
 class Etiqueta {
-  Etiqueta(this._producto, this._codigo);
+  Etiqueta(Producto producto, CodigoProducto codigo)
+    : _nombre = producto.getNombre(),
+      _precioVenta = producto.getPrecioVenta(),
+      _valorCodigo = codigo.getValor(),
+      _formato = codigo.getFormato();
 
-  final Producto _producto;
-  final CodigoProducto _codigo;
+  final String _nombre;
+  final Decimal _precioVenta;
+  final String _valorCodigo;
+  final FormatoCodigo _formato;
 
-  Producto getProducto() => _producto;
+  /// Nombre del producto en el momento de armar la etiqueta.
+  String getNombre() => _nombre;
 
-  /// Código que se imprime; su formato dice si es QR o de barras.
-  CodigoProducto getCodigo() => _codigo;
+  /// Precio de venta del producto en el momento de armar la etiqueta.
+  Decimal getPrecioVenta() => _precioVenta;
+
+  /// Texto exacto del código que se imprime (DA-41).
+  String getValorCodigo() => _valorCodigo;
+
+  /// Formato del código; dice si se dibuja QR o de barras.
+  FormatoCodigo getFormato() => _formato;
 }

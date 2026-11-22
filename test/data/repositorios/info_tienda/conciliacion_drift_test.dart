@@ -177,7 +177,15 @@ void main() {
       await ventas.guardar(tienda, venta);
       await movimientos.guardar(
         tienda,
-        SalidaVenta('s1', itemHuevo, -d('1'), fecha, venta, d('550'), d('400')),
+        SalidaVenta(
+          's1',
+          itemHuevo,
+          -d('1'),
+          fecha,
+          venta.getId(),
+          d('550'),
+          d('400'),
+        ),
       );
 
       final lista = await movimientos.buscarPorIds(tienda, [
@@ -605,7 +613,7 @@ void main() {
           itemHuevo,
           -d('10'),
           fecha,
-          venta,
+          venta.getId(),
           d('550'),
           d('400'),
         ),

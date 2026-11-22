@@ -8,7 +8,6 @@ import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
@@ -67,15 +66,7 @@ void main() {
     when(() => movimientos.listarSalidasPorTienda(tienda, desde, hasta))
         .thenAnswer(
           (_) async => [
-            SalidaVenta(
-              's1',
-              item,
-              d('-2'),
-              fecha,
-              Venta('v1', const [], d('1100'), fecha),
-              d('550'),
-              d('400'),
-            ),
+            SalidaVenta('s1', item, d('-2'), fecha, 'v1', d('550'), d('400')),
           ],
         );
 

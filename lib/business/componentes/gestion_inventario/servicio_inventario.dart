@@ -326,7 +326,7 @@ class ServicioInventario {
     final salidas = await _movimientos.listarSalidasPorVentas(tienda, ventas);
     final porVenta = <String, List<SalidaVenta>>{};
     for (final s in salidas) {
-      porVenta.putIfAbsent(s.getVenta().getId(), () => []).add(s);
+      porVenta.putIfAbsent(s.getVentaId(), () => []).add(s);
     }
     return porVenta;
   }

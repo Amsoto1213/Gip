@@ -61,7 +61,7 @@ void main() {
   Venta venta(String id) => Venta(id, const [], d('1'), fecha);
 
   SalidaVenta salida(String id, ItemInventario item, String cant, Venta v) =>
-      SalidaVenta(id, item, -d(cant), fecha, v, d('1'), null);
+      SalidaVenta(id, item, -d(cant), fecha, v.getId(), d('1'), null);
 
   Future<Decimal> stock(ItemInventario i) async =>
       (await items.buscarItem(tienda, i.getProducto()))!.getStockActual();

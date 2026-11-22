@@ -101,7 +101,7 @@ void main() {
     expect(vm.productoSinExistencia, isNull);
     expect(vm.lineas, isEmpty);
     final guardadas = prueba.perdidas.datos[tiendaPrueba.getId()]!;
-    expect(guardadas.single.getProducto(), prueba.queso);
+    expect(guardadas.single.getProductoId(), prueba.queso.getId());
   });
 
   test('otro error o un producto con existencia no ofrece anotarla', () async {
