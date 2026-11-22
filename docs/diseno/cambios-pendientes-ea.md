@@ -95,6 +95,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Componentes/GestionInventario
 
+- [ ] **`ServicioInventario`** (DI-63): `anularSalidas(tienda: Tienda, ventaId: String): void` y `listarSalidasDeVentas(tienda: Tienda, idsVentas: List<String>): Map<String, List<SalidaVenta>>`, con el id de la venta en lugar de `Venta`.
 - [ ] **`ServicioInventario`** (DI-33, DI-22, DI-24, DI-32):
   - Atributo nuevo `- productos: IProductoRepositorio` y constructor `ServicioInventario(items, movimientos, umbralRevisionConteo, unidadTrabajo, productos)`.
   - Descripción de `registrarEntrada`: en la misma transacción que la entrada y el stock, el costo de la entrada pasa a ser el precio de compra del producto (`setPrecioCompra`, `setActualizadoEn` y `productos.guardar`). Una entrada con costo cero (bonificación) o con el mismo costo no lo cambia. Si algo falla no se guarda nada y el producto vuelve a su precio anterior.
@@ -147,6 +148,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Componentes/Pagos
 
+- [ ] **Relaciones de los componentes de pagos** (DI-63): las asociaciones pasan a **dependencia** («use»): `ServicioVentas` ⇢ `ServicioInventario`, `ProcesadorPago` (antes [1..*]), `IVentaRepositorio` e `IUnidadTrabajo`; `ServicioAbonos` ⇢ `ServicioCaja`, `IUnidadTrabajo` e `IFiadoRepositorio`; `ServicioClientes` ⇢ `IClienteRepositorio`; `ServicioFiados` ⇢ `IFiadoRepositorio`; `ProcesadorFiado` ⇢ `ServicioFiados`; `ProcesadorPagoContado` ⇢ `ServicioCaja`. Las dependencias hacia las entidades que crean no cambian. `ServicioVentas` llama a `servicioInventario.anularSalidas(tienda, venta.getId())`.
 - [ ] **`ServicioVentas`**, descripción de `confirmar`: dentro de la transacción vuelve a leer el ítem de cada línea con `servicioInventario.obtenerItem` antes de crear la `SalidaVenta`. El ítem de la línea trae el stock del momento en que se agregó, y una entrada registrada con la venta abierta se perdería (DI-21 a).
 
 ### Interfaces/Pagos
@@ -200,7 +202,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **CUS-20** (DI-39 a, b, d, e):
   - `Venta`: el constructor acepta, como opcional, la anulación para armar una venta guardada. `Fiado.restaurar(saldo, estado)`.
   - `ServicioVentas.anular`: `venta.anular(anulacion)` se llama después de la transacción, cuando todo se guardó, y no dentro. Break "Motivo obligatorio" ("Escribe el motivo de la anulación") antes de abrir la transacción.
-  - `IMovimientoInventarioRepositorio.listarSalidasPorVenta(venta)` pasa a `listarSalidasPorVentas(tienda, ventas)` (con la tienda y varias ventas juntas). `ServicioInventario.listarSalidasDeVentas`, `ServicioVentas.listarSalidas` y `AnularVentaCoordinator.listarProductos`, para mostrar los productos de cada venta.
+  - `IMovimientoInventarioRepositorio.listarSalidasPorVenta(venta)` pasa a `listarSalidasPorVentas(tienda, idsVentas: List<String>)` (con la tienda y los ids de varias ventas juntas; DI-63). `ServicioInventario.listarSalidasDeVentas`, `ServicioVentas.listarSalidas` y `AnularVentaCoordinator.listarProductos`, para mostrar los productos de cada venta.
   - `IVentaRepositorio.listarPorPeriodo` trae también las ventas anuladas (los reportes las excluyen con `isAnulada`).
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
 - [ ] **CUS-22** (DI-45 g, h): `idsElegidos` depende del tipo: en POSIBLE_DUPLICADO son los registros que se **anulan** (los que el propietario no marcó como ocurridos); en ABONO_EXCEDE_SALDO, los abonos que se anulan; en CODIGO_REPETIDO, los productos que pierden el código; en STOCK_NEGATIVO y MOVIMIENTO_CAJA_CERRADA va vacío. La vista también ofrece "Ir al conteo" (abre CUS-04, no resuelve) y, tras cada intento, vuelve a pedir `consultarConflictos`. Una tarjeta puede juntar varios conflictos (una entrada repetida varias veces, DI-51): en ese caso la vista llama a `resolver` una vez por cada conflicto del grupo, con las entradas que no están marcadas.

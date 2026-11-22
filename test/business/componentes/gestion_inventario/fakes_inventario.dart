@@ -4,7 +4,6 @@ import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 
 import 'fakes_catalogo.dart';
@@ -86,9 +85,9 @@ class MovimientoRepositorioFalso
   @override
   Future<List<SalidaVenta>> listarSalidasPorVentas(
     Tienda tienda,
-    List<Venta> ventas,
+    List<String> idsVentas,
   ) async {
-    final ids = ventas.map((v) => v.getId()).toSet();
+    final ids = idsVentas.toSet();
     return de(tienda)
         .whereType<SalidaVenta>()
         .where((s) => ids.contains(s.getVentaId()))
