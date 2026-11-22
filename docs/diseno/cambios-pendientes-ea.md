@@ -77,6 +77,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 - [ ] **`ItemInventario`**: `+ setStockActual(stockActual: Decimal): void`. El diagrama de CUS-01 (paso 27) ya la usa (DI-20 a).
 - [ ] **`AjusteConteo`**, descripción: `cantidad` es la diferencia con signo (contada − stock) y una diferencia cero también se registra, como constancia del conteo (DI-24 b).
+- [ ] **`Etiqueta`** (DI-55): atributos `- nombre: String`, `- precioVenta: Decimal`, `- valorCodigo: String` y `- formato: FormatoCodigo` en lugar de `- producto: Producto` y `- codigo: CodigoProducto`; operaciones `+ getNombre(): String`, `+ getPrecioVenta(): Decimal`, `+ getValorCodigo(): String` y `+ getFormato(): FormatoCodigo` en lugar de `getProducto()` y `getCodigo()`. El constructor sigue siendo `Etiqueta(producto: Producto, codigo: CodigoProducto)`: copia los datos y no guarda referencias. Relaciones: **Dependency** `Etiqueta` ⇢ `Producto` y `Etiqueta` ⇢ `CodigoProducto` (en lugar de las agregaciones de DI-54 b) y Dependency → `FormatoCodigo`.
 
 ### Interfaces/GestionInventario
 
