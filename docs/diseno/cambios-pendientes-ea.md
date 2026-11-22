@@ -27,13 +27,14 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`DisparadorSincronizacion`** (Presentation, `comun`; DI-47 g, DI-48): llama al Sincronizador al tener usuario activo, al volver del segundo plano, al recuperar la conexión, cada 5 minutos (respaldo) y al instante: 1 s después de que este equipo escribe algo (`Sincronizador.escrituras`) o de que otro equipo cambia algo de la tienda (`CambiosRemotosSupabase`, Supabase Realtime).
 - [ ] **`ICuentaAcceso`** (interface) en `Interfaces/InfoTienda`. Crea la cuenta con la que se inicia sesión (correo y contraseña); la implementa la Data Layer con Supabase Auth (DI-43).
   - `+ crear(correo: String, clave: String): void`: crea la cuenta sin abrir sesión con ella. Si ya existe una con ese correo y la misma contraseña (un intento anterior que no alcanzó a guardar al empleado) la da por buena; si la contraseña es otra, rechaza con "Ese correo ya tiene una cuenta".
-- [ ] **`UsuarioActivo`** en `Entidades/InfoTienda`: tipo de dato (registro) con `usuario: Usuario` y `tienda: Tienda`, sin operaciones. El rol es la subclase de `Usuario` (DI-11).
+- [ ] **`UsuarioActivo`** en `Entidades/InfoTienda`: tipo de dato (registro) con `usuario: Usuario` y `tienda: Tienda`, sin operaciones. El rol es la subclase de `Usuario` (DI-11). Relaciones (DI-62): **agregación** con el rombo vacío en `UsuarioActivo` hacia `Usuario` y hacia `Tienda` (0..* en `UsuarioActivo`, 1 en `Usuario` y en `Tienda`); Dependency → `UsuarioActivo` desde `IAutenticacion`, `ISesionLocal`, `ServicioAcceso` e `IniciarSesionCoordinator`.
 - [ ] Opcional, si el diagrama de componentes muestra la Data Layer: `AutenticacionSupabase` implementa `IAutenticacion` y `SesionLocalPreferencias` implementa `ISesionLocal` (DI-05, DI-12).
 
 ## 2. Cambios en clases existentes
 
 ### Entidades/InfoTienda
 
+- [ ] **`DatosExportacion`** (DI-62): las asociaciones con `ItemInventario`, `Venta` y `Fiado` pasan a **agregación** con el rombo vacío en `DatosExportacion`, 0..* en los dos extremos. Atributos y operaciones no cambian.
 - [ ] **`Tienda`**: atributo `- id: String` (uuid; es el `tienda_id` de todas las tablas, y `codigo` sigue siendo el código visible), operación `+ getId(): String` y constructor `Tienda(id, codigo, nombre, direccion)` (DI-11).
 - [ ] **`Usuario`**, **`Empleado`** y **`Administrador`**: el constructor recibe `activo: bool` opcional, por defecto verdadero, para leer el usuario de la base (DI-11).
 - [ ] **`Usuario`**: atributo `- correo: String?` (con el que inicia sesión), operación `+ getCorreo(): String?` y el parámetro opcional `correo` en el constructor de `Usuario`, `Empleado` y `Administrador`. Nulo si no se conoce (DI-43).
