@@ -9,7 +9,6 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/datos_exportacion.dart';
 import 'package:gip/business/entidades/info_tienda/formato_exportacion.dart';
-import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
@@ -427,7 +426,8 @@ List<Venta> _ventas() {
     DateTime(2026, 10, 7, 11),
     anulacion: AnulacionVenta(
       'an1',
-      Administrador('u1', 'Carmen Ruiz', '1000000001'),
+      'u1',
+      'Carmen Ruiz',
       DateTime(2026, 10, 7, 11, 20).toUtc(),
       'Se equivocó de producto',
     ),

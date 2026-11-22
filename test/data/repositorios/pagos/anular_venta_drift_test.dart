@@ -195,8 +195,8 @@ void main() {
       expect(leida.isAnulada(), isTrue);
       final anulacion = leida.getAnulacion()!;
       expect(anulacion.getMotivo(), 'Cliente devolvió');
-      expect(anulacion.getUsuario().getNombre(), 'Carmen Ruiz');
-      expect(anulacion.getUsuario().getId(), 'u1');
+      expect(anulacion.getUsuarioNombre(), 'Carmen Ruiz');
+      expect(anulacion.getUsuarioId(), 'u1');
       expect(anulacion.getFecha().isUtc, isTrue);
     });
 

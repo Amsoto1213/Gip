@@ -139,6 +139,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `telefono` vacío significa que el cliente no lo dio; el teléfono es opcional.
   - Eliminar los datos **anonimiza** al cliente y no borra la fila: queda con el nombre "Cliente eliminado" y el teléfono vacío, y deja de salir en las búsquedas. Sus fiados, abonos y ventas no cambian.
 
+- [ ] **`AnulacionVenta`** (DI-61): atributos `- usuarioId: String` y `- usuarioNombre: String` en lugar de `- usuario: Usuario`; operaciones `+ getUsuarioId(): String` y `+ getUsuarioNombre(): String` en lugar de `getUsuario()`. Constructor `AnulacionVenta(id: String, usuarioId: String, usuarioNombre: String, fecha: DateTime, motivo: String)`. Se quita la asociación con `Usuario`; `ServicioVentas.anular` le pasa el id y el nombre del usuario.
+- [ ] **`Cliente` — `Fiado`** (DI-61): la asociación pasa a **agregación** con el rombo vacío en `Cliente`, 1 en `Cliente` y 0..* en `Fiado`, navegable en los dos sentidos. Atributos y operaciones no cambian.
 - [ ] **`LineaVenta` — `ItemInventario`** (DI-59): la asociación pasa a **agregación** con el rombo vacío en `LineaVenta`, 0..* en `LineaVenta` y 1 en `ItemInventario`. Atributos y operaciones no cambian.
 
 ### Componentes/Pagos

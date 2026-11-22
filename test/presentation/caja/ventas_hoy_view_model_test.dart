@@ -214,8 +214,13 @@ void main() {
         'lista', () async {
       when(() => coordinador.anularVenta(any(), any(), any(), any()))
           .thenAnswer(
-            (_) async =>
-                AnulacionVenta('x', propietario, ahora, 'Error al cobrar'),
+            (_) async => AnulacionVenta(
+              'x',
+              propietario.getId(),
+              propietario.getNombre(),
+              ahora,
+              'Error al cobrar',
+            ),
           );
 
       final ok = await vm.anular(v, 'Error al cobrar');
@@ -272,8 +277,15 @@ void main() {
   });
 
   test('cargar sin conservar mensajes borra el aviso anterior', () async {
-    when(() => coordinador.anularVenta(any(), any(), any(), any()))
-        .thenAnswer((_) async => AnulacionVenta('x', propietario, ahora, 'm'));
+    when(() => coordinador.anularVenta(any(), any(), any(), any())).thenAnswer(
+      (_) async => AnulacionVenta(
+        'x',
+        propietario.getId(),
+        propietario.getNombre(),
+        ahora,
+        'm',
+      ),
+    );
     await vm.anular(venta('a', ahora), 'm');
     expect(vm.aviso, isNotNull);
 
