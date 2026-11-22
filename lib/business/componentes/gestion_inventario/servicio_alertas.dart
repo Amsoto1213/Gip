@@ -91,7 +91,9 @@ class ServicioAlertas {
 
     return AlertaReabastecimiento(
       const Uuid().v4(),
-      item,
+      item.getId(),
+      item.getProducto().getId(),
+      item.getProducto().getNombre(),
       dia,
       stock,
       consumo,
@@ -128,7 +130,8 @@ class ServicioAlertas {
     DateTime hasta,
   ) => _ventasPerdidas.buscarPorPeriodo(tienda, desde, hasta);
 
-  /// CUS-13: crea `VentaPerdida(id, producto, ahora)` (fecha en UTC), la
+  /// CUS-13: crea la `VentaPerdida` con el id y el nombre del producto y la
+  /// hora actual en UTC (DI-60), la
   /// guarda con ventasPerdidas.guardar y la devuelve. Solo agrega: el número de
   /// ventas perdidas sale de contar registros (DA-48, DA-50).
   Future<VentaPerdida> registrarVentaPerdida(
@@ -137,7 +140,8 @@ class ServicioAlertas {
   ) async {
     final venta = VentaPerdida(
       const Uuid().v4(),
-      producto,
+      producto.getId(),
+      producto.getNombre(),
       DateTime.now().toUtc(),
     );
     await _ventasPerdidas.guardar(tienda, venta);

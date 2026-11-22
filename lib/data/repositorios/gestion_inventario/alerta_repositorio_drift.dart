@@ -1,11 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/gestion_inventario/alerta_reabastecimiento.dart';
-import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_alerta_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
-import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 
 /// [IAlertaRepositorio] sobre la base local (drift), tabla
 /// `alertas_reabastecimiento`. La fecha se guarda como el día local
@@ -114,11 +112,9 @@ class AlertaRepositorioDrift implements IAlertaRepositorio {
     final partes = fila.fecha.split('-').map(int.parse).toList();
     return AlertaReabastecimiento(
       fila.id,
-      ItemInventario(
-        item.id,
-        MapeoProducto.aEntidad(producto),
-        item.stockActual,
-      ),
+      item.id,
+      producto.id,
+      producto.nombre,
       DateTime(partes[0], partes[1], partes[2]),
       fila.existencia,
       fila.consumoPromedioDiario,

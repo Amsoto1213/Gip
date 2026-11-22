@@ -1,20 +1,14 @@
 import 'package:decimal/decimal.dart';
-import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
-import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 
 /// Etiqueta para pegar en un producto: el nombre y el precio del producto y el
 /// código que se imprime. No se guarda; la crea `ServicioCatalogo` y la recibe
 /// `IImpresionEtiquetas` (DA-39, DA-40, DA-41).
 ///
-/// Depende de [Producto] y [CodigoProducto] solo en el constructor: copia los
-/// datos que se imprimen y no guarda referencias a ellos (DI-55).
+/// Recibe solo los datos que imprime; `ServicioCatalogo` los saca del
+/// producto y de su código (DI-55, DI-60).
 class Etiqueta {
-  Etiqueta(Producto producto, CodigoProducto codigo)
-    : _nombre = producto.getNombre(),
-      _precioVenta = producto.getPrecioVenta(),
-      _valorCodigo = codigo.getValor(),
-      _formato = codigo.getFormato();
+  Etiqueta(this._nombre, this._precioVenta, this._valorCodigo, this._formato);
 
   final String _nombre;
   final Decimal _precioVenta;

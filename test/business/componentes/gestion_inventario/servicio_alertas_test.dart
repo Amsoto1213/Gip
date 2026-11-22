@@ -197,7 +197,12 @@ void main() {
         for (var i = 0; i < 3; i++) {
           perdidas.agregar(
             tienda,
-            VentaPerdida('vp$i', coco, DateTime(2026, 11, 12 + i, 10)),
+            VentaPerdida(
+              'vp$i',
+              coco.getId(),
+              coco.getNombre(),
+              DateTime(2026, 11, 12 + i, 10),
+            ),
           );
         }
 
@@ -269,8 +274,24 @@ void main() {
     });
 
     test('obtenerVentasPerdidas trae las de la tienda en el periodo', () async {
-      perdidas.agregar(tienda, VentaPerdida('a', coco, DateTime(2026, 11, 3)));
-      perdidas.agregar(tienda, VentaPerdida('b', coco, DateTime(2026, 10, 1)));
+      perdidas.agregar(
+        tienda,
+        VentaPerdida(
+          'a',
+          coco.getId(),
+          coco.getNombre(),
+          DateTime(2026, 11, 3),
+        ),
+      );
+      perdidas.agregar(
+        tienda,
+        VentaPerdida(
+          'b',
+          coco.getId(),
+          coco.getNombre(),
+          DateTime(2026, 10, 1),
+        ),
+      );
 
       final encontradas = await servicio.obtenerVentasPerdidas(
         tienda,
@@ -291,6 +312,7 @@ void main() {
 
         expect(uuidV4.hasMatch(venta.getId()), isTrue);
         expect(venta.getProductoId(), coco.getId());
+        expect(venta.getNombreProducto(), coco.getNombre());
         expect(venta.getFecha().isUtc, isTrue);
         expect(venta.getFecha().isBefore(antes), isFalse);
         expect(venta.getFecha().isAfter(despues), isFalse);
