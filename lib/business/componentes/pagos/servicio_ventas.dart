@@ -201,7 +201,8 @@ class ServicioVentas {
     }
     final anulacion = AnulacionVenta(
       const Uuid().v4(),
-      usuario,
+      usuario.getId(),
+      usuario.getNombre(),
       DateTime.now().toUtc(),
       motivoLimpio,
     );

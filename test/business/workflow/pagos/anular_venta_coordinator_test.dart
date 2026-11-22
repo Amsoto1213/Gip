@@ -126,7 +126,8 @@ void main() {
 
     expect(venta.isAnulada(), isTrue);
     expect(anulacion.getMotivo(), 'Error al cobrar');
-    expect(anulacion.getUsuario(), same(propietario));
+    expect(anulacion.getUsuarioId(), propietario.getId());
+    expect(anulacion.getUsuarioNombre(), propietario.getNombre());
     expect(ventasRepo.anulaciones, [anulacion]);
   });
 

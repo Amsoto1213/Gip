@@ -17,7 +17,6 @@ import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/forma_pago.dart';
 import 'package:gip/business/entidades/pagos/medio_pago.dart';
 import 'package:gip/business/entidades/pagos/pago_contado.dart';
-import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/pago_nequi.dart';
 import 'package:gip/business/entidades/pagos/venta.dart';
@@ -354,7 +353,8 @@ void main() {
         tarde,
         anulacion: AnulacionVenta(
           'a1',
-          Administrador('u1', 'Carmen', '1'),
+          'u1',
+          'Carmen',
           tarde,
           'Error al cobrar',
         ),
