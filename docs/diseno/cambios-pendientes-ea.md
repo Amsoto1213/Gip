@@ -41,6 +41,13 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Componentes/InfoTienda
 
+- [ ] **Relaciones de los componentes de info_tienda** (DI-67). Las asociaciones pasan a **dependencia** y se agregan las que faltan:
+  - `ServicioConciliacion`: **agregación** `ServicioConciliacion` ◇ `ResolutorConflicto` (rombo en el servicio, 1 a 1..*); «use» `IConflictoRepositorio`, `IMovimientoInventarioRepositorio`, `IFiadoRepositorio`, `ICajaRepositorio`, `IProductoRepositorio`, `IUnidadTrabajo` y `ServicioInventario`; «create» `ConflictoSincronizacion`; «use» `EtiquetasConflicto`, `MovimientoInventario`, `EntradaMercancia`, `ItemInventario`, `Producto`, `Caja`, `EstadoMovimiento`, `EstadoFiado` y `TipoConflicto` (faltan).
+  - Resolutores: los cuatro realizan `ResolutorConflicto`. `ResolutorMovimientos` «use» `IMovimientoInventarioRepositorio`, `ServicioInventario`, `ItemInventario` y `EstadoMovimiento`; `ResolutorAbonoExcedido` «use» `IFiadoRepositorio`, `ServicioCaja`, `TipoMovimientoCaja` y `ClasificacionMovimiento`; `ResolutorCodigoRepetido` «use» `IProductoRepositorio` y `Producto`; `ResolutorCajaCerrada` «use» `ICajaRepositorio`. `ResolutorConflicto` ⇢ `ConflictoSincronizacion` y `TipoConflicto` «use».
+  - `EtiquetasConflicto` (clase pendiente, DI-46 h): estereotipo «utility»; «use» `MovimientoInventario`, `EntradaMercancia`, `SalidaVenta`, `Merma`, `AjusteConteo`, `Abono` y `MedioPago`.
+  - `ServicioAcceso`: «use» `IAutenticacion`, `ISesionLocal`, `UsuarioActivo`, `Usuario` y `Administrador`.
+  - `ServicioExportacion`: «use» `IInventarioRepositorio`, `IVentaRepositorio`, `IFiadoRepositorio`, `IExportador` y `FormatoExportacion` (falta); «create» `DatosExportacion`.
+  - `ServicioUsuarios`: «use» `IUsuarioRepositorio`, `ICuentaAcceso` (falta), `Usuario` y `Administrador` (faltan); «create» `Empleado`.
 - [ ] **`ServicioAcceso`** deja de ser "sin dependencias" (DI-05, DI-11, DI-12):
   - Atributos `- autenticacion: IAutenticacion` y `- sesionLocal: ISesionLocal`; constructor `ServicioAcceso(autenticacion, sesionLocal)`.
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`: valida que lleguen correo y clave, inicia sesión, rechaza al usuario inactivo y guarda el usuario activo con `sesionLocal.guardar`.
