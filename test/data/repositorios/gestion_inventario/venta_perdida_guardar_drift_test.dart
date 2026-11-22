@@ -39,7 +39,10 @@ void main() {
 
   test('guarda la venta perdida con su fecha en UTC', () async {
     final fecha = DateTime.utc(2026, 11, 15, 14, 30);
-    await repo.guardar(tienda, VentaPerdida('v1', coco, fecha));
+    await repo.guardar(
+      tienda,
+      VentaPerdida('v1', coco.getId(), coco.getNombre(), fecha),
+    );
 
     final fila = await base.select(base.ventasPerdidas).getSingle();
     expect(fila.id, 'v1');
@@ -51,7 +54,12 @@ void main() {
   test('anota INSERTAR en cola_pendientes', () async {
     await repo.guardar(
       tienda,
-      VentaPerdida('v1', coco, DateTime.utc(2026, 11, 15)),
+      VentaPerdida(
+        'v1',
+        coco.getId(),
+        coco.getNombre(),
+        DateTime.utc(2026, 11, 15),
+      ),
     );
 
     final cola = await base.select(base.colaPendientes).getSingle();
@@ -63,8 +71,14 @@ void main() {
 
   test('dos registros del mismo producto no se pisan', () async {
     final fecha = DateTime.utc(2026, 11, 15, 9);
-    await repo.guardar(tienda, VentaPerdida('v1', coco, fecha));
-    await repo.guardar(tienda, VentaPerdida('v2', coco, fecha));
+    await repo.guardar(
+      tienda,
+      VentaPerdida('v1', coco.getId(), coco.getNombre(), fecha),
+    );
+    await repo.guardar(
+      tienda,
+      VentaPerdida('v2', coco.getId(), coco.getNombre(), fecha),
+    );
 
     expect(await base.select(base.ventasPerdidas).get(), hasLength(2));
     expect(await base.select(base.colaPendientes).get(), hasLength(2));
@@ -73,12 +87,22 @@ void main() {
   test('un id repetido no reemplaza la fila ni deja cola', () async {
     await repo.guardar(
       tienda,
-      VentaPerdida('v1', coco, DateTime.utc(2026, 11, 15, 9)),
+      VentaPerdida(
+        'v1',
+        coco.getId(),
+        coco.getNombre(),
+        DateTime.utc(2026, 11, 15, 9),
+      ),
     );
     await expectLater(
       repo.guardar(
         tienda,
-        VentaPerdida('v1', coco, DateTime.utc(2026, 11, 16, 9)),
+        VentaPerdida(
+          'v1',
+          coco.getId(),
+          coco.getNombre(),
+          DateTime.utc(2026, 11, 16, 9),
+        ),
       ),
       throwsA(anything),
     );

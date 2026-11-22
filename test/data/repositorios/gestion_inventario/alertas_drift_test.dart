@@ -59,7 +59,9 @@ void main() {
     bool provisional = false,
   }) => AlertaReabastecimiento(
     id,
-    item,
+    item.getId(),
+    item.getProducto().getId(),
+    item.getProducto().getNombre(),
     hoy,
     item.getStockActual(),
     d('2.3'),

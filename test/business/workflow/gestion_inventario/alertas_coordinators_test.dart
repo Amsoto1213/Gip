@@ -76,7 +76,15 @@ void main() {
         ),
       )
       ..add(SalidaVenta('s1', item, d('-30'), fecha, 'v1', d('3000'), null));
-    perdidas.agregar(tienda, VentaPerdida('vp1', coco, DateTime(2026, 11, 3)));
+    perdidas.agregar(
+      tienda,
+      VentaPerdida(
+        'vp1',
+        coco.getId(),
+        coco.getNombre(),
+        DateTime(2026, 11, 3),
+      ),
+    );
   });
 
   test('CUS-24: ejecutar genera y guarda las alertas del día', () async {

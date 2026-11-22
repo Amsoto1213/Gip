@@ -23,7 +23,8 @@ void main() {
 
   SalidaVenta salida(String cantidad) =>
       SalidaVenta('S$cantidad', item, d(cantidad), fecha, 'v', d('3000'), null);
-  VentaPerdida perdida(int n) => VentaPerdida('vp$n', coco, fecha);
+  VentaPerdida perdida(int n) =>
+      VentaPerdida('vp$n', coco.getId(), coco.getNombre(), fecha);
 
   test(
     'suma las unidades vendidas en valor absoluto y divide entre los días',

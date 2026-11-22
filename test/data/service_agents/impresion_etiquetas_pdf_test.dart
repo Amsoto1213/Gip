@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gip/business/entidades/gestion_inventario/codigo_producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/etiqueta.dart';
 import 'package:gip/business/entidades/gestion_inventario/formato_codigo.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
@@ -21,7 +20,7 @@ void main() {
   );
 
   Etiqueta etiqueta(FormatoCodigo formato, String valor) =>
-      Etiqueta(galletas, CodigoProducto('c', formato, valor));
+      Etiqueta(galletas.getNombre(), galletas.getPrecioVenta(), valor, formato);
 
   int paginas(Uint8List pdf) =>
       RegExp(r'/Type\s*/Page\b').allMatches(latin1.decode(pdf)).length;
