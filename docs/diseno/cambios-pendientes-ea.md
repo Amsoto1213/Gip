@@ -95,6 +95,12 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Componentes/GestionInventario
 
+- [ ] **Relaciones de los componentes de inventario** (DI-65). Las asociaciones pasan a **dependencia** y se agregan las que faltan:
+  - `ServicioInventario`: «use» `IInventarioRepositorio`, `IMovimientoInventarioRepositorio`, `IUnidadTrabajo` e `IProductoRepositorio` (falta, DI-33); «create» `ItemInventario`, `EntradaMercancia`, `Merma` y `AjusteConteo`; «use» `MovimientoInventario`, `SalidaVenta`, `Producto`, `EstadoMovimiento` y `MotivoMerma` (faltan).
+  - `ServicioCatalogo`: «use» `IProductoRepositorio`, `IImpresionEtiquetas`, `IUnidadTrabajo`, `ServicioInventario` e `InterpreteCodigo` (sin multiplicidad; el atributo pasa a `- interpretes: InterpreteCodigo[1..*]`); «create» `Producto`, `CodigoProducto` y `Etiqueta`; «use» `FormatoCodigo` y `UnidadMedida` (faltan).
+  - `ServicioAlertas`: «use» `IInventarioRepositorio`, `IMovimientoInventarioRepositorio`, `IVentaPerdidaRepositorio`, `IAlertaRepositorio` y `EstrategiaConsumo`; «create» `AlertaReabastecimiento` y `VentaPerdida`; «use» `ItemInventario` y `Producto` (faltan).
+  - `InterpreteCodigoBarras` e `InterpreteCodigoQR`: realización de `InterpreteCodigo`; «use» `IProductoRepositorio`. `InterpreteCodigoQR` ⇢ `InterpreteCodigoBarras` «use» (falta; llama a `esCodigoBarrasValido`, DI-34). `InterpreteCodigo` ⇢ `Producto` y `FormatoCodigo` «use» (faltan).
+  - `ConsumoPromedioSimple`: realización de `EstrategiaConsumo`. `EstrategiaConsumo` ⇢ `SalidaVenta` y `VentaPerdida` «use» (faltan).
 - [ ] **`ServicioInventario`** (DI-63): `anularSalidas(tienda: Tienda, ventaId: String): void` y `listarSalidasDeVentas(tienda: Tienda, idsVentas: List<String>): Map<String, List<SalidaVenta>>`, con el id de la venta en lugar de `Venta`.
 - [ ] **`ServicioInventario`** (DI-33, DI-22, DI-24, DI-32):
   - Atributo nuevo `- productos: IProductoRepositorio` y constructor `ServicioInventario(items, movimientos, umbralRevisionConteo, unidadTrabajo, productos)`.
