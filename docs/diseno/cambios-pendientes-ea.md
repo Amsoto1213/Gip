@@ -139,6 +139,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
   - `telefono` vacío significa que el cliente no lo dio; el teléfono es opcional.
   - Eliminar los datos **anonimiza** al cliente y no borra la fila: queda con el nombre "Cliente eliminado" y el teléfono vacío, y deja de salir en las búsquedas. Sus fiados, abonos y ventas no cambian.
 
+- [ ] **`LineaVenta` — `ItemInventario`** (DI-59): la asociación pasa a **agregación** con el rombo vacío en `LineaVenta`, 0..* en `LineaVenta` y 1 en `ItemInventario`. Atributos y operaciones no cambian.
+
 ### Componentes/Pagos
 
 - [ ] **`ServicioVentas`**, descripción de `confirmar`: dentro de la transacción vuelve a leer el ítem de cada línea con `servicioInventario.obtenerItem` antes de crear la `SalidaVenta`. El ítem de la línea trae el stock del momento en que se agregó, y una entrada registrada con la venta abierta se perdería (DI-21 a).
