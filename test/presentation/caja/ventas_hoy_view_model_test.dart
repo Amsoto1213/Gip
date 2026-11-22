@@ -47,7 +47,7 @@ void main() {
     ),
     -d('1'),
     v.getFecha(),
-    v,
+    v.getId(),
     d('1000'),
     null,
   );

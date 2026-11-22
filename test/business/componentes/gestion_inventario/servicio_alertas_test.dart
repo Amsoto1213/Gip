@@ -84,7 +84,7 @@ void main() {
             deItem ?? item,
             -d(unidades),
             fecha,
-            venta,
+            venta.getId(),
             d('3000'),
             null,
           ),

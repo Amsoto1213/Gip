@@ -290,7 +290,7 @@ void main() {
         (s) => s.getItem().getId() == 'i-arroz',
       );
       expect(sArroz.getCantidad(), d('-2'));
-      expect(sArroz.getVenta(), same(venta));
+      expect(sArroz.getVentaId(), venta.getId());
       expect(sArroz.getPrecioUnitario(), d('2800'));
       expect(sArroz.getCostoUnitario(), d('2000'));
       final sCafe = salidas.firstWhere((s) => s.getItem().getId() == 'i-cafe');

@@ -185,7 +185,15 @@ void main() {
       await ventas.guardar(tienda, venta);
       await movimientos.guardar(
         tienda,
-        SalidaVenta('s1', itemHuevo, -d('1'), f1, venta, d('550'), d('400')),
+        SalidaVenta(
+          's1',
+          itemHuevo,
+          -d('1'),
+          f1,
+          venta.getId(),
+          d('550'),
+          d('400'),
+        ),
       );
       final enRevision = (await movimientos.buscarPorIds(tienda, ['e1'])).single
         ..setEstado(EstadoMovimiento.enRevision);

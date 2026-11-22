@@ -22,7 +22,6 @@ import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/estado_fiado.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
 import 'package:gip/business/entidades/pagos/medio_pago.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 
 import '../gestion_caja/fakes_caja.dart';
 import '../gestion_inventario/fakes_catalogo.dart';
@@ -884,7 +883,7 @@ class _Equipo {
       item ?? huevo,
       -Decimal.parse(cantidad),
       fecha,
-      Venta('v$id', const [], Decimal.parse('550'), fecha),
+      'v$id',
       Decimal.parse('550'),
       Decimal.parse('400'),
     );

@@ -96,7 +96,7 @@ void main() {
       item,
       -d(unidades),
       fecha,
-      Venta('v$id', const [], d(precio) * d(unidades), fecha),
+      'v$id',
       d(precio),
       costo == null ? null : d(costo),
     ),

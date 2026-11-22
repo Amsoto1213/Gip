@@ -11,7 +11,6 @@ import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/conflicto_sincronizacion.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/tipo_conflicto.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/transversal/errores/errores_conciliacion.dart';
 
 import '../gestion_inventario/fakes_catalogo.dart';
@@ -85,7 +84,7 @@ void main() {
       item,
       -d(cantidad),
       fecha,
-      Venta('v$n', const [], d('550') * d(cantidad), fecha),
+      'v$n',
       d('550'),
       d('400'),
     );

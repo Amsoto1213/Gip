@@ -10,7 +10,6 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 
 import 'existencias_falsos.dart';
 
@@ -74,7 +73,7 @@ List<MovimientoInventario> movimientosAceite() => [
     itemAceite,
     d('-1'),
     noviembre(17, 10, 15),
-    Venta('v1', const [], d('9900'), noviembre(17, 10, 15)),
+    'v1',
     d('9900'),
     d('8600'),
   ),
