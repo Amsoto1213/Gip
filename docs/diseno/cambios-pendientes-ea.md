@@ -32,6 +32,12 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ## 2. Cambios en clases existentes
 
+- [ ] **Asociaciones (DI-68), que reemplazan lo que dicen las entradas de DI-59, DI-61 (b), DI-62 y DI-63 a DI-67 sobre colaboradores y referencias:**
+  - **Colaboradores inyectados:** todo lo que un componente recibe en su constructor y guarda como atributo (repositorios, `IUnidadTrabajo`, `IImpresionEtiquetas`, `IExportador`, `IAutenticacion`, `ISesionLocal`, `ICuentaAcceso`, `IEstadoSincronizacion` y otros servicios) es **asociación dirigida** 1 a 1, con la flecha hacia el colaborador, en lugar de dependencia «use». Lo mismo de cada coordinador hacia sus servicios.
+  - **Estrategias:** siguen como **agregación** (DI-66, DI-67 a): `ServicioCatalogo` ◇ `InterpreteCodigo`, `ServicioVentas` ◇ `ProcesadorPago`, `ServicioAlertas` ◇ `EstrategiaConsumo`, `ServicioConciliacion` ◇ `ResolutorConflicto`.
+  - **Entidades:** `LineaVenta` → `ItemInventario` (dirigida, 0..* a 1); `Cliente` 1 — 0..* `Fiado` (bidireccional); `UsuarioActivo` → `Usuario` y → `Tienda` (dirigidas, 0..* a 1); `DatosExportacion` → `ItemInventario`, `Venta` y `Fiado` (dirigidas, 1 a 0..*).
+  - **Sin cambios:** las composiciones, las realizaciones, la herencia y las dependencias «create» (de un servicio a lo que crea) y «use» (tipos que solo aparecen en firmas o en la lógica, y enums).
+
 ### Entidades/InfoTienda
 
 - [ ] **`DatosExportacion`** (DI-62): las asociaciones con `ItemInventario`, `Venta` y `Fiado` pasan a **agregación** con el rombo vacío en `DatosExportacion`, 0..* en los dos extremos. Atributos y operaciones no cambian.
