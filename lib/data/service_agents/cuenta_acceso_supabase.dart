@@ -27,7 +27,13 @@ class CuentaAccesoSupabase implements ICuentaAcceso {
            (() => SupabaseClient(
              configuracion.url,
              configuracion.anonKey,
-             authOptions: const AuthClientOptions(autoRefreshToken: false),
+             // Flujo implícito: el PKCE (el de por defecto) guarda un código en
+             // un almacenamiento que este cliente temporal no tiene, y falla
+             // antes de llamar a Supabase.
+             authOptions: const AuthClientOptions(
+               autoRefreshToken: false,
+               authFlowType: AuthFlowType.implicit,
+             ),
            ));
 
   final SupabaseClient Function() _crearCliente;
