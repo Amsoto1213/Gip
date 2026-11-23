@@ -2,7 +2,8 @@
 
 La web (`flutter build web`) se publica en Vercel desde el repositorio de GitHub. Vercel no trae Flutter, así que
 `tool/vercel_build.sh` lo instala en cada build (versión 3.47.x, ver `docs/versiones.md`) y compila a `build/web`.
-La configuración está en `vercel.json`.
+La configuración está en `vercel.json`. Por qué se eligió así, y la lista de librerías del proyecto, en
+`docs/decisiones-despliegue.md` (DI-69).
 
 ## Primera vez
 
