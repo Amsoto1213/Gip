@@ -9,7 +9,6 @@ import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
@@ -232,7 +231,7 @@ class MovimientoInventarioRepositorioDrift
         fila.costoUnitario,
       );
 
-  /// Salidas por venta de las [ventas] dadas, en cualquier estado, con su
+  /// Salidas por venta de las ventas con esos ids ([idsVentas]), en cualquier estado, con su
   /// ítem (stock actual) y su producto (CUS-20, DI-39). Cada ítem se arma una
   /// sola vez y lo comparten las salidas del mismo ítem, para que anular varias
   /// salidas de un mismo ítem sume sobre el mismo stock. Toda consulta filtra
@@ -240,10 +239,9 @@ class MovimientoInventarioRepositorioDrift
   @override
   Future<List<SalidaVenta>> listarSalidasPorVentas(
     Tienda tienda,
-    List<Venta> ventas,
+    List<String> idsVentas,
   ) async {
-    if (ventas.isEmpty) return const [];
-    final idsVentas = [for (final v in ventas) v.getId()];
+    if (idsVentas.isEmpty) return const [];
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
     final p = _base.productos;

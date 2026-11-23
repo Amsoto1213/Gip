@@ -124,7 +124,7 @@ void main() {
       await movimientos.guardar(tienda, salida('s1', arroz, '3', v));
       await movimientos.guardar(tienda, salida('s2', cafe, '2', v));
 
-      await servicio.anularSalidas(tienda, v);
+      await servicio.anularSalidas(tienda, v.getId());
 
       expect(await stock(arroz), d('10'));
       expect(await stock(cafe), d('22'));
@@ -138,7 +138,7 @@ void main() {
       final otraSalida = salida('s2', arroz, '1', v2);
       await movimientos.guardar(tienda, otraSalida);
 
-      await servicio.anularSalidas(tienda, v1);
+      await servicio.anularSalidas(tienda, v1.getId());
 
       expect(otraSalida.getEstado(), EstadoMovimiento.vigente);
       expect(await stock(arroz), d('10'));
@@ -151,14 +151,14 @@ void main() {
         ..setEstado(EstadoMovimiento.anulado);
       await movimientos.guardar(tienda, s);
 
-      await servicio.anularSalidas(tienda, v);
+      await servicio.anularSalidas(tienda, v.getId());
 
       expect(await stock(arroz), d('7'));
       expect(movimientos.estadosActualizados, isEmpty);
     });
 
     test('una venta sin salidas no hace nada', () async {
-      await servicio.anularSalidas(tienda, venta('v9'));
+      await servicio.anularSalidas(tienda, 'v9');
 
       expect(movimientos.estadosActualizados, isEmpty);
     });
@@ -176,7 +176,10 @@ void main() {
       );
       await movimientos.guardar(tienda, salida('s3', arroz, '1', v2));
 
-      final porVenta = await servicio.listarSalidasDeVentas(tienda, [v1, v2]);
+      final porVenta = await servicio.listarSalidasDeVentas(tienda, [
+        v1.getId(),
+        v2.getId(),
+      ]);
 
       expect(porVenta['v1']!.map((s) => s.getId()), ['s1', 's2']);
       expect(porVenta['v2']!.map((s) => s.getId()), ['s3']);

@@ -27,19 +27,33 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **`DisparadorSincronizacion`** (Presentation, `comun`; DI-47 g, DI-48): llama al Sincronizador al tener usuario activo, al volver del segundo plano, al recuperar la conexión, cada 5 minutos (respaldo) y al instante: 1 s después de que este equipo escribe algo (`Sincronizador.escrituras`) o de que otro equipo cambia algo de la tienda (`CambiosRemotosSupabase`, Supabase Realtime).
 - [ ] **`ICuentaAcceso`** (interface) en `Interfaces/InfoTienda`. Crea la cuenta con la que se inicia sesión (correo y contraseña); la implementa la Data Layer con Supabase Auth (DI-43).
   - `+ crear(correo: String, clave: String): void`: crea la cuenta sin abrir sesión con ella. Si ya existe una con ese correo y la misma contraseña (un intento anterior que no alcanzó a guardar al empleado) la da por buena; si la contraseña es otra, rechaza con "Ese correo ya tiene una cuenta".
-- [ ] **`UsuarioActivo`** en `Entidades/InfoTienda`: tipo de dato (registro) con `usuario: Usuario` y `tienda: Tienda`, sin operaciones. El rol es la subclase de `Usuario` (DI-11).
+- [ ] **`UsuarioActivo`** en `Entidades/InfoTienda`: tipo de dato (registro) con `usuario: Usuario` y `tienda: Tienda`, sin operaciones. El rol es la subclase de `Usuario` (DI-11). Relaciones (DI-62): **agregación** con el rombo vacío en `UsuarioActivo` hacia `Usuario` y hacia `Tienda` (0..* en `UsuarioActivo`, 1 en `Usuario` y en `Tienda`); Dependency → `UsuarioActivo` desde `IAutenticacion`, `ISesionLocal`, `ServicioAcceso` e `IniciarSesionCoordinator`.
 - [ ] Opcional, si el diagrama de componentes muestra la Data Layer: `AutenticacionSupabase` implementa `IAutenticacion` y `SesionLocalPreferencias` implementa `ISesionLocal` (DI-05, DI-12).
 
 ## 2. Cambios en clases existentes
 
+- [ ] **Asociaciones (DI-68), que reemplazan lo que dicen las entradas de DI-59, DI-61 (b), DI-62 y DI-63 a DI-67 sobre colaboradores y referencias:**
+  - **Colaboradores inyectados:** todo lo que un componente recibe en su constructor y guarda como atributo (repositorios, `IUnidadTrabajo`, `IImpresionEtiquetas`, `IExportador`, `IAutenticacion`, `ISesionLocal`, `ICuentaAcceso`, `IEstadoSincronizacion` y otros servicios) es **asociación dirigida** 1 a 1, con la flecha hacia el colaborador, en lugar de dependencia «use». Lo mismo de cada coordinador hacia sus servicios.
+  - **Estrategias:** siguen como **agregación** (DI-66, DI-67 a): `ServicioCatalogo` ◇ `InterpreteCodigo`, `ServicioVentas` ◇ `ProcesadorPago`, `ServicioAlertas` ◇ `EstrategiaConsumo`, `ServicioConciliacion` ◇ `ResolutorConflicto`.
+  - **Entidades:** `LineaVenta` → `ItemInventario` (dirigida, 0..* a 1); `Cliente` 1 — 0..* `Fiado` (bidireccional); `UsuarioActivo` → `Usuario` y → `Tienda` (dirigidas, 0..* a 1); `DatosExportacion` → `ItemInventario`, `Venta` y `Fiado` (dirigidas, 1 a 0..*).
+  - **Sin cambios:** las composiciones, las realizaciones, la herencia y las dependencias «create» (de un servicio a lo que crea) y «use» (tipos que solo aparecen en firmas o en la lógica, y enums).
+
 ### Entidades/InfoTienda
 
+- [ ] **`DatosExportacion`** (DI-62): las asociaciones con `ItemInventario`, `Venta` y `Fiado` pasan a **agregación** con el rombo vacío en `DatosExportacion`, 0..* en los dos extremos. Atributos y operaciones no cambian.
 - [ ] **`Tienda`**: atributo `- id: String` (uuid; es el `tienda_id` de todas las tablas, y `codigo` sigue siendo el código visible), operación `+ getId(): String` y constructor `Tienda(id, codigo, nombre, direccion)` (DI-11).
 - [ ] **`Usuario`**, **`Empleado`** y **`Administrador`**: el constructor recibe `activo: bool` opcional, por defecto verdadero, para leer el usuario de la base (DI-11).
 - [ ] **`Usuario`**: atributo `- correo: String?` (con el que inicia sesión), operación `+ getCorreo(): String?` y el parámetro opcional `correo` en el constructor de `Usuario`, `Empleado` y `Administrador`. Nulo si no se conoce (DI-43).
 
 ### Componentes/InfoTienda
 
+- [ ] **Relaciones de los componentes de info_tienda** (DI-67). Las asociaciones pasan a **dependencia** y se agregan las que faltan:
+  - `ServicioConciliacion`: **agregación** `ServicioConciliacion` ◇ `ResolutorConflicto` (rombo en el servicio, 1 a 1..*); «use» `IConflictoRepositorio`, `IMovimientoInventarioRepositorio`, `IFiadoRepositorio`, `ICajaRepositorio`, `IProductoRepositorio`, `IUnidadTrabajo` y `ServicioInventario`; «create» `ConflictoSincronizacion`; «use» `EtiquetasConflicto`, `MovimientoInventario`, `EntradaMercancia`, `ItemInventario`, `Producto`, `Caja`, `EstadoMovimiento`, `EstadoFiado` y `TipoConflicto` (faltan).
+  - Resolutores: los cuatro realizan `ResolutorConflicto`. `ResolutorMovimientos` «use» `IMovimientoInventarioRepositorio`, `ServicioInventario`, `ItemInventario` y `EstadoMovimiento`; `ResolutorAbonoExcedido` «use» `IFiadoRepositorio`, `ServicioCaja`, `TipoMovimientoCaja` y `ClasificacionMovimiento`; `ResolutorCodigoRepetido` «use» `IProductoRepositorio` y `Producto`; `ResolutorCajaCerrada` «use» `ICajaRepositorio`. `ResolutorConflicto` ⇢ `ConflictoSincronizacion` y `TipoConflicto` «use».
+  - `EtiquetasConflicto` (clase pendiente, DI-46 h): estereotipo «utility»; «use» `MovimientoInventario`, `EntradaMercancia`, `SalidaVenta`, `Merma`, `AjusteConteo`, `Abono` y `MedioPago`.
+  - `ServicioAcceso`: «use» `IAutenticacion`, `ISesionLocal`, `UsuarioActivo`, `Usuario` y `Administrador`.
+  - `ServicioExportacion`: «use» `IInventarioRepositorio`, `IVentaRepositorio`, `IFiadoRepositorio`, `IExportador` y `FormatoExportacion` (falta); «create» `DatosExportacion`.
+  - `ServicioUsuarios`: «use» `IUsuarioRepositorio`, `ICuentaAcceso` (falta), `Usuario` y `Administrador` (faltan); «create» `Empleado`.
 - [ ] **`ServicioAcceso`** deja de ser "sin dependencias" (DI-05, DI-11, DI-12):
   - Atributos `- autenticacion: IAutenticacion` y `- sesionLocal: ISesionLocal`; constructor `ServicioAcceso(autenticacion, sesionLocal)`.
   - `+ iniciarSesion(correo: String, clave: String): UsuarioActivo`: valida que lleguen correo y clave, inicia sesión, rechaza al usuario inactivo y guarda el usuario activo con `sesionLocal.guardar`.
@@ -94,6 +108,13 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Componentes/GestionInventario
 
+- [ ] **Relaciones de los componentes de inventario** (DI-65). Las asociaciones pasan a **dependencia** y se agregan las que faltan:
+  - `ServicioInventario`: «use» `IInventarioRepositorio`, `IMovimientoInventarioRepositorio`, `IUnidadTrabajo` e `IProductoRepositorio` (falta, DI-33); «create» `ItemInventario`, `EntradaMercancia`, `Merma` y `AjusteConteo`; «use» `MovimientoInventario`, `SalidaVenta`, `Producto`, `EstadoMovimiento` y `MotivoMerma` (faltan).
+  - `ServicioCatalogo`: «use» `IProductoRepositorio`, `IImpresionEtiquetas`, `IUnidadTrabajo`, `ServicioInventario`; **agregación** `ServicioCatalogo` ◇ `InterpreteCodigo` (rombo en el servicio, 1 a 1..*; DI-66); «create» `Producto`, `CodigoProducto` y `Etiqueta`; «use» `FormatoCodigo` y `UnidadMedida` (faltan).
+  - `ServicioAlertas`: «use» `IInventarioRepositorio`, `IMovimientoInventarioRepositorio`, `IVentaPerdidaRepositorio`, `IAlertaRepositorio`; **agregación** `ServicioAlertas` ◇ `EstrategiaConsumo` (rombo en el servicio, 1 a 1; DI-66); «create» `AlertaReabastecimiento` y `VentaPerdida`; «use» `ItemInventario` y `Producto` (faltan).
+  - `InterpreteCodigoBarras` e `InterpreteCodigoQR`: realización de `InterpreteCodigo`; «use» `IProductoRepositorio`. `InterpreteCodigoQR` ⇢ `InterpreteCodigoBarras` «use» (falta; llama a `esCodigoBarrasValido`, DI-34). `InterpreteCodigo` ⇢ `Producto` y `FormatoCodigo` «use» (faltan).
+  - `ConsumoPromedioSimple`: realización de `EstrategiaConsumo`. `EstrategiaConsumo` ⇢ `SalidaVenta` y `VentaPerdida` «use» (faltan).
+- [ ] **`ServicioInventario`** (DI-63): `anularSalidas(tienda: Tienda, ventaId: String): void` y `listarSalidasDeVentas(tienda: Tienda, idsVentas: List<String>): Map<String, List<SalidaVenta>>`, con el id de la venta en lugar de `Venta`.
 - [ ] **`ServicioInventario`** (DI-33, DI-22, DI-24, DI-32):
   - Atributo nuevo `- productos: IProductoRepositorio` y constructor `ServicioInventario(items, movimientos, umbralRevisionConteo, unidadTrabajo, productos)`.
   - Descripción de `registrarEntrada`: en la misma transacción que la entrada y el stock, el costo de la entrada pasa a ser el precio de compra del producto (`setPrecioCompra`, `setActualizadoEn` y `productos.guardar`). Una entrada con costo cero (bonificación) o con el mismo costo no lo cambia. Si algo falla no se guarda nada y el producto vuelve a su precio anterior.
@@ -120,6 +141,8 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Entidades/GestionCaja y Componentes/GestionCaja
 
+- [ ] **Relaciones de los componentes de caja** (DI-64): las asociaciones pasan a **dependencia** «use»: `ServicioCaja` ⇢ `ICajaRepositorio`; `ServicioReportes` ⇢ `IVentaRepositorio`, `IMovimientoInventarioRepositorio`, `ICajaRepositorio`, `IFiadoRepositorio`, `IEstadoSincronizacion` e `IInventarioRepositorio`. Las dependencias hacia lo que crean pasan a «create»: `ServicioCaja` ⇢ `Caja` y `MovimientoCaja`, `ServicioReportes` ⇢ `ReporteDiario`. Se agregan, porque faltan en el diagrama: `ServicioReportes` ⇢ `Producto` «use» (llave de los mapas de `calcularMargenes` y `clasificarRotacion`) y `ServicioReportes` ⇢ `Fiado`, `PagoNequi` y `MedioPago` «use» (separa ventas fiadas y por Nequi y abonos por Nequi). `Caja` ◆ `MovimientoCaja` sigue como composición, 1 a 0..*.
+- [ ] **`DesgloseCaja`** (DI-38, DI-64): clase nueva en `Entidades/GestionCaja`, sin relaciones con otras entidades: `baseApertura`, `ingresosNegocio`, `ingresosPersonales`, `egresosNegocio`, `cantidadEgresosNegocio`, `egresosPersonales`, `devolucionesPorAnulacion` y `saldoEsperado` (todos `Decimal` salvo `cantidadEgresosNegocio: int`). `Caja` gana `+ calcularDesglose(): DesgloseCaja` y `Caja` ⇢ `DesgloseCaja` «create».
 - [ ] **`ServicioCaja`** (DI-21 b):
   - `+ idCaja(tienda: Tienda, dia: DateTime): String` (estática): id de la caja del día, `<tienda_id>_AAAA-MM-DD`; no es uuid.
   - `+ diaLocal(momento: DateTime): DateTime` (estática): día local del dispositivo, sin hora.
@@ -146,6 +169,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 
 ### Componentes/Pagos
 
+- [ ] **Relaciones de los componentes de pagos** (DI-63): las asociaciones pasan a **dependencia** («use»): `ServicioVentas` ⇢ `ServicioInventario`, `IVentaRepositorio` e `IUnidadTrabajo`, y **agregación** `ServicioVentas` ◇ `ProcesadorPago` (rombo en el servicio, 1 a 1..*; DI-66); `ServicioAbonos` ⇢ `ServicioCaja`, `IUnidadTrabajo` e `IFiadoRepositorio`; `ServicioClientes` ⇢ `IClienteRepositorio`; `ServicioFiados` ⇢ `IFiadoRepositorio`; `ProcesadorFiado` ⇢ `ServicioFiados`; `ProcesadorPagoContado` ⇢ `ServicioCaja`. Las dependencias hacia las entidades que crean no cambian. `ServicioVentas` llama a `servicioInventario.anularSalidas(tienda, venta.getId())`.
 - [ ] **`ServicioVentas`**, descripción de `confirmar`: dentro de la transacción vuelve a leer el ítem de cada línea con `servicioInventario.obtenerItem` antes de crear la `SalidaVenta`. El ítem de la línea trae el stock del momento en que se agregó, y una entrada registrada con la venta abierta se perdería (DI-21 a).
 
 ### Interfaces/Pagos
@@ -199,7 +223,7 @@ Lista de lo que hay que cambiar en Enterprise Architect (`docs/modelo-ea/Proyect
 - [ ] **CUS-20** (DI-39 a, b, d, e):
   - `Venta`: el constructor acepta, como opcional, la anulación para armar una venta guardada. `Fiado.restaurar(saldo, estado)`.
   - `ServicioVentas.anular`: `venta.anular(anulacion)` se llama después de la transacción, cuando todo se guardó, y no dentro. Break "Motivo obligatorio" ("Escribe el motivo de la anulación") antes de abrir la transacción.
-  - `IMovimientoInventarioRepositorio.listarSalidasPorVenta(venta)` pasa a `listarSalidasPorVentas(tienda, ventas)` (con la tienda y varias ventas juntas). `ServicioInventario.listarSalidasDeVentas`, `ServicioVentas.listarSalidas` y `AnularVentaCoordinator.listarProductos`, para mostrar los productos de cada venta.
+  - `IMovimientoInventarioRepositorio.listarSalidasPorVenta(venta)` pasa a `listarSalidasPorVentas(tienda, idsVentas: List<String>)` (con la tienda y los ids de varias ventas juntas; DI-63). `ServicioInventario.listarSalidasDeVentas`, `ServicioVentas.listarSalidas` y `AnularVentaCoordinator.listarProductos`, para mostrar los productos de cada venta.
   - `IVentaRepositorio.listarPorPeriodo` trae también las ventas anuladas (los reportes las excluyen con `isAnulada`).
 - [ ] **CUS-21**: eliminar es anonimizar (nombre "Cliente eliminado", teléfono vacío), y la escritura se anota como ACTUALIZAR en la cola (DI-31 a, b).
 - [ ] **CUS-22** (DI-45 g, h): `idsElegidos` depende del tipo: en POSIBLE_DUPLICADO son los registros que se **anulan** (los que el propietario no marcó como ocurridos); en ABONO_EXCEDE_SALDO, los abonos que se anulan; en CODIGO_REPETIDO, los productos que pierden el código; en STOCK_NEGATIVO y MOVIMIENTO_CAJA_CERRADA va vacío. La vista también ofrece "Ir al conteo" (abre CUS-04, no resuelve) y, tras cada intento, vuelve a pedir `consultarConflictos`. Una tarjeta puede juntar varios conflictos (una entrada repetida varias veces, DI-51): en ese caso la vista llama a `resolver` una vez por cada conflicto del grupo, con las entradas que no están marcadas.
