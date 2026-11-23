@@ -1,7 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
 import 'package:gip/business/entidades/pagos/fiado.dart';
@@ -107,7 +106,6 @@ class VentaRepositorioDrift implements IVentaRepositorio {
     Venta venta,
     AnulacionVenta anulacion,
   ) => _base.transaction(() async {
-    final usuario = anulacion.getUsuario();
     await _base
         .into(_base.anulacionesVenta)
         .insert(
@@ -115,8 +113,8 @@ class VentaRepositorioDrift implements IVentaRepositorio {
             id: anulacion.getId(),
             tiendaId: tienda.getId(),
             ventaId: venta.getId(),
-            usuarioId: usuario.getId(),
-            usuarioNombre: usuario.getNombre(),
+            usuarioId: anulacion.getUsuarioId(),
+            usuarioNombre: anulacion.getUsuarioNombre(),
             fecha: anulacion.getFecha(),
             motivo: anulacion.getMotivo(),
           ),
@@ -125,8 +123,8 @@ class VentaRepositorioDrift implements IVentaRepositorio {
   });
 
   /// La anulación de cada venta, por el id de la venta; si hubiera dos (dos
-  /// equipos sin conexión), vale la más antigua (DI-39). Quien anula es el
-  /// propietario: se arma como [Administrador] con el id y el nombre guardados.
+  /// equipos sin conexión), vale la más antigua (DI-39). De quien anuló trae
+  /// el id y el nombre guardados (DI-61).
   Future<Map<String, AnulacionVenta>> _anulacionesDe(
     Tienda tienda,
     List<String> ventaIds,
@@ -146,7 +144,8 @@ class VentaRepositorioDrift implements IVentaRepositorio {
       for (final a in filas)
         a.ventaId: AnulacionVenta(
           a.id,
-          Administrador(a.usuarioId, a.usuarioNombre, ''),
+          a.usuarioId,
+          a.usuarioNombre,
           a.fecha,
           a.motivo,
         ),

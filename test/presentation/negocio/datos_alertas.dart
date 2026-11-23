@@ -1,6 +1,5 @@
 import 'package:decimal/decimal.dart';
 import 'package:gip/business/entidades/gestion_inventario/alerta_reabastecimiento.dart';
-import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/gestion_inventario/venta_perdida.dart';
@@ -38,7 +37,9 @@ AlertaReabastecimiento alertaDe(
   bool provisional = false,
 }) => AlertaReabastecimiento(
   'a-${producto.getId()}',
-  ItemInventario('i-${producto.getId()}', producto, d(hay)),
+  'i-${producto.getId()}',
+  producto.getId(),
+  producto.getNombre(),
   DateTime(2026, 11, 15),
   d(hay),
   d(vende),
@@ -55,7 +56,22 @@ final alertasDelMockup = [
 
 /// Coco se pidió agotado tres veces.
 final ventasPerdidasDelMockup = [
-  VentaPerdida('v1', coco, DateTime(2026, 11, 14, 18, 5)),
-  VentaPerdida('v2', coco, DateTime(2026, 11, 12, 9, 40)),
-  VentaPerdida('v3', coco, DateTime(2026, 11, 10, 12)),
+  VentaPerdida(
+    'v1',
+    coco.getId(),
+    coco.getNombre(),
+    DateTime(2026, 11, 14, 18, 5),
+  ),
+  VentaPerdida(
+    'v2',
+    coco.getId(),
+    coco.getNombre(),
+    DateTime(2026, 11, 12, 9, 40),
+  ),
+  VentaPerdida(
+    'v3',
+    coco.getId(),
+    coco.getNombre(),
+    DateTime(2026, 11, 10, 12),
+  ),
 ];

@@ -9,7 +9,6 @@ import 'package:gip/business/entidades/gestion_inventario/motivo_merma.dart';
 import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
@@ -73,7 +72,7 @@ class MovimientoInventarioRepositorioDrift
         fecha: movimiento.getFecha(),
         estado: _estados[movimiento.getEstado()]!,
         costoUnitario: Value(movimiento.getCostoUnitario()),
-        ventaId: Value(movimiento.getVenta().getId()),
+        ventaId: Value(movimiento.getVentaId()),
         precioUnitario: Value(movimiento.getPrecioUnitario()),
       ),
       Merma() => MovimientosInventarioCompanion.insert(
@@ -146,9 +145,8 @@ class MovimientoInventarioRepositorioDrift
   }
 
   /// Salidas VIGENTES por venta del ítem con fecha en `[desde, hasta)` (DI-25).
-  /// La tienda sale del ítem, como en [buscarUltimaEntrada]. La venta de cada
-  /// salida trae solo id, fecha y total, sin formas de pago: el consumo no las
-  /// necesita. Hasta CUS-20 no hay ventas anuladas que descartar.
+  /// La tienda sale del ítem, como en [buscarUltimaEntrada]. Cada salida trae
+  /// el id de su venta, no la venta (DI-56).
   @override
   Future<List<SalidaVenta>> listarSalidas(
     ItemInventario item,
@@ -157,7 +155,6 @@ class MovimientoInventarioRepositorioDrift
   ) async {
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
-    final v = _base.ventas;
     final consulta =
         _base.select(m).join([
             innerJoin(
@@ -165,7 +162,6 @@ class MovimientoInventarioRepositorioDrift
               i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
               useColumns: false,
             ),
-            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
           ])
           ..where(
             m.itemId.equals(item.getId()) &
@@ -176,10 +172,7 @@ class MovimientoInventarioRepositorioDrift
           )
           ..orderBy([OrderingTerm.desc(m.fecha)]);
     final resultado = await consulta.get();
-    return [
-      for (final r in resultado)
-        _salida(r.readTable(m), r.readTableOrNull(v), item),
-    ];
+    return [for (final r in resultado) _salida(r.readTable(m), item)];
   }
 
   /// Salidas VIGENTES por venta de la tienda con fecha en `[desde, hasta)`
@@ -194,7 +187,6 @@ class MovimientoInventarioRepositorioDrift
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
     final p = _base.productos;
-    final v = _base.ventas;
     final consulta =
         _base.select(m).join([
             innerJoin(
@@ -202,7 +194,6 @@ class MovimientoInventarioRepositorioDrift
               i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
             ),
             innerJoin(p, p.id.equalsExp(i.productoId)),
-            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
           ])
           ..where(
             m.tiendaId.equals(tienda.getId()) &
@@ -217,7 +208,6 @@ class MovimientoInventarioRepositorioDrift
       for (final r in await consulta.get())
         _salida(
           r.readTable(m),
-          r.readTableOrNull(v),
           items.putIfAbsent(r.readTable(i).id, () {
             final fila = r.readTable(i);
             return ItemInventario(
@@ -230,26 +220,18 @@ class MovimientoInventarioRepositorioDrift
     ];
   }
 
-  SalidaVenta _salida(
-    FilaMovimientoInventario fila,
-    FilaVenta? venta,
-    ItemInventario item,
-  ) => SalidaVenta(
-    fila.id,
-    item,
-    fila.cantidad,
-    fila.fecha,
-    Venta(
-      fila.ventaId ?? '',
-      const [],
-      venta?.total ?? Decimal.zero,
-      venta?.fecha ?? fila.fecha,
-    ),
-    fila.precioUnitario ?? Decimal.zero,
-    fila.costoUnitario,
-  );
+  SalidaVenta _salida(FilaMovimientoInventario fila, ItemInventario item) =>
+      SalidaVenta(
+        fila.id,
+        item,
+        fila.cantidad,
+        fila.fecha,
+        fila.ventaId ?? '',
+        fila.precioUnitario ?? Decimal.zero,
+        fila.costoUnitario,
+      );
 
-  /// Salidas por venta de las [ventas] dadas, en cualquier estado, con su
+  /// Salidas por venta de las ventas con esos ids ([idsVentas]), en cualquier estado, con su
   /// ítem (stock actual) y su producto (CUS-20, DI-39). Cada ítem se arma una
   /// sola vez y lo comparten las salidas del mismo ítem, para que anular varias
   /// salidas de un mismo ítem sume sobre el mismo stock. Toda consulta filtra
@@ -257,10 +239,9 @@ class MovimientoInventarioRepositorioDrift
   @override
   Future<List<SalidaVenta>> listarSalidasPorVentas(
     Tienda tienda,
-    List<Venta> ventas,
+    List<String> idsVentas,
   ) async {
-    if (ventas.isEmpty) return const [];
-    final porId = {for (final v in ventas) v.getId(): v};
+    if (idsVentas.isEmpty) return const [];
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
     final p = _base.productos;
@@ -275,7 +256,7 @@ class MovimientoInventarioRepositorioDrift
           ..where(
             m.tiendaId.equals(tienda.getId()) &
                 m.tipo.equals(_tipoSalidaVenta) &
-                m.ventaId.isIn(porId.keys.toList()),
+                m.ventaId.isIn(idsVentas),
           )
           ..orderBy([OrderingTerm.asc(m.fecha)]);
     final items = <String, ItemInventario>{};
@@ -284,7 +265,6 @@ class MovimientoInventarioRepositorioDrift
       for (final r in await consulta.get())
         _salidaDeVenta(
           r.readTable(m),
-          porId[r.readTable(m).ventaId]!,
           items.putIfAbsent(r.readTable(i).id, () {
             final fila = r.readTable(i);
             return ItemInventario(
@@ -300,7 +280,6 @@ class MovimientoInventarioRepositorioDrift
 
   SalidaVenta _salidaDeVenta(
     FilaMovimientoInventario fila,
-    Venta venta,
     ItemInventario item,
     EstadoMovimiento estado,
   ) => SalidaVenta(
@@ -308,7 +287,7 @@ class MovimientoInventarioRepositorioDrift
     item,
     fila.cantidad,
     fila.fecha,
-    venta,
+    fila.ventaId ?? '',
     fila.precioUnitario ?? Decimal.zero,
     fila.costoUnitario,
   )..setEstado(estado);
@@ -316,8 +295,8 @@ class MovimientoInventarioRepositorioDrift
   /// Movimientos de la tienda con esos ids, de cualquier tipo y en cualquier
   /// estado, cada uno con su ítem (stock actual) y su producto (CUS-22,
   /// DI-45). Cada ítem se arma una sola vez y lo comparten los movimientos del
-  /// mismo ítem, para recalcular el stock una vez por ítem. La venta de cada
-  /// salida trae solo id, fecha y total. Toda consulta filtra por `tienda_id`.
+  /// mismo ítem, para recalcular el stock una vez por ítem. Cada salida trae
+  /// el id de su venta (DI-56). Toda consulta filtra por `tienda_id`.
   @override
   Future<List<MovimientoInventario>> buscarPorIds(
     Tienda tienda,
@@ -327,7 +306,6 @@ class MovimientoInventarioRepositorioDrift
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
     final p = _base.productos;
-    final v = _base.ventas;
     final consulta =
         _base.select(m).join([
             innerJoin(
@@ -335,7 +313,6 @@ class MovimientoInventarioRepositorioDrift
               i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
             ),
             innerJoin(p, p.id.equalsExp(i.productoId)),
-            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
           ])
           ..where(m.tiendaId.equals(tienda.getId()) & m.id.isIn(ids))
           ..orderBy([OrderingTerm.asc(m.fecha), OrderingTerm.asc(m.id)]);
@@ -344,7 +321,6 @@ class MovimientoInventarioRepositorioDrift
       for (final r in await consulta.get())
         _movimiento(
           r.readTable(m),
-          r.readTableOrNull(v),
           items.putIfAbsent(r.readTable(i).id, () {
             final fila = r.readTable(i);
             return ItemInventario(
@@ -359,8 +335,8 @@ class MovimientoInventarioRepositorioDrift
 
   /// Todos los movimientos de la tienda con fecha en `[desde, hasta)`, de los
   /// cuatro tipos y en cualquier estado, del más antiguo al más reciente, cada
-  /// uno con su ítem y su producto (cada ítem se arma una sola vez). La venta
-  /// de cada salida trae solo id, fecha y total. Filtra por `tienda_id`
+  /// uno con su ítem y su producto (cada ítem se arma una sola vez). Cada
+  /// salida trae el id de su venta (DI-56). Filtra por `tienda_id`
   /// (CUS-23, DI-46).
   @override
   Future<List<MovimientoInventario>> listarPorTienda(
@@ -371,7 +347,6 @@ class MovimientoInventarioRepositorioDrift
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
     final p = _base.productos;
-    final v = _base.ventas;
     final consulta =
         _base.select(m).join([
             innerJoin(
@@ -379,7 +354,6 @@ class MovimientoInventarioRepositorioDrift
               i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
             ),
             innerJoin(p, p.id.equalsExp(i.productoId)),
-            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
           ])
           ..where(
             m.tiendaId.equals(tienda.getId()) &
@@ -392,7 +366,6 @@ class MovimientoInventarioRepositorioDrift
       for (final r in await consulta.get())
         _movimiento(
           r.readTable(m),
-          r.readTableOrNull(v),
           items.putIfAbsent(r.readTable(i).id, () {
             final fila = r.readTable(i);
             return ItemInventario(
@@ -482,8 +455,8 @@ class MovimientoInventarioRepositorioDrift
 
   /// Historial del ítem con fecha en `[desde, hasta)`, del más reciente al más
   /// antiguo, de los cuatro tipos y en cualquier estado (CUS-25, DI-32). La
-  /// tienda sale del ítem, como en [buscarUltimaEntrada]. La venta de cada
-  /// salida trae solo id, fecha y total, como en [listarSalidas].
+  /// tienda sale del ítem, como en [buscarUltimaEntrada]. Cada salida trae el
+  /// id de su venta, como en [listarSalidas].
   @override
   Future<List<MovimientoInventario>> listarPorItem(
     ItemInventario item,
@@ -492,7 +465,6 @@ class MovimientoInventarioRepositorioDrift
   ) async {
     final m = _base.movimientosInventario;
     final i = _base.itemsInventario;
-    final v = _base.ventas;
     final consulta =
         _base.select(m).join([
             innerJoin(
@@ -500,7 +472,6 @@ class MovimientoInventarioRepositorioDrift
               i.id.equalsExp(m.itemId) & i.tiendaId.equalsExp(m.tiendaId),
               useColumns: false,
             ),
-            leftOuterJoin(v, v.id.equalsExp(m.ventaId)),
           ])
           ..where(
             m.itemId.equals(item.getId()) &
@@ -509,15 +480,13 @@ class MovimientoInventarioRepositorioDrift
           )
           ..orderBy([OrderingTerm.desc(m.fecha), OrderingTerm.desc(m.id)]);
     return [
-      for (final r in await consulta.get())
-        _movimiento(r.readTable(m), r.readTableOrNull(v), item),
+      for (final r in await consulta.get()) _movimiento(r.readTable(m), item),
     ];
   }
 
   /// Arma la subclase según `tipo` y le pone el estado guardado.
   MovimientoInventario _movimiento(
     FilaMovimientoInventario fila,
-    FilaVenta? venta,
     ItemInventario item,
   ) {
     final MovimientoInventario movimiento = switch (fila.tipo) {
@@ -529,7 +498,7 @@ class MovimientoInventarioRepositorioDrift
         fila.costoUnitario ?? Decimal.zero,
         fila.numeroFactura,
       ),
-      _tipoSalidaVenta => _salida(fila, venta, item),
+      _tipoSalidaVenta => _salida(fila, item),
       _tipoMerma => Merma(
         fila.id,
         item,

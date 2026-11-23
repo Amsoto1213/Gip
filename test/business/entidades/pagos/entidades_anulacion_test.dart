@@ -1,6 +1,5 @@
 import 'package:decimal/decimal.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/anulacion_venta.dart';
 import 'package:gip/business/entidades/pagos/cliente.dart';
@@ -15,10 +14,9 @@ import 'package:gip/transversal/errores/errores_pagos.dart';
 void main() {
   Decimal d(String v) => Decimal.parse(v);
   final fecha = DateTime.utc(2026, 11, 15, 15);
-  final propietario = Administrador('u1', 'Carmen Ruiz', '1000000001');
 
   AnulacionVenta anulacion([String motivo = 'Error al cobrar']) =>
-      AnulacionVenta('a1', propietario, fecha, motivo);
+      AnulacionVenta('a1', 'u1', 'Carmen Ruiz', fecha, motivo);
 
   Venta venta() =>
       Venta('v1', [PagoContado('p1', d('5000'), d('0'))], d('5000'), fecha);
@@ -28,7 +26,8 @@ void main() {
       final a = anulacion('Cliente devolvió');
 
       expect(a.getId(), 'a1');
-      expect(a.getUsuario(), same(propietario));
+      expect(a.getUsuarioId(), 'u1');
+      expect(a.getUsuarioNombre(), 'Carmen Ruiz');
       expect(a.getFecha(), fecha);
       expect(a.getMotivo(), 'Cliente devolvió');
     });

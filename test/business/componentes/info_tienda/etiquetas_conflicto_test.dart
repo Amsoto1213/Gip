@@ -11,7 +11,6 @@ import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/pagos/abono.dart';
 import 'package:gip/business/entidades/pagos/medio_pago.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 
 void main() {
   Decimal d(String v) => Decimal.parse(v);
@@ -86,15 +85,7 @@ void main() {
     test('venta, pérdida y conteo usan la cantidad sin signo', () {
       expect(
         EtiquetasConflicto.movimiento(
-          SalidaVenta(
-            's1',
-            item,
-            -d('3'),
-            fecha,
-            Venta('v1', const [], d('550'), fecha),
-            d('550'),
-            d('400'),
-          ),
+          SalidaVenta('s1', item, -d('3'), fecha, 'v1', d('550'), d('400')),
         ),
         'Venta de 3 Huevo AA · 19/11 10:42 a. m.',
       );

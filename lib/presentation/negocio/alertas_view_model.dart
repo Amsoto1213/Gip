@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/gestion_inventario/alerta_reabastecimiento.dart';
-import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/venta_perdida.dart';
 import 'package:gip/business/entidades/info_tienda/usuario_activo.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
@@ -57,8 +56,8 @@ class AlertasViewModel extends ChangeNotifier {
   bool get hayProvisionales => _alertas.any((a) => a.isProvisional());
 
   /// Veces que el producto se pidió agotado en los últimos 30 días.
-  int ventasPerdidasDe(Producto producto) =>
-      _perdidasPorProducto[producto.getId()] ?? 0;
+  int ventasPerdidasDe(String productoId) =>
+      _perdidasPorProducto[productoId] ?? 0;
 
   void elegirPestana(PestanaAlertas pestana) {
     if (pestana == _pestana) return;
@@ -89,7 +88,7 @@ class AlertasViewModel extends ChangeNotifier {
       _ventasPerdidas = perdidas;
       final conteo = <String, int>{};
       for (final v in perdidas) {
-        conteo.update(v.getProducto().getId(), (n) => n + 1, ifAbsent: () => 1);
+        conteo.update(v.getProductoId(), (n) => n + 1, ifAbsent: () => 1);
       }
       _perdidasPorProducto = conteo;
     } on ExcepcionSoloPropietario {

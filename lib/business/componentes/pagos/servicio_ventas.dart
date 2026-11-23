@@ -149,7 +149,7 @@ class ServicioVentas {
           item,
           -linea.getCantidad(),
           fecha,
-          venta,
+          venta.getId(),
           producto.getPrecioVenta(),
           producto.getPrecioCompra(),
         );
@@ -180,7 +180,9 @@ class ServicioVentas {
   Future<Map<String, List<SalidaVenta>>> listarSalidas(
     Tienda tienda,
     List<Venta> ventas,
-  ) => _servicioInventario.listarSalidasDeVentas(tienda, ventas);
+  ) => _servicioInventario.listarSalidasDeVentas(tienda, [
+    for (final v in ventas) v.getId(),
+  ]);
 
   /// Creator de [AnulacionVenta]. Rechaza si la venta ya está anulada o si el
   /// motivo está vacío; dentro de unidadTrabajo.ejecutar registra la
@@ -201,13 +203,14 @@ class ServicioVentas {
     }
     final anulacion = AnulacionVenta(
       const Uuid().v4(),
-      usuario,
+      usuario.getId(),
+      usuario.getNombre(),
       DateTime.now().toUtc(),
       motivoLimpio,
     );
     await _unidadTrabajo.ejecutar(() async {
       await _ventas.registrarAnulacion(tienda, venta, anulacion);
-      await _servicioInventario.anularSalidas(tienda, venta);
+      await _servicioInventario.anularSalidas(tienda, venta.getId());
       for (final forma in venta.getFormasPago()) {
         await _procesadorPara(forma).revertir(tienda, venta, forma);
       }

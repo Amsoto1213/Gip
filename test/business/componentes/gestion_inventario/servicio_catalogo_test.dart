@@ -626,7 +626,8 @@ void main() {
       expect(codigo.getValor(), 'GIP:GAL-6');
       expect(codigo.getId(), matches(uuidV4));
       expect(productos.guardadosEnTransaccion, [true]);
-      expect(impresas.single.getCodigo(), codigo);
+      expect(impresas.single.getValorCodigo(), 'GIP:GAL-6');
+      expect(impresas.single.getFormato(), FormatoCodigo.qr);
     });
 
     test('genera una etiqueta por copia de cada producto, sin repetir el '
@@ -635,12 +636,16 @@ void main() {
 
       expect(impresas, hasLength(6));
       expect(
-        impresas.take(3).map((e) => e.getProducto()),
-        everyElement(galletas),
+        impresas.take(3).map((e) => e.getNombre()),
+        everyElement(galletas.getNombre()),
       );
       expect(
-        impresas.skip(3).map((e) => e.getProducto()),
-        everyElement(aceite),
+        impresas.take(3).map((e) => e.getValorCodigo()),
+        everyElement('GIP:GAL-6'),
+      );
+      expect(
+        impresas.skip(3).map((e) => e.getValorCodigo()),
+        everyElement('GIP:ACE-1'),
       );
       expect(galletas.getCodigos(), hasLength(1));
       expect(productos.guardadosEnTransaccion, [true, true]);
@@ -663,7 +668,10 @@ void main() {
 
         await servicio.imprimirEtiquetas(tienda, [galletas, aceite], 1);
 
-        expect(impresas.map((e) => e.getCodigo()), [qr, ean]);
+        expect(impresas.map((e) => e.getValorCodigo()), [
+          qr.getValor(),
+          ean.getValor(),
+        ]);
         expect(productos.guardadosEnTransaccion, isEmpty);
       },
     );

@@ -1,11 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:gip/business/entidades/gestion_inventario/alerta_reabastecimiento.dart';
-import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_alerta_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
-import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 
 /// [IAlertaRepositorio] sobre la base local (drift), tabla
 /// `alertas_reabastecimiento`. La fecha se guarda como el día local
@@ -58,7 +56,7 @@ class AlertaRepositorioDrift implements IAlertaRepositorio {
               AlertasReabastecimientoCompanion.insert(
                 id: alerta.getId(),
                 tiendaId: tienda.getId(),
-                itemId: alerta.getItem().getId(),
+                itemId: alerta.getItemId(),
                 fecha: dia,
                 existencia: alerta.getExistencia(),
                 consumoPromedioDiario: alerta.getConsumoPromedioDiario(),
@@ -102,9 +100,7 @@ class AlertaRepositorioDrift implements IAlertaRepositorio {
     return alertas..sort((x, y) {
       final porDias = x.getDiasCobertura().compareTo(y.getDiasCobertura());
       if (porDias != 0) return porDias;
-      return x.getItem().getProducto().getNombre().compareTo(
-        y.getItem().getProducto().getNombre(),
-      );
+      return x.getNombreProducto().compareTo(y.getNombreProducto());
     });
   }
 
@@ -116,11 +112,9 @@ class AlertaRepositorioDrift implements IAlertaRepositorio {
     final partes = fila.fecha.split('-').map(int.parse).toList();
     return AlertaReabastecimiento(
       fila.id,
-      ItemInventario(
-        item.id,
-        MapeoProducto.aEntidad(producto),
-        item.stockActual,
-      ),
+      item.id,
+      producto.id,
+      producto.nombre,
       DateTime(partes[0], partes[1], partes[2]),
       fila.existencia,
       fila.consumoPromedioDiario,

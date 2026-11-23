@@ -172,7 +172,7 @@ class ExportadorCsvExcel implements IExportador {
       anulacion == null ? 'Vigente' : 'Anulada',
       anulacion == null ? null : _fechaHora(anulacion.getFecha()),
       anulacion?.getMotivo(),
-      anulacion?.getUsuario().getNombre(),
+      anulacion?.getUsuarioNombre(),
     ];
   }
 

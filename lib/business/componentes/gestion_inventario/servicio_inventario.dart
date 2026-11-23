@@ -9,7 +9,6 @@ import 'package:gip/business/entidades/gestion_inventario/movimiento_inventario.
 import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_movimiento_inventario_repositorio.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_producto_repositorio.dart';
@@ -303,11 +302,14 @@ class ServicioInventario {
     return stock;
   }
 
-  /// Busca las salidas de la venta con movimientos.listarSalidasPorVentas y
-  /// llama a [anularMovimiento] por cada una que siga vigente: el stock vuelve
-  /// (CUS-20).
-  Future<void> anularSalidas(Tienda tienda, Venta venta) async {
-    final salidas = await _movimientos.listarSalidasPorVentas(tienda, [venta]);
+  /// Busca las salidas de la venta [ventaId] con
+  /// movimientos.listarSalidasPorVentas y llama a [anularMovimiento] por cada
+  /// una que siga vigente: el stock vuelve (CUS-20). Recibe el id, no la
+  /// `Venta` (DI-63).
+  Future<void> anularSalidas(Tienda tienda, String ventaId) async {
+    final salidas = await _movimientos.listarSalidasPorVentas(tienda, [
+      ventaId,
+    ]);
     for (final salida in salidas) {
       if (salida.getEstado() == EstadoMovimiento.vigente) {
         await anularMovimiento(tienda, salida);
@@ -315,18 +317,21 @@ class ServicioInventario {
     }
   }
 
-  /// Salidas de las [ventas], agrupadas por el id de cada venta, en cualquier
-  /// estado: con ellas la pantalla muestra los productos de cada venta
-  /// (CUS-20, DI-39).
+  /// Salidas de las ventas con esos ids ([idsVentas]), agrupadas por el id de
+  /// cada venta, en cualquier estado: con ellas la pantalla muestra los
+  /// productos de cada venta (CUS-20, DI-39, DI-63).
   Future<Map<String, List<SalidaVenta>>> listarSalidasDeVentas(
     Tienda tienda,
-    List<Venta> ventas,
+    List<String> idsVentas,
   ) async {
-    if (ventas.isEmpty) return const {};
-    final salidas = await _movimientos.listarSalidasPorVentas(tienda, ventas);
+    if (idsVentas.isEmpty) return const {};
+    final salidas = await _movimientos.listarSalidasPorVentas(
+      tienda,
+      idsVentas,
+    );
     final porVenta = <String, List<SalidaVenta>>{};
     for (final s in salidas) {
-      porVenta.putIfAbsent(s.getVenta().getId(), () => []).add(s);
+      porVenta.putIfAbsent(s.getVentaId(), () => []).add(s);
     }
     return porVenta;
   }

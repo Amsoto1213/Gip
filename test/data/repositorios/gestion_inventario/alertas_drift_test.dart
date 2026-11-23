@@ -59,7 +59,9 @@ void main() {
     bool provisional = false,
   }) => AlertaReabastecimiento(
     id,
-    item,
+    item.getId(),
+    item.getProducto().getId(),
+    item.getProducto().getNombre(),
     hoy,
     item.getStockActual(),
     d('2.3'),
@@ -78,7 +80,7 @@ void main() {
       final leidas = await alertas.listarPorFecha(tienda, hoy);
       final a = leidas.single;
       expect(a.getId(), 'a1');
-      expect(a.getItem().getProducto().getNombre(), 'Coco');
+      expect(a.getNombreProducto(), 'Coco');
       expect(a.getFecha(), hoy);
       expect(a.getExistencia(), d('2'));
       expect(a.getConsumoPromedioDiario(), d('2.3'));
@@ -194,7 +196,7 @@ void main() {
 
       final encontradas = await perdidas.buscarPorPeriodo(tienda, desde, hasta);
       expect(encontradas.map((v) => v.getId()), ['v2', 'v1']);
-      expect(encontradas.last.getProducto().getNombre(), 'Coco');
+      expect(encontradas.last.getNombreProducto(), 'Coco');
       expect(encontradas.last.getFecha(), DateTime.utc(2026, 11, 3, 10));
     });
 

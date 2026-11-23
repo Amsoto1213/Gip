@@ -11,7 +11,6 @@ import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/gestion_inventario/venta_perdida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 import 'package:gip/business/interfaces/info_tienda/i_autenticacion.dart';
 import 'package:gip/business/interfaces/info_tienda/i_sesion_local.dart';
 import 'package:gip/business/workflow/gestion_inventario/consultar_alertas_coordinator.dart';
@@ -76,18 +75,16 @@ void main() {
           null,
         ),
       )
-      ..add(
-        SalidaVenta(
-          's1',
-          item,
-          d('-30'),
-          fecha,
-          Venta('v1', const [], d('0'), fecha),
-          d('3000'),
-          null,
-        ),
-      );
-    perdidas.agregar(tienda, VentaPerdida('vp1', coco, DateTime(2026, 11, 3)));
+      ..add(SalidaVenta('s1', item, d('-30'), fecha, 'v1', d('3000'), null));
+    perdidas.agregar(
+      tienda,
+      VentaPerdida(
+        'vp1',
+        coco.getId(),
+        coco.getNombre(),
+        DateTime(2026, 11, 3),
+      ),
+    );
   });
 
   test('CUS-24: ejecutar genera y guarda las alertas del día', () async {
@@ -98,7 +95,7 @@ void main() {
       DateTime(2026, 11, 15),
     );
     expect(guardadas, hasLength(1));
-    expect(guardadas.single.getItem().getProducto().getNombre(), 'Coco');
+    expect(guardadas.single.getNombreProducto(), 'Coco');
   });
 
   group('CUS-05', () {

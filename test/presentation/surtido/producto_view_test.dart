@@ -377,9 +377,8 @@ void main() {
       expect(find.text('Etiquetas enviadas a impresión'), findsOneWidget);
       final etiquetas = impresion.envios.single;
       expect(etiquetas, hasLength(8));
-      final codigo = etiquetas.first.getCodigo();
-      expect(codigo.getFormato(), FormatoCodigo.qr);
-      expect(codigo.getValor(), 'GIP:GAL-6');
+      expect(etiquetas.first.getFormato(), FormatoCodigo.qr);
+      expect(etiquetas.first.getValorCodigo(), 'GIP:GAL-6');
     });
 
     testWidgets('en escritorio el panel va al lado del formulario', (

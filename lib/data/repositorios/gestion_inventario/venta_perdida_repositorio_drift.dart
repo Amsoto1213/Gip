@@ -5,7 +5,6 @@ import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/interfaces/gestion_inventario/i_venta_perdida_repositorio.dart';
 import 'package:gip/data/helpers/cola_sincronizacion.dart';
 import 'package:gip/data/local/base_local_drift.dart';
-import 'package:gip/data/repositorios/gestion_inventario/mapeo_producto.dart';
 
 /// [IVentaPerdidaRepositorio] sobre la base local (drift), tabla
 /// `ventas_perdidas`. Solo agrega (RNF-15, DI-30). Los periodos son
@@ -28,7 +27,7 @@ class VentaPerdidaRepositorioDrift implements IVentaPerdidaRepositorio {
               VentasPerdidasCompanion.insert(
                 id: ventaPerdida.getId(),
                 tiendaId: tienda.getId(),
-                productoId: ventaPerdida.getProducto().getId(),
+                productoId: ventaPerdida.getProductoId(),
                 fecha: ventaPerdida.getFecha().toUtc(),
               ),
             );
@@ -63,7 +62,8 @@ class VentaPerdidaRepositorioDrift implements IVentaPerdidaRepositorio {
       for (final f in await consulta.get())
         VentaPerdida(
           f.readTable(v).id,
-          MapeoProducto.aEntidad(f.readTable(p)),
+          f.readTable(p).id,
+          f.readTable(p).nombre,
           f.readTable(v).fecha,
         ),
     ];
@@ -95,7 +95,12 @@ class VentaPerdidaRepositorioDrift implements IVentaPerdidaRepositorio {
           ..orderBy([OrderingTerm.desc(v.fecha)]);
     return [
       for (final f in await consulta.get())
-        VentaPerdida(f.readTable(v).id, producto, f.readTable(v).fecha),
+        VentaPerdida(
+          f.readTable(v).id,
+          producto.getId(),
+          producto.getNombre(),
+          f.readTable(v).fecha,
+        ),
     ];
   }
 }

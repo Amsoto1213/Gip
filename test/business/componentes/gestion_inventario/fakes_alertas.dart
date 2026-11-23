@@ -62,7 +62,7 @@ class VentaPerdidaRepositorioFalso implements IVentaPerdidaRepositorio {
       .expand((l) => l)
       .where(
         (v) =>
-            v.getProducto().getId() == producto.getId() &&
+            v.getProductoId() == producto.getId() &&
             _enPeriodo(v, desde, hasta),
       )
       .toList();

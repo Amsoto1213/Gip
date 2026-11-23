@@ -158,9 +158,20 @@ class ServicioCatalogo {
 
     return [
       for (final producto in productos)
-        for (var i = 0; i < copias; i++)
-          Etiqueta(producto, _codigoParaEtiqueta(producto)),
+        for (var i = 0; i < copias; i++) _etiquetaDe(producto),
     ];
+  }
+
+  /// Creator: arma la etiqueta con el nombre y el precio del producto y el
+  /// valor y el formato de su código (DI-60).
+  Etiqueta _etiquetaDe(Producto producto) {
+    final codigo = _codigoParaEtiqueta(producto);
+    return Etiqueta(
+      producto.getNombre(),
+      producto.getPrecioVenta(),
+      codigo.getValor(),
+      codigo.getFormato(),
+    );
   }
 
   CodigoProducto _codigoParaEtiqueta(Producto producto) {

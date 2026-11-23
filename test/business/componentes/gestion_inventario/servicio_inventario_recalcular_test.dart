@@ -12,7 +12,6 @@ import 'package:gip/business/entidades/gestion_inventario/producto.dart';
 import 'package:gip/business/entidades/gestion_inventario/salida_venta.dart';
 import 'package:gip/business/entidades/gestion_inventario/unidad_medida.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
-import 'package:gip/business/entidades/pagos/venta.dart';
 
 import 'fakes_catalogo.dart';
 import 'fakes_inventario.dart';
@@ -71,7 +70,7 @@ void main() {
       huevo,
       -d(cantidad),
       fecha,
-      Venta('v$n', const [], d('550') * d(cantidad), fecha),
+      'v$n',
       d('550'),
       d('400'),
     );

@@ -1,14 +1,18 @@
 import 'package:decimal/decimal.dart';
-import 'package:gip/business/entidades/gestion_inventario/item_inventario.dart';
 
 /// Sugerencia verificable de reabastecimiento (RF-05): guarda la existencia
 /// del momento (RNF-02) y el consumo con que se calculó, para que el
 /// Propietario pueda comprobarla. Provisional si había menos de 30 días de
 /// historial (RNF-03). La crea `ServicioAlertas` (CUS-24).
+///
+/// Del ítem recibe solo su id y el id y el nombre de su producto; se los pasa
+/// `ServicioAlertas` al crearla o el repositorio al leerla (DI-57, DI-60).
 class AlertaReabastecimiento {
   AlertaReabastecimiento(
     this._id,
-    this._item,
+    this._itemId,
+    this._productoId,
+    this._nombreProducto,
     this._fecha,
     this._existencia,
     this._consumoPromedioDiario,
@@ -17,7 +21,9 @@ class AlertaReabastecimiento {
   );
 
   final String _id;
-  final ItemInventario _item;
+  final String _itemId;
+  final String _productoId;
+  final String _nombreProducto;
   final DateTime _fecha;
   final Decimal _existencia;
   final Decimal _consumoPromedioDiario;
@@ -27,7 +33,14 @@ class AlertaReabastecimiento {
   /// Identificador único del objeto (DA-43).
   String getId() => _id;
 
-  ItemInventario getItem() => _item;
+  /// Id del ítem para el que se calculó.
+  String getItemId() => _itemId;
+
+  /// Id del producto del ítem; con él se cuentan sus ventas perdidas.
+  String getProductoId() => _productoId;
+
+  /// Nombre del producto del ítem.
+  String getNombreProducto() => _nombreProducto;
 
   /// Día para el que se calculó (día local, sin hora).
   DateTime getFecha() => _fecha;

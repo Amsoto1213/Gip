@@ -84,7 +84,7 @@ void main() {
             deItem ?? item,
             -d(unidades),
             fecha,
-            venta,
+            venta.getId(),
             d('3000'),
             null,
           ),
@@ -111,7 +111,7 @@ void main() {
         expect(generadas, hasLength(1));
         final alerta = generadas.single;
         expect(alerta.getId(), matches(uuidV4));
-        expect(alerta.getItem().getProducto().getNombre(), 'Coco');
+        expect(alerta.getNombreProducto(), 'Coco');
         expect(alerta.getFecha(), diaHoy);
         expect(alerta.getExistencia(), d('13.98'));
         expect(alerta.getConsumoPromedioDiario(), d('2'));
@@ -197,7 +197,12 @@ void main() {
         for (var i = 0; i < 3; i++) {
           perdidas.agregar(
             tienda,
-            VentaPerdida('vp$i', coco, DateTime(2026, 11, 12 + i, 10)),
+            VentaPerdida(
+              'vp$i',
+              coco.getId(),
+              coco.getNombre(),
+              DateTime(2026, 11, 12 + i, 10),
+            ),
           );
         }
 
@@ -237,7 +242,7 @@ void main() {
 
         final generadas = await servicio.generarAlertas(tienda, hoy);
 
-        expect(generadas.map((a) => a.getItem().getId()), ['i1']);
+        expect(generadas.map((a) => a.getItemId()), ['i1']);
         expect(alertas.reemplazos, 1);
         expect(await alertas.listarPorFecha(tienda, diaHoy), hasLength(1));
       },
@@ -269,8 +274,24 @@ void main() {
     });
 
     test('obtenerVentasPerdidas trae las de la tienda en el periodo', () async {
-      perdidas.agregar(tienda, VentaPerdida('a', coco, DateTime(2026, 11, 3)));
-      perdidas.agregar(tienda, VentaPerdida('b', coco, DateTime(2026, 10, 1)));
+      perdidas.agregar(
+        tienda,
+        VentaPerdida(
+          'a',
+          coco.getId(),
+          coco.getNombre(),
+          DateTime(2026, 11, 3),
+        ),
+      );
+      perdidas.agregar(
+        tienda,
+        VentaPerdida(
+          'b',
+          coco.getId(),
+          coco.getNombre(),
+          DateTime(2026, 10, 1),
+        ),
+      );
 
       final encontradas = await servicio.obtenerVentasPerdidas(
         tienda,
@@ -290,7 +311,8 @@ void main() {
         final despues = DateTime.now().toUtc();
 
         expect(uuidV4.hasMatch(venta.getId()), isTrue);
-        expect(venta.getProducto(), same(coco));
+        expect(venta.getProductoId(), coco.getId());
+        expect(venta.getNombreProducto(), coco.getNombre());
         expect(venta.getFecha().isUtc, isTrue);
         expect(venta.getFecha().isBefore(antes), isFalse);
         expect(venta.getFecha().isAfter(despues), isFalse);
