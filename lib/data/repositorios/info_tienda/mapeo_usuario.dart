@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:gip/business/entidades/info_tienda/tienda.dart';
 import 'package:gip/business/entidades/info_tienda/usuario.dart';
 import 'package:gip/transversal/errores/errores_usuarios.dart';
@@ -65,8 +66,19 @@ abstract final class MapeoUsuario {
       const ExcepcionCorreoYaRegistrado(),
     PostgrestException(code: '23505') => const ExcepcionDatosUsuarioNoValidos(),
     PostgrestException() => error,
-    _ => const ExcepcionSinConexionUsuarios(),
+    _ => _sinConexion(error),
   };
+
+  /// "Necesitas internet…": lo que no es una respuesta del servidor. Se anota la
+  /// causa real, porque un error de otro tipo (una respuesta que no se pudo
+  /// leer, por ejemplo) también termina en este mensaje.
+  static Object _sinConexion(Object error) {
+    debugPrint(
+      'Usuarios: falla sin respuesta del servidor → '
+      '${error.runtimeType}: $error',
+    );
+    return const ExcepcionSinConexionUsuarios();
+  }
 
   static bool _habla(PostgrestException e, String texto) =>
       '${e.message} ${e.details ?? ''}'.toLowerCase().contains(texto);

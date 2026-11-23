@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:gip/transversal/configuracion/configuracion_usuarios.dart';
 import 'package:gip/transversal/errores/errores_usuarios.dart';
 import 'package:gip/transversal/errores/excepcion_negocio.dart';
@@ -29,8 +30,31 @@ abstract final class MapeoCuentaAcceso {
     ),
     AuthApiException() when cuentaYaExiste(error as AuthException) =>
       const ExcepcionCorreoYaRegistrado(),
-    AuthRetryableFetchException() => const ExcepcionSinConexionUsuarios(),
-    AuthException() => const ExcepcionCuentaNoCreada(),
-    _ => const ExcepcionSinConexionUsuarios(),
+    AuthRetryableFetchException() => _anotar(
+      'Crear cuenta: Supabase Auth no respondió (red o error 5xx)',
+      error,
+      const ExcepcionSinConexionUsuarios(),
+    ),
+    AuthException() => _anotar(
+      'Crear cuenta: Supabase Auth la rechazó',
+      error,
+      const ExcepcionCuentaNoCreada(),
+    ),
+    _ => _anotar(
+      'Crear cuenta: falla que no es de Supabase Auth',
+      error,
+      const ExcepcionSinConexionUsuarios(),
+    ),
   };
+
+  /// Deja la causa real en el registro (`adb logcat -s flutter`, o la consola de
+  /// `flutter run`): todos estos casos terminan en un mensaje corto para el
+  /// tendero y, sin esto, no se sabe cuál fue.
+  static Object _anotar(String contexto, Object causa, Object resultado) {
+    final detalle = causa is AuthException
+        ? 'código=${causa.code} estado=${causa.statusCode} mensaje=${causa.message}'
+        : '$causa';
+    debugPrint('$contexto → ${causa.runtimeType}: $detalle');
+    return resultado;
+  }
 }
